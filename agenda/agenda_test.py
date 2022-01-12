@@ -1,3 +1,5 @@
+import gamla
+
 import agenda
 
 
@@ -28,9 +30,6 @@ def test_needs():
             )
         },
     )
-
-
-import gamla
 
 
 @agenda.expect_convos(
