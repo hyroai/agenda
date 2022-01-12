@@ -1,24 +1,32 @@
-from agenda.composers import (
-    UNKNOWN,
-    combine_utterances,
-    function_to_listener_with_memory,
-    function_to_stater,
-    optionally_needs,
-    slot,
-    str_to_acker,
-    str_to_asker,
-)
-from agenda.sentence import str_to_statement
-from agenda.test_utils import expect_convo
+import gamla
 
-UNKNOWN = UNKNOWN
-combine_utterances = combine_utterances
-function_to_listener_with_memory = function_to_listener_with_memory
-function_to_stater = function_to_stater
-optionally_needs = optionally_needs
-slot = slot
-str_to_acker = str_to_acker
-str_to_asker = str_to_asker
+from agenda import composers, sentence, test_utils
 
-str_to_statement = str_to_statement
-expect_convo = expect_convo
+UNKNOWN = composers.UNKNOWN
+EMPTY_SENTENCE = sentence.EMPTY_SENTENCE
+combine_utterances = composers.combine_utterances
+function_to_listener_with_memory = composers.function_to_listener_with_memory
+optionally_needs = composers.optionally_needs
+slot = composers.slot
+when = composers.when
+
+str_to_statement = sentence.str_to_statement
+
+expect_convos = test_utils.expect_convos
+
+
+def _value_to_function_if_needed(value_or_function):
+    if isinstance(value_or_function, str):
+        return lambda: value_or_function
+    return value_or_function
+
+
+def _generic(inner):
+    return gamla.compose(
+        composers.mark_utter, gamla.after(inner), _value_to_function_if_needed
+    )
+
+
+ask = _generic(sentence.str_to_question)
+state = _generic(sentence.str_to_statement)
+ack = _generic(sentence.str_to_ack)

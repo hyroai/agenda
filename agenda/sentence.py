@@ -35,7 +35,7 @@ def sentence_to_str(sentence: SentenceOrPart) -> str:
     question = question_obj.get(_TEXT) if question_obj else ""
     ack_obj = sentence.get(_ACK, "")
     ack = ack_obj.get(_TEXT) if ack_obj else ""
-    return f"{ack} {statements} {question}".strip()
+    return " ".join(filter(gamla.identity, [ack, statements, question]))
 
 
 def str_to_statement(text):
@@ -80,10 +80,10 @@ def _merge_sentences(sentence1, sentence2):
     statements = sentence2.get(_STATEMENT, frozenset())
     ack = sentence2.get(_ACK, None)
     if ack:
-        sentence1 = _add_ack(sentence1, ack)
+        new_sentence = _add_ack(sentence1, ack)
     for s in statements:
-        sentence1 = _add_statement(sentence1, s)
-    return sentence1
+        new_sentence = _add_statement(sentence1, s)
+    return new_sentence.set(_CONSTITUENTS, frozenset([sentence1, sentence2]))
 
 
 def _sentence_part_reducer(

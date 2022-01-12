@@ -51,8 +51,7 @@ def edge_source_equals(x):
 
 def transform_edges(query, edge_mapper):
     return _operate_on_subgraph(
-        _split_by_condition(query),
-        gamla.compose(tuple, gamla.map(edge_mapper)),
+        _split_by_condition(query), gamla.compose(tuple, gamla.map(edge_mapper))
     )
 
 
@@ -80,10 +79,7 @@ def remove_nodes(nodes):
     return gamla.compose_left(
         *map(
             lambda x: gamla.remove(
-                gamla.anyjuxt(
-                    edge_source_equals(x),
-                    edge_destination_equals(x),
-                )
+                gamla.anyjuxt(edge_source_equals(x), edge_destination_equals(x))
             ),
             nodes,
         )
@@ -91,7 +87,10 @@ def remove_nodes(nodes):
 
 
 def sink(x):
-    return gamla.compose(edge_source, gamla.find(edge_destination_equals(x)))
+    return gamla.compose(
+        gamla.unless(gamla.equals(None), edge_source),
+        gamla.find(edge_destination_equals(x)),
+    )
 
 
 def conjunction(x, y):

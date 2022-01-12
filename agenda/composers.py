@@ -4,17 +4,9 @@ import gamla
 from computation_graph import base_types, composers
 from computation_graph import graph as cg_graph
 from computation_graph import run
-from computation_graph.composers import logic, memory
+from computation_graph.composers import compose_dict, logic, memory
 
 from agenda import missing_cg_utils, sentence
-
-
-def str_to_asker(text):
-    return mark_utter(lambda: sentence.str_to_question(text))
-
-
-def str_to_acker(text):
-    return mark_utter(lambda: sentence.str_to_ack(text))
 
 
 class Unknown:
@@ -56,9 +48,9 @@ mark_state = missing_cg_utils.compose_curry(state)
 utter_sink = missing_cg_utils.sink(utter)
 state_sink = missing_cg_utils.sink(state)
 
-utter_sink_or_empty_sentence = gamla.excepts(
-    AttributeError, utter_sink, lambda _: lambda: sentence.EMPTY_SENTENCE
-)
+
+def utter_sink_or_empty_sentence(g):
+    return utter_sink(g) or (lambda: sentence.EMPTY_SENTENCE)
 
 
 UNKNOWN = Unknown()
@@ -69,9 +61,7 @@ def _replace_participated(replacement, graph):
         graph,
         gamla.filter(missing_cg_utils.edge_source_equals(participated)),
         # TODO(uri): need to resolve ambiguity, if we created more than one sources for destination here
-        gamla.map(
-            missing_cg_utils.replace_edge_source(replacement),
-        ),
+        gamla.map(missing_cg_utils.replace_edge_source(replacement)),
         tuple,
     )
 
@@ -89,8 +79,7 @@ def _handle_participation(condition_fn, g):
 def _composer(markers, f):
     def composer(*graphs):
         return base_types.merge_graphs(
-            f(*graphs),
-            *map(missing_cg_utils.remove_nodes(markers), graphs),
+            f(*graphs), *map(missing_cg_utils.remove_nodes(markers), graphs)
         )
 
     return composer
@@ -111,9 +100,7 @@ def slot(listener, asker, acker):
         }
     )
     def who_should_speak(
-        listener_state,
-        listener_utter,
-        listener_output_changed_to_known,
+        listener_state, listener_utter, listener_output_changed_to_known
     ) -> Optional[base_types.GraphType]:
         if listener_output_changed_to_known:
             return acker
@@ -166,13 +153,31 @@ def remember(graph):
 
 
 function_to_listener_with_memory = gamla.compose(remember, mark_state, mark_event)
-function_to_stater = gamla.compose(mark_utter, gamla.after(sentence.str_to_statement))
+
+
+def _combine_utterances_generic(who_spoke_and_what_was_said, origin_graphs):
+    return base_types.merge_graphs(
+        mark_utter(
+            composers.compose_unary(lambda x: x[1], who_spoke_and_what_was_said)
+        ),
+        *map(
+            _handle_participation(
+                missing_cg_utils.in_literal(
+                    composers.compose_unary(lambda x: x[0], who_spoke_and_what_was_said)
+                )
+            ),
+            origin_graphs,
+        ),
+        *map(missing_cg_utils.remove_nodes([utter, participated]), origin_graphs),
+    )
 
 
 def _combine_utterances(*utter_graphs):
-    @missing_cg_utils.compose_left_many_to_one(map(utter_sink, utter_graphs))
+    @missing_cg_utils.compose_left_many_to_one(
+        map(utter_sink_or_empty_sentence, utter_graphs)
+    )
     def process_inputs(
-        args: Tuple[sentence.SentenceOrPart, ...],
+        args: Tuple[sentence.SentenceOrPart, ...]
     ) -> Tuple[FrozenSet[base_types.GraphType], sentence.SentenceOrPart]:
         combined_utter = sentence.combine(args)
         return (
@@ -185,22 +190,7 @@ def _combine_utterances(*utter_graphs):
             combined_utter,
         )
 
-    @mark_utter
-    @missing_cg_utils.compose_left_curry(process_inputs)
-    def final_response(output) -> sentence.SentenceOrPart:
-        return gamla.second(output)
-
-    @missing_cg_utils.compose_left_curry(process_inputs)
-    def who_spoke(output) -> FrozenSet[base_types.GraphType]:
-        return gamla.head(output)
-
-    return base_types.merge_graphs(
-        final_response,
-        *map(
-            _handle_participation(missing_cg_utils.in_literal(who_spoke)), utter_graphs
-        ),
-        *map(missing_cg_utils.remove_nodes([utter, participated]), utter_graphs),
-    )
+    return _combine_utterances_generic(process_inputs, utter_graphs)
 
 
 combine_utterances = _composer([utter, participated])(_combine_utterances)
@@ -231,10 +221,39 @@ def optionally_needs(recipient, dependencies):
     )
 
 
+@_composer([state, utter, participated])
+def when(condition, do):
+    @composers.compose_left_dict(
+        {
+            "condition_state": state_sink(condition),
+            "condition_utter": utter_sink_or_empty_sentence(condition),
+            "do_utter": utter_sink(do),
+        }
+    )
+    def what_to_say_and_who_spoke(condition_state, condition_utter, do_utter):
+        if condition_state is UNKNOWN or not condition_state:
+            return frozenset([condition]), condition_utter
+        utterances = [condition_utter, do_utter]
+        combined_utter = sentence.combine(utterances)
+        try:
+            return (
+            frozenset(
+                map(
+                    gamla.compose([condition, do].__getitem__, utterances.index),
+                    sentence.constituents(combined_utter),
+                )
+            ),
+            combined_utter,
+        )
+        except:
+            breakpoint()
+
+    return _combine_utterances_generic(what_to_say_and_who_spoke, [condition, do])
+
+
 def _final_replace(x, y):
     return missing_cg_utils.transform_edges(
-        missing_cg_utils.edge_source_equals(x),
-        missing_cg_utils.replace_edge_source(y),
+        missing_cg_utils.edge_source_equals(x), missing_cg_utils.replace_edge_source(y)
     )
 
 
