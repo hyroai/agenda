@@ -1,4 +1,4 @@
-from typing import FrozenSet, Optional, Tuple
+from typing import Optional
 
 import gamla
 from computation_graph import base_types, composers
@@ -155,45 +155,44 @@ def remember(graph):
 function_to_listener_with_memory = gamla.compose(remember, mark_state, mark_event)
 
 
-def _combine_utterances_generic(who_spoke_and_what_was_said, origin_graphs):
+def _make_gate(gate_logic, origin_graphs):
     return base_types.merge_graphs(
-        mark_utter(
-            composers.compose_unary(lambda x: x[1], who_spoke_and_what_was_said)
-        ),
+        mark_utter(composers.compose_unary(lambda x: x[1], gate_logic)),
         *map(
             _handle_participation(
                 missing_cg_utils.in_literal(
-                    composers.compose_unary(lambda x: x[0], who_spoke_and_what_was_said)
+                    composers.compose_unary(lambda x: x[0], gate_logic)
                 )
             ),
             origin_graphs,
         ),
-        *map(missing_cg_utils.remove_nodes([utter, participated]), origin_graphs),
     )
 
 
-def _combine_utterances(*utter_graphs):
-    @missing_cg_utils.compose_left_many_to_one(
-        map(utter_sink_or_empty_sentence, utter_graphs)
+def _combine_utterances_track_source(graphs, utterances):
+    combined_utter = sentence.combine(utterances)
+    return (
+        frozenset(
+            map(
+                gamla.compose(graphs.__getitem__, utterances.index),
+                sentence.constituents(combined_utter),
+            )
+        ),
+        combined_utter,
     )
-    def process_inputs(
-        args: Tuple[sentence.SentenceOrPart, ...]
-    ) -> Tuple[FrozenSet[base_types.GraphType], sentence.SentenceOrPart]:
-        combined_utter = sentence.combine(args)
-        return (
-            frozenset(
-                map(
-                    gamla.compose(utter_graphs.__getitem__, args.index),
-                    sentence.constituents(combined_utter),
-                )
-            ),
-            combined_utter,
-        )
-
-    return _combine_utterances_generic(process_inputs, utter_graphs)
 
 
-combine_utterances = _composer([utter, participated])(_combine_utterances)
+def _combine_utter_graphs(*utter_graphs):
+    return _make_gate(
+        missing_cg_utils.compose_left_many_to_one(
+            map(utter_sink_or_empty_sentence, utter_graphs),
+            lambda args: _combine_utterances_track_source(utter_graphs, args),
+        ),
+        utter_graphs,
+    )
+
+
+combine_utterances = _composer([utter, participated])(_combine_utter_graphs)
 
 
 @gamla.curry
@@ -210,7 +209,7 @@ def _dict_composer(markers, f):
 @_dict_composer([state, utter, participated])
 def optionally_needs(recipient, dependencies):
     return base_types.merge_graphs(
-        _combine_utterances(recipient, *dependencies.values()),
+        _combine_utter_graphs(recipient, *dependencies.values()),
         gamla.pipe(
             dependencies,
             gamla.valmap(state_sink),
@@ -223,29 +222,24 @@ def optionally_needs(recipient, dependencies):
 
 @_composer([state, utter, participated])
 def when(condition, do):
-    @composers.compose_left_dict(
-        {
-            "condition_state": state_sink(condition),
-            "condition_utter": utter_sink_or_empty_sentence(condition),
-            "do_utter": utter_sink(do),
-        }
-    )
-    def what_to_say_and_who_spoke(condition_state, condition_utter, do_utter):
-        if condition_state is UNKNOWN or not condition_state:
-            return frozenset([condition]), condition_utter
-        utterances = [condition_utter, do_utter]
-        combined_utter = sentence.combine(utterances)
-        return (
-            frozenset(
-                map(
-                    gamla.compose([condition, do].__getitem__, utterances.index),
-                    sentence.constituents(combined_utter),
-                )
+    return _make_gate(
+        composers.compose_dict(
+            lambda condition_state, condition_utter, do_utter: (
+                frozenset([condition]),
+                condition_utter,
+            )
+            if condition_state is UNKNOWN or not condition_state
+            else _combine_utterances_track_source(
+                [condition, do], [condition_utter, do_utter]
             ),
-            combined_utter,
-        )
-
-    return _combine_utterances_generic(what_to_say_and_who_spoke, [condition, do])
+            {
+                "condition_state": state_sink(condition),
+                "condition_utter": utter_sink_or_empty_sentence(condition),
+                "do_utter": utter_sink(do),
+            },
+        ),
+        [condition, do],
+    )
 
 
 def _final_replace(x, y):
