@@ -1,5 +1,3 @@
-import gamla
-
 import agenda
 
 

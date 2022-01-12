@@ -11,11 +11,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_namespace_packages(),
     zip_safe=False,
-    install_requires=[
-        "gamla",
-        "computation-graph",
-        "immutables",
-    ],
+    install_requires=["gamla", "computation-graph", "immutables"],
     package_data={"": [], "agenda": ["py.typed"]},
     include_package_data=True,
 )

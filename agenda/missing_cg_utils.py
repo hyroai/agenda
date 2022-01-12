@@ -1,6 +1,7 @@
+import dataclasses
+
 import gamla
 from computation_graph import base_types, composers, graph
-import dataclasses
 
 
 def compose_curry(x):

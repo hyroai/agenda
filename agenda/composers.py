@@ -4,7 +4,7 @@ import gamla
 from computation_graph import base_types, composers
 from computation_graph import graph as cg_graph
 from computation_graph import run
-from computation_graph.composers import compose_dict, logic, memory
+from computation_graph.composers import logic, memory
 
 from agenda import missing_cg_utils, sentence
 
@@ -235,8 +235,7 @@ def when(condition, do):
             return frozenset([condition]), condition_utter
         utterances = [condition_utter, do_utter]
         combined_utter = sentence.combine(utterances)
-        try:
-            return (
+        return (
             frozenset(
                 map(
                     gamla.compose([condition, do].__getitem__, utterances.index),
@@ -245,8 +244,6 @@ def when(condition, do):
             ),
             combined_utter,
         )
-        except:
-            breakpoint()
 
     return _combine_utterances_generic(what_to_say_and_who_spoke, [condition, do])
 
