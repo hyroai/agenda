@@ -35,7 +35,7 @@ def _operate_on_subgraph(selector, transformation):
     )
 
 
-def edge_destination_equals(x):
+def _edge_destination_equals(x):
     if not isinstance(x, base_types.ComputationNode):
         x = graph.make_computation_node(x)
     return lambda edge: edge.destination == x
@@ -80,7 +80,7 @@ def remove_nodes(nodes):
     return gamla.compose_left(
         *map(
             lambda x: gamla.remove(
-                gamla.anyjuxt(edge_source_equals(x), edge_destination_equals(x))
+                gamla.anyjuxt(edge_source_equals(x), _edge_destination_equals(x))
             ),
             nodes,
         )
@@ -90,7 +90,7 @@ def remove_nodes(nodes):
 def sink(x):
     return gamla.compose(
         gamla.unless(gamla.equals(None), edge_source),
-        gamla.find(edge_destination_equals(x)),
+        gamla.find(_edge_destination_equals(x)),
     )
 
 
