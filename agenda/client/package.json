@@ -1,0 +1,18 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "prompt": "^1.2.0",
+    "prompt-async": "^0.9.9",
+    "ws": "^8.4.0"
+  },
+  "devDependencies": {},
+  "description": ""
+}

@@ -1,0 +1,16 @@
+LICENSE.md
+README.md
+pyproject.toml
+setup.py
+agenda/__init__.py
+agenda/agenda_test.py
+agenda/composers.py
+agenda/missing_cg_utils.py
+agenda/sentence.py
+agenda/test_utils.py
+agenda.egg-info/PKG-INFO
+agenda.egg-info/SOURCES.txt
+agenda.egg-info/dependency_links.txt
+agenda.egg-info/not-zip-safe
+agenda.egg-info/requires.txt
+agenda.egg-info/top_level.txt

@@ -2,6 +2,7 @@ import gamla
 
 from agenda import composers, sentence, test_utils
 
+
 UNKNOWN = composers.UNKNOWN
 EMPTY_SENTENCE = sentence.EMPTY_SENTENCE
 combine_utterances = composers.combine_utterances
@@ -30,3 +31,6 @@ def _generic(inner):
 ask = _generic(sentence.str_to_question)
 state = _generic(sentence.str_to_statement)
 ack = _generic(sentence.str_to_ack)
+
+
+extract_utterance = gamla.itemgetter(composers.utter)
