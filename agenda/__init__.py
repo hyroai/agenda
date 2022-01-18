@@ -10,6 +10,11 @@ function_to_listener_with_memory = composers.function_to_listener_with_memory
 optionally_needs = composers.optionally_needs
 slot = composers.slot
 when = composers.when
+event = composers.event
+remember = composers.remember
+mark_state = composers.mark_state
+
+wrap_up = composers.wrap_up
 
 str_to_statement = sentence.str_to_statement
 

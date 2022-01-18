@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "prompt": "^1.2.0",
+    "express": "^4.17.2",
+    "prompt": "^1.2.1",
     "prompt-async": "^0.9.9",
     "ws": "^8.4.0"
   },

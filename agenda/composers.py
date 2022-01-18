@@ -25,7 +25,7 @@ def participated():
 
 
 def event():
-    raise NotImplementedError
+    raise NotImplementedError("Event")
 
 
 # terminals:

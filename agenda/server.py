@@ -17,7 +17,7 @@ def create_socket_handler(bot: Callable):
         async def responder_with_state(request):
             nonlocal state
             try:
-                computation_result = await bot(state, request)
+                computation_result = await bot(event=request, state=state)
                 state = computation_result.state
                 return agenda.extract_utterance(computation_result.result)
             except Exception as err:

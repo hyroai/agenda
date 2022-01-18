@@ -2,10 +2,10 @@ import asyncio
 import os
 from typing import Callable
 
-import config_to_bot
+from agenda import config_to_bot
 import fastapi
 import gamla
-import server
+from agenda import server
 import uvicorn
 from uvicorn.main import Server
 
