@@ -12,7 +12,6 @@ _STATEMENT = "statement"
 _ACK = "ack"
 _CONSTITUENTS = "constituents"
 _TYPE = "type"
-_GENERIC_ACK = "Got it."
 
 EMPTY_SENTENCE = immutables.Map({_TYPE: _SENTENCE, _CONSTITUENTS: frozenset()})
 
@@ -31,9 +30,9 @@ def sentence_to_str(sentence: SentenceOrPart) -> str:
     if not _is_sentence(sentence):
         sentence = _sentence_part_reducer(EMPTY_SENTENCE, sentence)
     statements = " ".join(map(gamla.itemgetter(_TEXT), sentence.get(_STATEMENT, [])))
-    question_obj = sentence.get(_QUESTION, None)
+    question_obj = sentence.get(_QUESTION)
     question = question_obj.get(_TEXT) if question_obj else ""
-    ack_obj = sentence.get(_ACK, "")
+    ack_obj = sentence.get(_ACK)
     ack = ack_obj.get(_TEXT) if ack_obj else ""
     return " ".join(filter(gamla.identity, [ack, statements, question]))
 
@@ -45,50 +44,58 @@ def str_to_statement(text):
 
 
 def str_to_question(text):
-    assert text
+    if not text:
+        return EMPTY_SENTENCE
     return immutables.Map({_TYPE: _QUESTION, _TEXT: text})
 
 
 def str_to_ack(text):
-    assert text
+    if not text:
+        return EMPTY_SENTENCE
     return immutables.Map({_TYPE: _ACK, _TEXT: text})
 
 
 def _set_question(sentence, element):
-    return sentence.set(_QUESTION, element).set(
-        _CONSTITUENTS, sentence[_CONSTITUENTS] | {element}
-    )
+    assert element != EMPTY_SENTENCE
+    return sentence.set(_QUESTION, element)
 
 
 def _add_statement(sentence, element):
-    return sentence.set(
-        _STATEMENT, sentence.get(_STATEMENT, frozenset()) | {element}
-    ).set(_CONSTITUENTS, sentence[_CONSTITUENTS] | {element})
+    assert element != EMPTY_SENTENCE
+    return sentence.set(_STATEMENT, sentence.get(_STATEMENT, frozenset()) | {element})
+
+
+def _add_constituent(sentence, element):
+    return sentence.set(_CONSTITUENTS, sentence[_CONSTITUENTS] | {element})
 
 
 def _add_ack(sentence, element):
+    assert element != EMPTY_SENTENCE
     if _has_ack(sentence):
-        return sentence.set(_ACK, _GENERIC_ACK).set(
-            _CONSTITUENTS, sentence[_CONSTITUENTS] | {element}
-        )
-    return sentence.set(_ACK, element).set(
-        _CONSTITUENTS, sentence[_CONSTITUENTS] | {element}
-    )
+        return sentence.set(_ACK, str_to_ack("Got it."))
+    return sentence.set(_ACK, element)
 
 
 def _merge_sentences(sentence1, sentence2):
-    statements = sentence2.get(_STATEMENT, frozenset())
-    ack = sentence2.get(_ACK, None)
-    if ack:
-        new_sentence = _add_ack(sentence1, ack)
-    for s in statements:
-        new_sentence = _add_statement(sentence1, s)
-    return new_sentence.set(_CONSTITUENTS, frozenset([sentence1, sentence2]))
+    new_sentence = sentence1.set(
+        _CONSTITUENTS, frozenset([*constituents(sentence1), sentence2])
+    )
+    if _has_ack(sentence2):
+        new_sentence = _add_ack(new_sentence, sentence2.get(_ACK))
+        assert _has_ack(new_sentence)
+    for s in sentence2.get(_STATEMENT, ()):
+        new_sentence = _add_statement(new_sentence, s)
+    if _has_question(sentence2):
+        new_sentence = _set_question(new_sentence, sentence2.get(_QUESTION))
+    return new_sentence
 
 
 def _sentence_part_reducer(
     sentence_so_far: SentenceOrPart, current: SentenceOrPart
 ) -> SentenceOrPart:
+    assert EMPTY_SENTENCE not in constituents(sentence_so_far), constituents(
+        sentence_so_far
+    )
     if (
         current is EMPTY_SENTENCE
         or _is_question(current)
@@ -96,13 +103,13 @@ def _sentence_part_reducer(
     ):
         return sentence_so_far
     if _is_question(current):
-        return _set_question(sentence_so_far, current)
+        return _add_constituent(_set_question(sentence_so_far, current), current)
     if _is_ack(current):
-        return _add_ack(sentence_so_far, current)
+        return _add_constituent(_add_ack(sentence_so_far, current), current)
     if _is_statement(current):
-        return _add_statement(sentence_so_far, current)
+        return _add_constituent(_add_statement(sentence_so_far, current), current)
     if _is_sentence(current):
-        if _has_question(current):
+        if _has_question(sentence_so_far) and _has_question(current):
             return sentence_so_far
         return _merge_sentences(sentence_so_far, current)
 

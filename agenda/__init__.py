@@ -9,7 +9,7 @@ function_to_listener_with_memory = composers.function_to_listener_with_memory
 optionally_needs = composers.optionally_needs
 slot = composers.slot
 when = composers.when
-
+complement = composers.complement
 str_to_statement = sentence.str_to_statement
 
 expect_convos = test_utils.expect_convos
