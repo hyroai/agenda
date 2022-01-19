@@ -1,0 +1,18 @@
+slots:  
+  - &phone
+    ask: What is your phone number?
+    listen:
+      type: phone
+  
+  - &email
+    ask: What is your email?
+    listen:
+      type: email
+goals: 
+  - say:  
+      url: http://localhost:8000/order-pizza
+    needs: 
+      - key: phone
+        value: *phone
+      - key: email
+        value: *email
