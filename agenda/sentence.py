@@ -12,7 +12,6 @@ _STATEMENT = "statement"
 _ACK = "ack"
 _CONSTITUENTS = "constituents"
 _TYPE = "type"
-_GENERIC_ACK = "Got it."
 
 EMPTY_SENTENCE = immutables.Map({_TYPE: _SENTENCE, _CONSTITUENTS: frozenset()})
 
@@ -68,7 +67,7 @@ def _add_statement(sentence, element):
 
 def _add_ack(sentence, element):
     if _has_ack(sentence):
-        return sentence.set(_ACK, _GENERIC_ACK).set(
+        return sentence.set(_ACK, str_to_ack("Got it.")).set(
             _CONSTITUENTS, sentence[_CONSTITUENTS] | {element}
         )
     return sentence.set(_ACK, element).set(

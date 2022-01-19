@@ -1,6 +1,7 @@
 from typing import Any, Callable
 
 import agenda
+import logging
 import fastapi
 import gamla
 from starlette import websockets
@@ -21,6 +22,7 @@ def create_socket_handler(bot: Callable):
                 state = computation_result.state
                 return agenda.extract_utterance(computation_result.result)
             except Exception as err:
+                logging.exception(err)
                 return _error_message(err)
 
         await websocket.accept()

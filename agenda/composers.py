@@ -214,7 +214,7 @@ def optionally_needs(recipient, dependencies):
             dependencies,
             gamla.valmap(state_sink),
             missing_cg_utils.package_into_dict,
-            missing_cg_utils.compose_curry(recipient),
+            missing_cg_utils.compose_curry(missing_cg_utils.infer_source(recipient)),
             gamla.remove(gamla.contains(set(recipient))),
             tuple,
         ),

@@ -118,7 +118,33 @@ package_into_dict = gamla.compose_left(
         )
     ),
     tuple,
-    lambda cg: composers.compose_many_to_one(
-        lambda args: gamla.frozendict(dict(args)), cg
-    ),
+    lambda cg: composers.compose_many_to_one(packaging_to_dict, cg),
 )
+
+
+def packaging_to_dict(args):
+    return gamla.frozendict(dict(args))
+
+
+def infer_source(x):
+    if not base_types.is_computation_graph(x):
+        return x
+    return gamla.pipe(
+        x,
+        gamla.bifurcate(
+            gamla.mapcat(
+                gamla.compose_left(
+                    gamla.ternary(
+                        gamla.attrgetter("source"),
+                        gamla.compose_left(gamla.attrgetter("source"), gamla.wrap_tuple),
+                        gamla.attrgetter("args"),
+                    )
+                )
+            ),
+            gamla.map(gamla.attrgetter("destination")),
+        ),
+        gamla.map(set),
+        gamla.star(set.difference),
+        gamla.assert_that(gamla.len_equals(1)),
+        gamla.head,
+    )

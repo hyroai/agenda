@@ -28,7 +28,7 @@ async def _make_app(bot: Callable) -> fastapi.FastAPI:
 app = asyncio.get_event_loop().run_until_complete(
     gamla.compose_left(
         gamla.just(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "main.yaml")
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "pizza.yaml")
         ),
         config_to_bot.yaml_to_slot_bot,
         _make_app,
