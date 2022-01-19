@@ -13,7 +13,7 @@ class Unknown:
     pass
 
 
-# initials:
+# sources:
 
 
 def forget():
