@@ -13,6 +13,7 @@ when = composers.when
 event = composers.event
 remember = composers.remember
 mark_state = composers.mark_state
+mark_event = composers.mark_event
 
 wrap_up = composers.wrap_up
 

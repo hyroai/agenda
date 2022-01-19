@@ -105,3 +105,20 @@ def conjunction(x, y):
 @gamla.curry
 def compose_left_many_to_one(graphs, aggregation):
     return composers.compose_many_to_one(aggregation, graphs)
+
+
+package_into_dict = gamla.compose_left(
+    dict.items,
+    gamla.map(
+        gamla.compose_left(
+            gamla.packstack(lambda x: lambda: x, gamla.identity),
+            lambda pair: composers.compose_dict(
+                lambda x, y: (x, y), dict(zip(["x", "y"], pair))
+            ),
+        )
+    ),
+    tuple,
+    lambda cg: composers.compose_many_to_one(
+        lambda args: gamla.frozendict(dict(args)), cg
+    ),
+)

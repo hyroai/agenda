@@ -4,9 +4,27 @@ import agenda
 import gamla
 import toposort
 import httpx
+import duckling
 from computation_graph import base_types, composers
 from computation_graph.composers import lift
 from agenda import composers as agenda_composers
+
+d = duckling.DucklingWrapper()
+
+duckling_wrapper = gamla.ternary(
+    gamla.nonempty,
+    gamla.compose_left(
+        gamla.map(gamla.get_in(["value", "value"])), gamla.sort, gamla.head
+    ),
+    gamla.just(agenda.UNKNOWN),
+)
+
+_FUNCTION_MAP = {
+    "email": gamla.compose_left(d.parse_email, duckling_wrapper),
+    "phone": gamla.compose_left(d.parse_phone_number, duckling_wrapper),
+}
+
+_INFORMATION_TYPES = frozenset({"phone", "email"})
 
 
 def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphType]:
@@ -31,55 +49,97 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
         def ask_composer(ask):
             return agenda.ask(ask)
 
+    if keys == frozenset({"type"}):
+
+        def function_composer(type):
+
+            assert (
+                type in _INFORMATION_TYPES
+            ), f"We currently do not support {type} type"
+
+            def listen_to_type(user_utterance):
+                return _FUNCTION_MAP.get(type)(user_utterance)
+
+            return agenda.mark_event(listen_to_type)
+
+        return function_composer
     if keys == frozenset({"key", "value"}):
 
-        def needs_composer(key, value):
-            if value() == "incoming_utterance":
-                return (key(), agenda.event)
-            return (key(), value())
+        def kv_composer(key, value):
+            if value == "incoming_utterance":
+                return (key, agenda.event)
+            return (key, value)
 
-        return needs_composer
+        return kv_composer
+
+    if keys == frozenset({"url"}):
+
+        def url_composer(url):
+            async def post_request(params):
+
+                return gamla.pipe(
+                    await gamla.post_json_with_extra_headers_and_params_async(
+                        {},
+                        {"Content-Type": "application/json"},
+                        30,
+                        url,
+                        gamla.pipe(
+                            params,
+                            gamla.valmap(
+                                gamla.when(
+                                    gamla.equals(agenda.UNKNOWN), gamla.just(None)
+                                )
+                            ),
+                        ),
+                    ),
+                    httpx.Response.json,
+                    gamla.freeze_deep,
+                )
+
+            return post_request
+
+        return url_composer
+
+    if keys == frozenset({"say", "needs"}):
+
+        def say_remote(say, needs: Iterable[Tuple[str, base_types.GraphType]]):
+            return agenda.optionally_needs(agenda.state(say), dict(needs))
+
+        return say_remote
 
     if keys == frozenset({"url", "needs"}):
 
-        def remote(needs: Tuple[str, base_types.GraphType], url: str):
+        def remote(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
             async def remote_function(params: Dict):
                 return gamla.pipe(
                     await gamla.post_json_with_extra_headers_and_params_async(
-                        {}, {"Content-Type": "application/json"}, 30, url(), params
+                        {}, {"Content-Type": "application/json"}, 30, url, params
                     ),
                     httpx.Response.json,
                     gamla.when(gamla.equals(None), gamla.just(agenda.UNKNOWN)),
                 )
 
-            return composers.compose_left_unary(
-                gamla.pipe(
-                    needs,
-                    gamla.map(
-                        gamla.compose_left(
-                            gamla.packstack(lambda x: lambda: x, gamla.identity),
-                            lambda pair: composers.compose_dict(
-                                lambda x, y: (x, y), dict(zip(["x", "y"], pair))
-                            ),
-                        )
-                    ),
-                    tuple,
-                    lambda cg: composers.compose_many_to_one(
-                        lambda args: gamla.frozendict(dict(args)), cg
-                    ),
-                ),
-                remote_function,
-            )
+            return agenda.optionally_needs(remote_function, dict(needs))
 
         return remote
 
+    if keys == frozenset({"listen", "ask"}):
+
+        def ask_about_composers(listen, ask):
+            return agenda.slot(
+                gamla.pipe(listen, agenda.mark_state, agenda.remember),
+                agenda.ask(ask),
+                agenda.ack("Got it."),
+            )
+
+        return ask_about_composers
     if keys == frozenset({"ack", "listen", "ask"}):
 
         def slot_composer(ack, listen, ask):
             return agenda.slot(
                 gamla.pipe(listen, agenda.mark_state, agenda.remember),
-                agenda.ask(ask()),
-                agenda.ack(ack()),
+                agenda.ask(ask),
+                agenda.ack(ack),
             )
 
         return slot_composer
@@ -110,7 +170,7 @@ def reducer(
             ),
         )
     except KeyError:
-        return lift.always(current)
+        return current
     to_cg = _determine_composer(frozenset(cg_dict))
     return to_cg(**cg_dict)
 

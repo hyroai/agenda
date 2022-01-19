@@ -213,7 +213,8 @@ def optionally_needs(recipient, dependencies):
         gamla.pipe(
             dependencies,
             gamla.valmap(state_sink),
-            composers.compose_dict(recipient),
+            missing_cg_utils.package_into_dict,
+            missing_cg_utils.compose_curry(recipient),
             gamla.remove(gamla.contains(set(recipient))),
             tuple,
         ),

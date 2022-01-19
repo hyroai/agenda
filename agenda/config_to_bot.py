@@ -26,9 +26,9 @@ _subject_to_object: Callable[[FrozenSet[_Triplet]], Dict] = gamla.compose_left(
     gamla.groupby(gamla.head),
     gamla.valmap(
         gamla.compose_left(
-            gamla.map(
+            gamla.mapcat(
                 gamla.compose_left(
-                    gamla.nth(2), gamla.when(gamla.is_instance(tuple), gamla.head)
+                    gamla.nth(2), gamla.unless(gamla.is_instance(tuple), gamla.wrap_tuple)
                 )
             ),
             set,
