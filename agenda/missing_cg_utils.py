@@ -83,7 +83,8 @@ def remove_nodes(nodes):
                 gamla.anyjuxt(edge_source_equals(x), _edge_destination_equals(x))
             ),
             nodes,
-        )
+        ),
+        tuple,
     )
 
 
@@ -105,3 +106,42 @@ def conjunction(x, y):
 @gamla.curry
 def compose_left_many_to_one(graphs, aggregation):
     return composers.compose_many_to_one(aggregation, graphs)
+
+
+package_into_dict = gamla.compose_left(
+    dict.items,
+    gamla.map(
+        gamla.compose_left(
+            gamla.packstack(lambda x: lambda: x, gamla.identity),
+            lambda pair: composers.compose_dict(
+                lambda x, y: (x, y), dict(zip(["x", "y"], pair))
+            ),
+        )
+    ),
+    tuple,
+    lambda cg: composers.compose_many_to_one(
+        lambda args: gamla.frozendict(dict(args)), cg
+    ),
+)
+
+
+_cg_to_source = gamla.compose_left(
+    gamla.bifurcate(
+        gamla.mapcat(
+            gamla.compose_left(
+                gamla.ternary(
+                    base_types.edge_source,
+                    gamla.compose_left(base_types.edge_source, gamla.wrap_tuple),
+                    base_types.edge_args,
+                )
+            )
+        ),
+        gamla.map(base_types.edge_destination),
+    ),
+    gamla.map(set),
+    gamla.star(set.difference),
+    gamla.assert_that(gamla.len_equals(1)),
+    gamla.head,
+)
+
+infer_source = gamla.when(base_types.is_computation_graph, _cg_to_source)

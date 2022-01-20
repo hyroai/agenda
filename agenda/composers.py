@@ -1,10 +1,12 @@
-from typing import Optional
+from typing import Collection, Optional
 
 import gamla
 from computation_graph import base_types, composers
+from computation_graph import graph
 from computation_graph import graph as cg_graph
 from computation_graph import run
 from computation_graph.composers import logic, memory
+from computation_graph.trace import graphviz
 
 from agenda import missing_cg_utils, sentence
 
@@ -20,6 +22,7 @@ def forget():
     raise NotImplementedError
 
 
+@cg_graph.make_terminal("participated")
 def participated():
     raise NotImplementedError
 
@@ -28,6 +31,7 @@ def event():
     raise NotImplementedError
 
 
+UNKNOWN = Unknown()
 # terminals:
 
 
@@ -49,18 +53,44 @@ utter_sink = missing_cg_utils.sink(utter)
 state_sink = missing_cg_utils.sink(state)
 
 
+def _or_combine_edge(edges: Collection[base_types.ComputationEdge]):
+    assert len(edges) > 1
+
+    def any_node(*args):
+        return any(args)
+
+    return (
+        graph.make_standard_edge(
+            source=tuple(map(base_types.edge_source, edges)),
+            key=None,
+            destination=any_node,
+        ),
+        graph.make_standard_edge(
+            source=any_node,
+            key=base_types.edge_key(gamla.head(edges)),
+            destination=base_types.edge_destination(gamla.head(edges)),
+        ),
+    )
+
+
+def _resolve_ambiguity_using_logical_or(graph):
+    groups = base_types.ambiguity_groups(graph)
+    return base_types.merge_graphs(
+        tuple(gamla.mapcat(_or_combine_edge)(groups)),
+        gamla.pipe(
+            graph, gamla.remove(gamla.contains(frozenset(gamla.concat(groups))))
+        ),
+    )
+
+
 def utter_sink_or_empty_sentence(g):
     return utter_sink(g) or (lambda: sentence.EMPTY_SENTENCE)
-
-
-UNKNOWN = Unknown()
 
 
 def _replace_participated(replacement, graph):
     return gamla.pipe(
         graph,
         gamla.filter(missing_cg_utils.edge_source_equals(participated)),
-        # TODO(uri): need to resolve ambiguity, if we created more than one sources for destination here
         gamla.map(missing_cg_utils.replace_edge_source(replacement)),
         tuple,
     )
@@ -79,7 +109,12 @@ def _handle_participation(condition_fn, g):
 def _composer(markers, f):
     def composer(*graphs):
         return base_types.merge_graphs(
-            f(*graphs), *map(missing_cg_utils.remove_nodes(markers), graphs)
+            f(*graphs),
+            _resolve_ambiguity_using_logical_or(
+                base_types.merge_graphs(
+                    *map(missing_cg_utils.remove_nodes(markers), graphs)
+                )
+            ),
         )
 
     return composer
@@ -164,7 +199,27 @@ def complement(graph):
     return complement
 
 
-function_to_listener_with_memory = gamla.compose(remember, mark_state, mark_event)
+function_to_listener_with_memory = gamla.debug_exception(
+    gamla.compose(remember, mark_state, mark_event)
+)
+
+
+def listen_if_participated_last_turn(graph):
+    def combined(value, is_participated_last_turn: Optional[bool]):
+        if is_participated_last_turn:
+            return value
+        return UNKNOWN
+
+    return gamla.pipe(
+        base_types.merge_graphs(
+            composers.compose_left_future(
+                participated, combined, "is_participated_last_turn"
+            ),
+            composers.compose_left(mark_event(graph), combined, key="value"),
+        ),
+        mark_state,
+        remember,
+    )
 
 
 def _make_gate(gate_logic, origin_graphs):
@@ -182,14 +237,16 @@ def _make_gate(gate_logic, origin_graphs):
 
 
 def _combine_utterances_track_source(graphs, utterances):
-    combined_utter = sentence.combine(utterances)
-    return (
-        gamla.compose(
-            frozenset,
-            gamla.map(gamla.compose(graphs.__getitem__, utterances.index)),
-            sentence.constituents,
-        )(combined_utter),
-        combined_utter,
+    return gamla.pipe(
+        utterances,
+        sentence.combine,
+        gamla.pair_with(
+            gamla.compose(
+                frozenset,
+                gamla.map(gamla.compose(graphs.__getitem__, utterances.index)),
+                sentence.constituents,
+            )
+        ),
     )
 
 
@@ -224,7 +281,8 @@ def optionally_needs(recipient, dependencies):
         gamla.pipe(
             dependencies,
             gamla.valmap(state_sink),
-            composers.compose_dict(recipient),
+            missing_cg_utils.package_into_dict,
+            missing_cg_utils.compose_curry(missing_cg_utils.infer_source(recipient)),
             gamla.remove(gamla.contains(set(recipient))),
             tuple,
         ),
@@ -260,6 +318,8 @@ def _final_replace(x, y):
 
 
 wrap_up = gamla.compose_left(
+    gamla.assert_that(gamla.compose(gamla.empty, base_types.ambiguity_groups)),
+    gamla.side_effect(graphviz.visualize_graph),
     _final_replace(participated, lambda: True),
     _final_replace(forget, lambda: False),
     _final_replace(event, lambda event: event),

@@ -38,18 +38,21 @@ def sentence_to_str(sentence: SentenceOrPart) -> str:
 
 
 def str_to_statement(text):
+    assert isinstance(text, str), text
     if not text:
         return EMPTY_SENTENCE
     return immutables.Map({_TYPE: _STATEMENT, _TEXT: text})
 
 
 def str_to_question(text):
+    assert isinstance(text, str)
     if not text:
         return EMPTY_SENTENCE
     return immutables.Map({_TYPE: _QUESTION, _TEXT: text})
 
 
 def str_to_ack(text):
+    assert isinstance(text, str)
     if not text:
         return EMPTY_SENTENCE
     return immutables.Map({_TYPE: _ACK, _TEXT: text})

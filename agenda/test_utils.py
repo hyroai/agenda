@@ -13,6 +13,8 @@ def expect_convos(convos, f):
             result = base_types.ComputationResult(None, None)
             for input_event, output_event in convo:
                 result = cg(event=input_event, state=result.state)
-                assert result.result[composers.utter] == output_event
+                assert (
+                    result.result[composers.utter] == output_event
+                ), f"expected: {output_event} but got: {result.result[composers.utter]}"
 
     return inner
