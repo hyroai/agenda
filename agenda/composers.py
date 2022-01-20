@@ -98,7 +98,9 @@ def _replace_participated(replacement, graph):
 
 @gamla.curry
 def _handle_participation(condition_fn, g):
-    indicator_graph = missing_cg_utils.conjunction(participated, condition_fn(g))
+    if not missing_cg_utils.has_source(participated)(g):
+        return base_types.EMPTY_GRAPH
+    indicator_graph = missing_cg_utils.conjunction_debug(participated, condition_fn(g))
     return base_types.merge_graphs(
         _replace_participated(cg_graph.infer_graph_sink(indicator_graph), g),
         indicator_graph,
@@ -199,21 +201,17 @@ def complement(graph):
     return complement
 
 
-function_to_listener_with_memory = gamla.debug_exception(
-    gamla.compose(remember, mark_state, mark_event)
-)
+function_to_listener_with_memory = gamla.compose(remember, mark_state, mark_event)
 
 
 def listen_if_participated_last_turn(graph):
     def combined(value, is_participated_last_turn: Optional[bool]):
-        if is_participated_last_turn:
-            return value
-        return UNKNOWN
+        return value if is_participated_last_turn else UNKNOWN
 
     return gamla.pipe(
         base_types.merge_graphs(
-            composers.compose_left_future(
-                participated, combined, "is_participated_last_turn"
+            composers.make_compose_future(
+                combined, participated, "is_participated_last_turn"
             ),
             composers.compose_left(mark_event(graph), combined, key="value"),
         ),
@@ -318,7 +316,10 @@ def _final_replace(x, y):
 
 
 wrap_up = gamla.compose_left(
-    gamla.assert_that(gamla.compose(gamla.empty, base_types.ambiguity_groups)),
+    gamla.assert_that_with_message(
+        base_types.ambiguity_groups,
+        gamla.compose(gamla.empty, base_types.ambiguity_groups),
+    ),
     gamla.side_effect(graphviz.visualize_graph),
     _final_replace(participated, lambda: True),
     _final_replace(forget, lambda: False),
