@@ -8,6 +8,14 @@ slots:
     ask: What is your email?
     listen:
       type: email
+  - &amount_of_pizzas
+    ask: How many pies would you like?
+    listen:
+      type: amount
+  - &wants-to-order-pizza
+    ask: Would you like to order pizza?
+    listen:
+      type: bool
 goals: 
   - say:  
       url: http://localhost:8000/order-pizza
@@ -16,3 +24,6 @@ goals:
         value: *phone
       - key: email
         value: *email
+      - key: amount_of_pizzas  
+        value: *amount_of_pizzas
+    when: *wants-to-order-pizza    

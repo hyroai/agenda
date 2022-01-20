@@ -1,4 +1,4 @@
-from typing import Callable, Dict, FrozenSet, List, Iterable, Tuple
+from typing import Callable, Dict, FrozenSet, List, Iterable, Tuple, Union
 
 import agenda
 import gamla
@@ -19,12 +19,71 @@ duckling_wrapper = gamla.ternary(
     gamla.just(agenda.UNKNOWN),
 )
 
+
+_AFFIRMATIVE = {
+    "affirmative",
+    "agree",
+    "cool",
+    "definitely",
+    "good",
+    "i did",
+    "i do",
+    "i had",
+    "i have",
+    "i think so",
+    "i believe so",
+    "obviously",
+    "of course",
+    "ok",
+    "proceed",
+    "right",
+    "sure",
+    "that's great",
+    "yeah",
+    "yes",
+    "yup",
+}
+
+
+_NEGATIVE = {
+    "definitely not",
+    "didn't",
+    "don't",
+    "have not",
+    "i don't think so",
+    "i have not",
+    "i haven't",
+    "nah",
+    "negative",
+    "negatory",
+    "no",
+    "nope",
+    "not",
+    "nothing",
+    "of course not",
+    "none",
+    "none of the above",
+    "i disagree",
+    "disagree",
+}
+
+
+def _parse_bool(user_utterance: str):
+    if user_utterance.strip() in _AFFIRMATIVE:
+        return True
+    if user_utterance.strip() in _NEGATIVE:
+        return False
+    return agenda.UNKNOWN
+
+
 _FUNCTION_MAP = {
     "email": gamla.compose_left(d.parse_email, duckling_wrapper),
     "phone": gamla.compose_left(d.parse_phone_number, duckling_wrapper),
+    "amount": gamla.compose_left(d.parse_number, duckling_wrapper),
+    "bool": _parse_bool,
 }
 
-_INFORMATION_TYPES = frozenset({"phone", "email"})
+_INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount"})
 
 
 def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphType]:
@@ -106,7 +165,14 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
             return agenda.optionally_needs(agenda.state(say), dict(needs))
 
         return say_remote
+    if keys == frozenset({"say", "needs", "when"}):
 
+        def when_composer(say, needs, when):
+            return agenda.when(
+                when, agenda.optionally_needs(agenda.state(say), dict(needs))
+            )
+
+        return when_composer
     if keys == frozenset({"url", "needs"}):
 
         def remote(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
