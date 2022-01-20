@@ -100,7 +100,7 @@ def _replace_participated(replacement, graph):
 def _handle_participation(condition_fn, g):
     if not missing_cg_utils.has_source(participated)(g):
         return base_types.EMPTY_GRAPH
-    indicator_graph = missing_cg_utils.conjunction_debug(participated, condition_fn(g))
+    indicator_graph = missing_cg_utils.conjunction(participated, condition_fn(g))
     return base_types.merge_graphs(
         _replace_participated(cg_graph.infer_graph_sink(indicator_graph), g),
         indicator_graph,
