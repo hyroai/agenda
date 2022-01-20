@@ -122,6 +122,12 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
             return agenda.mark_event(listen_to_type)
 
         return function_composer
+    if keys == frozenset({"complement"}):
+
+        def complement_composer(complement):
+            return agenda.complement(complement)
+
+        return complement_composer
     if keys == frozenset({"key", "value"}):
 
         def kv_composer(key, value):
@@ -165,6 +171,12 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
             return agenda.optionally_needs(agenda.state(say), dict(needs))
 
         return say_remote
+    if keys == frozenset({"say", "when"}):
+
+        def say_when_composer(say, when):
+            return agenda.when(when, agenda.state(say))
+
+        return say_when_composer
     if keys == frozenset({"say", "needs", "when"}):
 
         def when_composer(say, needs, when):
@@ -212,7 +224,7 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
     if keys == frozenset({"goals", "slots"}):
 
         def goals_composer(goals, slots):
-            return base_types.merge_graphs(*goals)
+            return agenda.combine_utterances(*goals)
 
         return goals_composer
     assert False, keys

@@ -27,3 +27,6 @@ goals:
       - key: amount_of_pizzas  
         value: *amount_of_pizzas
     when: *wants-to-order-pizza    
+  - say: I'm transfering you to an agent.
+    when:
+      complement: *wants-to-order-pizza 

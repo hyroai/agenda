@@ -17,10 +17,11 @@ app.post("/order-pizza", function (req, res) {
   console.log("Got a POST request for /order-pizza");
   if (!req.body.phone || !req.body.email) {
     res.json(null);
+  } else {
+    res.json(
+      `I got your phone:${req.body.phone}, and your email ${req.body.email}.`
+    );
   }
-  res.json(
-    `I got your phone:${req.body.phone}, and your email ${req.body.email}`
-  );
 });
 
 var server = app.listen(8000, function () {
