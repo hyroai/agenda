@@ -72,17 +72,8 @@ def _add_constituent(sentence, element):
 def _add_ack(sentence, element):
     assert element != EMPTY_SENTENCE
     if _has_ack(sentence):
-<<<<<<< HEAD
-        return sentence.set(_ACK, str_to_ack("Got it.")).set(
-            _CONSTITUENTS, sentence[_CONSTITUENTS] | {element}
-        )
-    return sentence.set(_ACK, element).set(
-        _CONSTITUENTS, sentence[_CONSTITUENTS] | {element}
-    )
-=======
         return sentence.set(_ACK, str_to_ack("Got it."))
     return sentence.set(_ACK, element)
->>>>>>> main
 
 
 def _merge_sentences(sentence1, sentence2):
