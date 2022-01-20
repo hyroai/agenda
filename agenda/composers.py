@@ -13,7 +13,7 @@ class Unknown:
     pass
 
 
-# initials:
+# sources:
 
 
 def forget():
@@ -152,6 +152,18 @@ def remember(graph):
     return remember_or_forget
 
 
+@_composer([state])
+def complement(graph):
+    @mark_state
+    @missing_cg_utils.compose_left_curry(state_sink(graph))
+    def complement(value):
+        if value is UNKNOWN:
+            return UNKNOWN
+        return not value
+
+    return complement
+
+
 function_to_listener_with_memory = gamla.compose(remember, mark_state, mark_event)
 
 
@@ -172,12 +184,11 @@ def _make_gate(gate_logic, origin_graphs):
 def _combine_utterances_track_source(graphs, utterances):
     combined_utter = sentence.combine(utterances)
     return (
-        frozenset(
-            map(
-                gamla.compose(graphs.__getitem__, utterances.index),
-                sentence.constituents(combined_utter),
-            )
-        ),
+        gamla.compose(
+            frozenset,
+            gamla.map(gamla.compose(graphs.__getitem__, utterances.index)),
+            sentence.constituents,
+        )(combined_utter),
         combined_utter,
     )
 

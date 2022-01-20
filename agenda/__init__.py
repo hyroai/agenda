@@ -17,6 +17,7 @@ mark_event = composers.mark_event
 
 wrap_up = composers.wrap_up
 
+complement = composers.complement
 str_to_statement = sentence.str_to_statement
 
 expect_convos = test_utils.expect_convos
