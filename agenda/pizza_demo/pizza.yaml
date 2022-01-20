@@ -16,6 +16,9 @@ slots:
     ask: Would you like to order pizza?
     listen:
       type: bool
+      examples:
+        - I want to order pizza
+        - I want pizza
 goals: 
   - say:  
       url: http://localhost:8000/order-pizza

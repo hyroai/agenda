@@ -5,6 +5,7 @@ import gamla
 import toposort
 import httpx
 import duckling
+import spacy
 from computation_graph import base_types, composers
 from computation_graph.composers import lift
 from agenda import composers as agenda_composers
@@ -19,6 +20,7 @@ duckling_wrapper = gamla.ternary(
     gamla.just(agenda.UNKNOWN),
 )
 
+nlp = spacy.load("en_core_web_lg")
 
 _AFFIRMATIVE = {
     "affirmative",
@@ -68,19 +70,39 @@ _NEGATIVE = {
 }
 
 
-def _parse_bool(user_utterance: str):
-    if user_utterance.strip() in _AFFIRMATIVE:
-        return True
-    if user_utterance.strip() in _NEGATIVE:
-        return False
-    return agenda.UNKNOWN
+def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> int:
+    user_sentence = nlp(user_utterance)
+    return gamla.pipe(
+        examples,
+        gamla.map(
+            gamla.compose_left(
+                lambda example: nlp(example),
+                lambda sentence: sentence.similarity(user_sentence),
+            )
+        ),
+        gamla.sort,
+        gamla.last,
+    )
+
+
+def _listen_to_bool_or_intent(examples: Tuple[str, ...]):
+    def parse_bool(user_utterance: str):
+        if examples and _sentences_similarity(user_utterance, examples) >= 0.9:
+            return True
+        if user_utterance.strip() in _AFFIRMATIVE:
+            return True
+        if user_utterance.strip() in _NEGATIVE:
+            return False
+        return agenda.UNKNOWN
+
+    return parse_bool
 
 
 _FUNCTION_MAP = {
     "email": gamla.compose_left(d.parse_email, duckling_wrapper),
     "phone": gamla.compose_left(d.parse_phone_number, duckling_wrapper),
     "amount": gamla.compose_left(d.parse_number, duckling_wrapper),
-    "bool": _parse_bool,
+    "bool": _listen_to_bool_or_intent,
 }
 
 _INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount"})
@@ -110,7 +132,7 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
 
     if keys == frozenset({"type"}):
 
-        def function_composer(type):
+        def listen_to_type(type):
 
             assert (
                 type in _INFORMATION_TYPES
@@ -120,6 +142,20 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
                 return _FUNCTION_MAP.get(type)(user_utterance)
 
             return agenda.mark_event(listen_to_type)
+
+        return listen_to_type
+    if keys == frozenset({"type", "examples"}):
+
+        def function_composer(type, examples):
+
+            assert (
+                type in _INFORMATION_TYPES
+            ), f"We currently do not support {type} type"
+
+            def listen_to_type_or_intent(user_utterance):
+                return _FUNCTION_MAP.get(type)(examples)(user_utterance)
+
+            return agenda.mark_event(listen_to_type_or_intent)
 
         return function_composer
     if keys == frozenset({"complement"}):
