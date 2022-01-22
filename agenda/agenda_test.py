@@ -183,10 +183,10 @@ def test_listen_if_participated1():
 
 @agenda.expect_convos(
     [
-        [["Hi", "x?"], ["yes", "y?"], ["no", "false"]],
-        # [["Hi", "x?"], ["no", "y?"], ["no", "false"]],
-        # [["Hi", "x?"], ["yes", "y?"], ["yes", "true"]],
-        # [["Hi", "x?"], ["no", "y?"], ["yes", "false"]],
+        [["Hi", "x?"], ["yes", "okay. y?"], ["no", "okay. false"]],
+        [["Hi", "x?"], ["no", "okay. y?"], ["no", "okay. false"]],
+        [["Hi", "x?"], ["yes", "okay. y?"], ["yes", "okay. true"]],
+        [["Hi", "x?"], ["no", "okay. y?"], ["yes", "okay. false"]],
     ]
 )
 def test_listen_if_participated2():
@@ -200,13 +200,19 @@ def test_listen_if_participated2():
         ),
         {
             "x": agenda.slot(
-                agenda.listen_if_participated_last_turn(lambda text: "yes" in text),
-                agenda.ask("x?"),
+                base_types.merge_graphs(
+                    agenda.listen_if_participated_last_turn(lambda text: "yes" in text),
+                    agenda.ask("x?"),
+                ),
+                agenda.ask(""),
                 agenda.ack("okay."),
             ),
             "y": agenda.slot(
-                agenda.listen_if_participated_last_turn(lambda text: "yes" in text),
-                agenda.ask("y?"),
+                base_types.merge_graphs(
+                    agenda.listen_if_participated_last_turn(lambda text: "yes" in text),
+                    agenda.ask("y?"),
+                ),
+                agenda.ask(""),
                 agenda.ack("okay."),
             ),
         },
