@@ -148,4 +148,6 @@ infer_source = gamla.when(base_types.is_computation_graph, _cg_to_source)
 
 
 def has_source(node):
+    if not isinstance(node, base_types.ComputationNode):
+        node = graph.make_computation_node(node)
     return gamla.anymap(gamla.compose(gamla.equals(node), edge_source))

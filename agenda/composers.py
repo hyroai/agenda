@@ -22,30 +22,27 @@ def forget():
     raise NotImplementedError
 
 
-@cg_graph.make_terminal("participated")
 def participated():
     raise NotImplementedError
 
 
-def event():
-    raise NotImplementedError
-
+event = graph.make_source_with_name("event")
 
 UNKNOWN = Unknown()
-# terminals:
 
 
-@cg_graph.make_terminal("utter")
 def utter(x) -> str:
     return sentence.sentence_to_str(x)
 
 
-@cg_graph.make_terminal("state")
 def state(x):
     return x
 
 
-mark_event = missing_cg_utils.compose_left_curry(event)
+def mark_event(x):
+    return composers.compose_source(x, event, None)
+
+
 mark_utter = missing_cg_utils.compose_curry(utter)
 mark_state = missing_cg_utils.compose_curry(state)
 
@@ -53,7 +50,7 @@ utter_sink = missing_cg_utils.sink(utter)
 state_sink = missing_cg_utils.sink(state)
 
 
-def _or_combine_edge(edges: Collection[base_types.ComputationEdge]):
+def _combine_edges_to_disjunction(edges: Collection[base_types.ComputationEdge]):
     assert len(edges) > 1
 
     def any_node(*args):
@@ -76,7 +73,7 @@ def _or_combine_edge(edges: Collection[base_types.ComputationEdge]):
 def _resolve_ambiguity_using_logical_or(graph):
     groups = base_types.ambiguity_groups(graph)
     return base_types.merge_graphs(
-        tuple(gamla.mapcat(_or_combine_edge)(groups)),
+        tuple(gamla.mapcat(_combine_edges_to_disjunction)(groups)),
         gamla.pipe(
             graph, gamla.remove(gamla.contains(frozenset(gamla.concat(groups))))
         ),
@@ -178,12 +175,12 @@ def slot(listener, asker, acker):
 def remember(graph):
     @mark_state
     @composers.compose_left_dict({"value": state_sink(graph), "should_forget": forget})
-    @memory.with_state("memory")
+    @memory.with_state("memory", UNKNOWN)
     def remember_or_forget(value, memory, should_forget):
         if should_forget:
             return UNKNOWN
         if value is UNKNOWN:
-            return memory or UNKNOWN
+            return memory
         return value
 
     return remember_or_forget
@@ -205,13 +202,13 @@ function_to_listener_with_memory = gamla.compose(remember, mark_state, mark_even
 
 
 def listen_if_participated_last_turn(graph):
-    def combined(value, is_participated_last_turn: Optional[bool]):
+    def combined(value, is_participated_last_turn: bool):
         return value if is_participated_last_turn else UNKNOWN
 
     return gamla.pipe(
         base_types.merge_graphs(
             composers.make_compose_future(
-                combined, participated, "is_participated_last_turn"
+                combined, participated, "is_participated_last_turn", False
             ),
             composers.compose_left(mark_event(graph), combined, key="value"),
         ),
@@ -323,6 +320,5 @@ wrap_up = gamla.compose_left(
     gamla.side_effect(graphviz.visualize_graph),
     _final_replace(participated, lambda: True),
     _final_replace(forget, lambda: False),
-    _final_replace(event, lambda event: event),
     lambda g: run.to_callable(g, frozenset()),
 )
