@@ -1,4 +1,7 @@
+from typing import Callable
+
 import gamla
+from computation_graph import base_types
 
 from agenda import composers, sentence, test_utils
 
@@ -29,3 +32,15 @@ def _generic(inner):
 ask = _generic(sentence.str_to_question)
 say = _generic(sentence.str_to_statement)
 ack = _generic(sentence.str_to_ack)
+
+
+def slot_that_listens_only_after_question(
+    listener: Callable, asker: Callable, acker: Callable
+):
+    return composers.slot(
+        base_types.merge_graphs(
+            composers.listen_if_participated_last_turn(listener), asker
+        ),
+        ask(""),
+        acker,
+    )

@@ -1,5 +1,4 @@
 import gamla
-from computation_graph import base_types
 
 import agenda
 
@@ -163,8 +162,6 @@ def test_complement():
     [[["Hi", "x?"], ["yes", "okay. true"]], [["Hi", "x?"], ["no", "okay. false"]]]
 )
 def test_listen_if_participated1():
-    listener = agenda.listen_if_participated_last_turn(lambda text: "yes" in text)
-    asker = agenda.ask("x?")
     return agenda.optionally_needs(
         agenda.say(
             gamla.double_star(
@@ -172,10 +169,8 @@ def test_listen_if_participated1():
             )
         ),
         {
-            "x": agenda.slot(
-                base_types.merge_graphs(listener, asker),
-                agenda.ask(""),
-                agenda.ack("okay."),
+            "x": agenda.slot_that_listens_only_after_question(
+                lambda text: "yes" in text, agenda.ask("x?"), agenda.ack("okay.")
             )
         },
     )
@@ -199,21 +194,11 @@ def test_listen_if_participated2():
             )
         ),
         {
-            "x": agenda.slot(
-                base_types.merge_graphs(
-                    agenda.listen_if_participated_last_turn(lambda text: "yes" in text),
-                    agenda.ask("x?"),
-                ),
-                agenda.ask(""),
-                agenda.ack("okay."),
+            "x": agenda.slot_that_listens_only_after_question(
+                lambda text: "yes" in text, agenda.ask("x?"), agenda.ack("okay.")
             ),
-            "y": agenda.slot(
-                base_types.merge_graphs(
-                    agenda.listen_if_participated_last_turn(lambda text: "yes" in text),
-                    agenda.ask("y?"),
-                ),
-                agenda.ask(""),
-                agenda.ack("okay."),
+            "y": agenda.slot_that_listens_only_after_question(
+                lambda text: "yes" in text, agenda.ask("y?"), agenda.ack("okay.")
             ),
         },
     )
