@@ -39,7 +39,7 @@ def state(x):
     return x
 
 
-def mark_event(x):
+def consumes_external_event(x):
     return composers.compose_source(x, event, None)
 
 
@@ -120,44 +120,38 @@ def _composer(markers, f):
 
 
 @_composer([utter, participated])
-def slot(listener, asker, acker):
+def slot(asker_listener, acker):
     @composers.compose_left_dict(
         {
-            "listener_state": state_sink(listener),
-            "listener_utter": utter_sink_or_empty_sentence(listener),
+            "listener_state": state_sink(asker_listener),
             "listener_output_changed_to_known": missing_cg_utils.conjunction(
-                memory.changed(state_sink(listener)),
+                memory.changed(state_sink(asker_listener)),
                 logic.complement(
-                    missing_cg_utils.equals_literal(state_sink(listener), UNKNOWN)
+                    missing_cg_utils.equals_literal(state_sink(asker_listener), UNKNOWN)
                 ),
             ),
         }
     )
     def who_should_speak(
-        listener_state, listener_utter, listener_output_changed_to_known
+        listener_state, listener_output_changed_to_known
     ) -> Optional[base_types.GraphType]:
         if listener_output_changed_to_known:
             return acker
         if listener_state is not UNKNOWN:
             return None
-        if listener_utter is not sentence.EMPTY_SENTENCE:
-            return listener
-        return asker
+        return asker_listener
 
     @mark_utter
     @composers.compose_left_dict(
         {
             "who_should_speak": who_should_speak,
-            "listener_utter": utter_sink_or_empty_sentence(listener),
-            "asker_utter": utter_sink(asker),
+            "listener_utter": utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
         }
     )
-    def final_utter(who_should_speak, listener_utter, asker_utter, acker_utter):
-        if who_should_speak == listener:
+    def final_utter(who_should_speak, listener_utter, acker_utter):
+        if who_should_speak == asker_listener:
             return listener_utter
-        if who_should_speak == asker:
-            return asker_utter
         if who_should_speak == acker:
             return acker_utter
         return sentence.EMPTY_SENTENCE
@@ -165,7 +159,7 @@ def slot(listener, asker, acker):
     return base_types.merge_graphs(
         *map(
             _handle_participation(missing_cg_utils.equals_literal(who_should_speak)),
-            [listener, asker, acker],
+            [asker_listener, acker],
         ),
         final_utter,
     )
@@ -198,10 +192,10 @@ def complement(graph):
     return complement
 
 
-function_to_listener_with_memory = gamla.compose(remember, mark_state, mark_event)
+listener_with_memory = gamla.compose(remember, mark_state, consumes_external_event)
 
 
-def listen_if_participated_last_turn(graph):
+def listener_with_memory_when_participated(graph):
     def combined(value, is_participated_last_turn: bool):
         return value if is_participated_last_turn else UNKNOWN
 
@@ -210,7 +204,7 @@ def listen_if_participated_last_turn(graph):
             composers.make_compose_future(
                 combined, participated, "is_participated_last_turn", False
             ),
-            composers.compose_left(mark_event(graph), combined, key="value"),
+            composers.compose_left(graph, combined, key="value"),
         ),
         mark_state,
         remember,
