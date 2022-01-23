@@ -83,7 +83,8 @@ def remove_nodes(nodes):
                 gamla.anyjuxt(edge_source_equals(x), _edge_destination_equals(x))
             ),
             nodes,
-        )
+        ),
+        tuple,
     )
 
 
@@ -118,33 +119,35 @@ package_into_dict = gamla.compose_left(
         )
     ),
     tuple,
-    lambda cg: composers.compose_many_to_one(packaging_to_dict, cg),
+    lambda cg: composers.compose_many_to_one(
+        lambda args: gamla.frozendict(dict(args)), cg
+    ),
 )
 
 
-def packaging_to_dict(args):
-    return gamla.frozendict(dict(args))
-
-
-def infer_source(x):
-    if not base_types.is_computation_graph(x):
-        return x
-    return gamla.pipe(
-        x,
-        gamla.bifurcate(
-            gamla.mapcat(
-                gamla.compose_left(
-                    gamla.ternary(
-                        gamla.attrgetter("source"),
-                        gamla.compose_left(gamla.attrgetter("source"), gamla.wrap_tuple),
-                        gamla.attrgetter("args"),
-                    )
+_cg_to_source = gamla.compose_left(
+    gamla.bifurcate(
+        gamla.mapcat(
+            gamla.compose_left(
+                gamla.ternary(
+                    base_types.edge_source,
+                    gamla.compose_left(base_types.edge_source, gamla.wrap_tuple),
+                    base_types.edge_args,
                 )
-            ),
-            gamla.map(gamla.attrgetter("destination")),
+            )
         ),
-        gamla.map(set),
-        gamla.star(set.difference),
-        gamla.assert_that(gamla.len_equals(1)),
-        gamla.head,
-    )
+        gamla.map(base_types.edge_destination),
+    ),
+    gamla.map(set),
+    gamla.star(set.difference),
+    gamla.assert_that(gamla.len_equals(1)),
+    gamla.head,
+)
+
+infer_source = gamla.when(base_types.is_computation_graph, _cg_to_source)
+
+
+def has_source(node):
+    if not isinstance(node, base_types.ComputationNode):
+        node = graph.make_computation_node(node)
+    return gamla.anymap(gamla.compose(gamla.equals(node), edge_source))

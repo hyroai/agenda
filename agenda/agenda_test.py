@@ -1,3 +1,5 @@
+import gamla
+
 import agenda
 
 
@@ -17,7 +19,11 @@ def test_slot():
 def test_needs():
     options = ["dog", "cat"]
     return agenda.optionally_needs(
-        agenda.state(lambda pet: "" if pet == agenda.UNKNOWN else f"You have a {pet}."),
+        agenda.say(
+            gamla.double_star(
+                lambda pet: "" if pet == agenda.UNKNOWN else f"You have a {pet}."
+            )
+        ),
         {
             "pet": agenda.slot(
                 agenda.function_to_listener_with_memory(
@@ -66,9 +72,11 @@ def test_when1():
             agenda.ask("what kind of topping would you like?"),
             agenda.optionally_needs(
                 agenda.ack(
-                    lambda topping: ""
-                    if topping is agenda.UNKNOWN
-                    else f"got it, {topping} pizza."
+                    gamla.double_star(
+                        lambda topping: ""
+                        if topping is agenda.UNKNOWN
+                        else f"got it, {topping} pizza."
+                    )
                 ),
                 {"topping": topping},
             ),
@@ -96,10 +104,12 @@ def test_when2():
             agenda.ack("okay."),
         ),
         agenda.optionally_needs(
-            agenda.state(
-                lambda phone, email: ""
-                if agenda.UNKNOWN in [phone, email]
-                else f"your email is {email} and your phone is {phone}"
+            agenda.say(
+                gamla.double_star(
+                    lambda phone, email: ""
+                    if agenda.UNKNOWN in [phone, email]
+                    else f"your email is {email} and your phone is {phone}"
+                )
             ),
             {
                 "phone": agenda.slot(
@@ -143,6 +153,52 @@ def test_complement():
         agenda.ack("okay."),
     )
     return agenda.combine_utterances(
-        agenda.when(good_or_bad, agenda.state("happy to hear.")),
-        agenda.when(agenda.complement(good_or_bad), agenda.state("sorry to hear.")),
+        agenda.when(good_or_bad, agenda.say("happy to hear.")),
+        agenda.when(agenda.complement(good_or_bad), agenda.say("sorry to hear.")),
+    )
+
+
+@agenda.expect_convos(
+    [[["Hi", "x?"], ["yes", "okay. true"]], [["Hi", "x?"], ["no", "okay. false"]]]
+)
+def test_listen_if_participated1():
+    return agenda.optionally_needs(
+        agenda.say(
+            gamla.double_star(
+                lambda x: "" if x == agenda.UNKNOWN else ("true" if x else "false")
+            )
+        ),
+        {
+            "x": agenda.slot_that_listens_only_after_question(
+                lambda text: "yes" in text, agenda.ask("x?"), agenda.ack("okay.")
+            )
+        },
+    )
+
+
+@agenda.expect_convos(
+    [
+        [["Hi", "x?"], ["yes", "okay. y?"], ["no", "okay. false"]],
+        [["Hi", "x?"], ["no", "okay. y?"], ["no", "okay. false"]],
+        [["Hi", "x?"], ["yes", "okay. y?"], ["yes", "okay. true"]],
+        [["Hi", "x?"], ["no", "okay. y?"], ["yes", "okay. false"]],
+    ]
+)
+def test_listen_if_participated2():
+    return agenda.optionally_needs(
+        agenda.say(
+            gamla.double_star(
+                lambda x, y: ""
+                if agenda.UNKNOWN in [x, y]
+                else ("true" if (x and y) else "false")
+            )
+        ),
+        {
+            "x": agenda.slot_that_listens_only_after_question(
+                lambda text: "yes" in text, agenda.ask("x?"), agenda.ack("okay.")
+            ),
+            "y": agenda.slot_that_listens_only_after_question(
+                lambda text: "yes" in text, agenda.ask("y?"), agenda.ack("okay.")
+            ),
+        },
     )

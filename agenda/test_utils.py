@@ -1,18 +1,18 @@
 import gamla
-from computation_graph import base_types
+from computation_graph import graph
 
 from agenda import composers
 
 
 @gamla.curry
 def expect_convos(convos, f):
-    cg = composers.wrap_up(f())
-
     def inner():
+        cg = composers.wrap_up(f())
         for convo in convos:
-            result = base_types.ComputationResult(None, None)
-            for input_event, output_event in convo:
-                result = cg(event=input_event, state=result.state)
-                assert result.result[composers.utter] == output_event
+            prev = {}
+            for input_event, expected in convo:
+                prev = cg({**prev, composers.event: input_event})
+                result = prev[graph.make_computation_node(composers.utter)]
+                assert result == expected, f"expected: {expected} actual: {result}"
 
     return inner
