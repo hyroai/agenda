@@ -107,6 +107,8 @@ _FUNCTION_MAP = {
 
 _INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount"})
 
+_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "bool"})
+
 
 def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphType]:
     if not keys:
@@ -141,7 +143,15 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
             def listen_to_type(user_utterance):
                 return _FUNCTION_MAP.get(type)(user_utterance)
 
-            return agenda.mark_event(listen_to_type)
+            if type in _TYPES_TO_LISTEN_AFTER_ASKING:
+                return agenda.listener_with_memory_when_participated(
+                    agenda.consumes_external_event(listen_to_type)
+                )
+            return gamla.pipe(
+                agenda.consumes_external_event(listen_to_type),
+                agenda.mark_state,
+                agenda.remember,
+            )
 
         return listen_to_type
     if keys == frozenset({"type", "examples"}):
@@ -155,7 +165,7 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
             def listen_to_type_or_intent(user_utterance):
                 return _FUNCTION_MAP.get(type)(examples)(user_utterance)
 
-            return agenda.mark_event(listen_to_type_or_intent)
+            return gamla.pipe(agenda.consumes_external_event(listen_to_type_or_intent), agenda.mark_state, agenda.remember)
 
         return function_composer
     if keys == frozenset({"complement"}):
@@ -242,9 +252,7 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
 
         def ask_about_composers(listen, ask):
             return agenda.slot(
-                gamla.pipe(listen, agenda.mark_state, agenda.remember),
-                agenda.ask(ask),
-                agenda.ack("Got it."),
+                base_types.merge_graphs(listen, agenda.ask(ask)), agenda.ack("Got it.")
             )
 
         return ask_about_composers
@@ -252,9 +260,7 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
 
         def slot_composer(ack, listen, ask):
             return agenda.slot(
-                gamla.pipe(listen, agenda.mark_state, agenda.remember),
-                agenda.ask(ask),
-                agenda.ack(ack),
+                base_types.merge_graphs(listen, agenda.ask(ask)), agenda.ack(ack)
             )
 
         return slot_composer
