@@ -3,6 +3,7 @@ import gamla
 from agenda import composers, sentence, test_utils
 
 UNKNOWN = composers.UNKNOWN
+
 combine_utterances = composers.combine_utterances
 listener_with_memory = composers.listener_with_memory
 listener_with_memory_when_participated = (
@@ -31,3 +32,5 @@ def _generic(inner):
 ask = _generic(sentence.str_to_question)
 say = _generic(sentence.str_to_statement)
 ack = _generic(sentence.str_to_ack)
+
+consumes_external_event = composers.consumes_external_event

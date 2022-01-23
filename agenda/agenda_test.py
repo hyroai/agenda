@@ -187,7 +187,7 @@ def test_listen_if_participated1():
             "x": agenda.slot(
                 base_types.merge_graphs(
                     agenda.listener_with_memory_when_participated(
-                        lambda text: "yes" in text
+                        agenda.consumes_external_event(lambda text: "yes" in text)
                     ),
                     agenda.ask("x?"),
                 ),
@@ -218,7 +218,7 @@ def test_listen_if_participated2():
             "x": agenda.slot(
                 base_types.merge_graphs(
                     agenda.listener_with_memory_when_participated(
-                        lambda text: "yes" in text
+                        agenda.consumes_external_event(lambda text: "yes" in text)
                     ),
                     agenda.ask("x?"),
                 ),
@@ -227,7 +227,7 @@ def test_listen_if_participated2():
             "y": agenda.slot(
                 base_types.merge_graphs(
                     agenda.listener_with_memory_when_participated(
-                        lambda text: "yes" in text
+                        agenda.consumes_external_event(lambda text: "yes" in text)
                     ),
                     agenda.ask("y?"),
                 ),

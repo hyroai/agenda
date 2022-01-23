@@ -39,7 +39,7 @@ def state(x):
     return x
 
 
-def mark_event(x):
+def consumes_external_event(x):
     return composers.compose_source(x, event, None)
 
 
@@ -192,7 +192,7 @@ def complement(graph):
     return complement
 
 
-listener_with_memory = gamla.compose(remember, mark_state, mark_event)
+listener_with_memory = gamla.compose(remember, mark_state, consumes_external_event)
 
 
 def listener_with_memory_when_participated(graph):
@@ -204,7 +204,7 @@ def listener_with_memory_when_participated(graph):
             composers.make_compose_future(
                 combined, participated, "is_participated_last_turn", False
             ),
-            composers.compose_left(mark_event(graph), combined, key="value"),
+            composers.compose_left(graph, combined, key="value"),
         ),
         mark_state,
         remember,
