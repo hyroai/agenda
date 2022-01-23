@@ -5,6 +5,8 @@ import logging
 import fastapi
 import gamla
 from starlette import websockets
+from computation_graph import graph
+from agenda import composers
 
 
 def _error_message(error):
@@ -13,14 +15,14 @@ def _error_message(error):
 
 def create_socket_handler(bot: Callable):
     async def message_handler(websocket: fastapi.WebSocket):
-        state: Any = None
+        state: dict = {}
 
         async def responder_with_state(request):
             nonlocal state
             try:
-                computation_result = await bot(event=request, state=state)
-                state = computation_result.state
-                return agenda.extract_utterance(computation_result.result)
+                computation_result = await bot({composers.event: request, **state})
+                state = computation_result
+                return state[graph.make_computation_node(composers.utter)]
             except Exception as err:
                 logging.exception(err)
                 return _error_message(err)

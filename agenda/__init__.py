@@ -42,7 +42,6 @@ say = _generic(sentence.str_to_statement)
 ack = _generic(sentence.str_to_ack)
 
 
-extract_utterance = gamla.itemgetter(composers.utter)
 def slot_that_listens_only_after_question(
     listener: Callable, asker: Callable, acker: Callable
 ):

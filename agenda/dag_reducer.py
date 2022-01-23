@@ -114,7 +114,7 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
     if keys == frozenset({"say"}):
 
         def say_composer(say):
-            return agenda.state(say)
+            return agenda.say(say)
 
         return say_composer
 
@@ -195,6 +195,7 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
                     ),
                     httpx.Response.json,
                     gamla.freeze_deep,
+                    gamla.when(gamla.equals(None), gamla.just("")),
                 )
 
             return post_request
@@ -204,20 +205,20 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
     if keys == frozenset({"say", "needs"}):
 
         def say_remote(say, needs: Iterable[Tuple[str, base_types.GraphType]]):
-            return agenda.optionally_needs(agenda.state(say), dict(needs))
+            return agenda.optionally_needs(agenda.say(say), dict(needs))
 
         return say_remote
     if keys == frozenset({"say", "when"}):
 
         def say_when_composer(say, when):
-            return agenda.when(when, agenda.state(say))
+            return agenda.when(when, agenda.say(say))
 
         return say_when_composer
     if keys == frozenset({"say", "needs", "when"}):
 
         def when_composer(say, needs, when):
             return agenda.when(
-                when, agenda.optionally_needs(agenda.state(say), dict(needs))
+                when, agenda.optionally_needs(agenda.say(say), dict(needs))
             )
 
         return when_composer
