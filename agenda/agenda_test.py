@@ -1,4 +1,5 @@
 import gamla
+from computation_graph import base_types
 
 import agenda
 
@@ -7,10 +8,12 @@ import agenda
 def test_slot():
     what_needs_to_be_said = "hello"
     return agenda.slot(
-        agenda.function_to_listener_with_memory(
-            lambda x: x == what_needs_to_be_said or agenda.UNKNOWN
+        base_types.merge_graphs(
+            agenda.listener_with_memory(
+                lambda x: x == what_needs_to_be_said or agenda.UNKNOWN
+            ),
+            agenda.ask(f"say {what_needs_to_be_said}"),
         ),
-        agenda.ask(f"say {what_needs_to_be_said}"),
         agenda.ack("you said it"),
     )
 
@@ -26,10 +29,12 @@ def test_needs():
         ),
         {
             "pet": agenda.slot(
-                agenda.function_to_listener_with_memory(
-                    lambda x: x in options and x or agenda.UNKNOWN
+                base_types.merge_graphs(
+                    agenda.listener_with_memory(
+                        lambda x: x in options and x or agenda.UNKNOWN
+                    ),
+                    agenda.ask(f"say {' or '.join(options)}"),
                 ),
-                agenda.ask(f"say {' or '.join(options)}"),
                 agenda.ack("Got it."),
             )
         },
@@ -54,22 +59,23 @@ def test_needs():
     ]
 )
 def test_when1():
-    topping = agenda.function_to_listener_with_memory(
+    topping = agenda.listener_with_memory(
         lambda incoming: next(
             filter(lambda x: x in incoming, ["mushroom", "olives"]), agenda.UNKNOWN
         )
     )
     return agenda.when(
         agenda.slot(
-            agenda.function_to_listener_with_memory(
-                lambda x: "pizza" in x or agenda.UNKNOWN
+            base_types.merge_graphs(
+                agenda.listener_with_memory(lambda x: "pizza" in x or agenda.UNKNOWN),
+                agenda.ask("what can i do for you today?"),
             ),
-            agenda.ask("what can i do for you today?"),
             agenda.ack("okay."),
         ),
         agenda.slot(
-            topping,
-            agenda.ask("what kind of topping would you like?"),
+            base_types.merge_graphs(
+                topping, agenda.ask("what kind of topping would you like?")
+            ),
             agenda.optionally_needs(
                 agenda.ack(
                     gamla.double_star(
@@ -97,10 +103,10 @@ def test_when1():
 def test_when2():
     return agenda.when(
         agenda.slot(
-            agenda.function_to_listener_with_memory(
-                lambda x: "pizza" in x or agenda.UNKNOWN
+            base_types.merge_graphs(
+                agenda.listener_with_memory(lambda x: "pizza" in x or agenda.UNKNOWN),
+                agenda.ask("what can i do for you today?"),
             ),
-            agenda.ask("what can i do for you today?"),
             agenda.ack("okay."),
         ),
         agenda.optionally_needs(
@@ -113,17 +119,25 @@ def test_when2():
             ),
             {
                 "phone": agenda.slot(
-                    agenda.function_to_listener_with_memory(
-                        lambda incoming: incoming if "1" in incoming else agenda.UNKNOWN
+                    base_types.merge_graphs(
+                        agenda.listener_with_memory(
+                            lambda incoming: incoming
+                            if "1" in incoming
+                            else agenda.UNKNOWN
+                        ),
+                        agenda.ask("what's your phone?"),
                     ),
-                    agenda.ask("what's your phone?"),
                     agenda.ack("okay."),
                 ),
                 "email": agenda.slot(
-                    agenda.function_to_listener_with_memory(
-                        lambda incoming: incoming if "@" in incoming else agenda.UNKNOWN
+                    base_types.merge_graphs(
+                        agenda.listener_with_memory(
+                            lambda incoming: incoming
+                            if "@" in incoming
+                            else agenda.UNKNOWN
+                        ),
+                        agenda.ask("what's your email?"),
                     ),
-                    agenda.ask("what's your email?"),
                     agenda.ack("okay."),
                 ),
             },
@@ -148,8 +162,9 @@ def _good_or_bad(text):
 )
 def test_complement():
     good_or_bad = agenda.slot(
-        agenda.function_to_listener_with_memory(_good_or_bad),
-        agenda.ask("how are you?"),
+        base_types.merge_graphs(
+            agenda.listener_with_memory(_good_or_bad), agenda.ask("how are you?")
+        ),
         agenda.ack("okay."),
     )
     return agenda.combine_utterances(
@@ -169,8 +184,14 @@ def test_listen_if_participated1():
             )
         ),
         {
-            "x": agenda.slot_that_listens_only_after_question(
-                lambda text: "yes" in text, agenda.ask("x?"), agenda.ack("okay.")
+            "x": agenda.slot(
+                base_types.merge_graphs(
+                    agenda.listener_with_memory_when_participated(
+                        lambda text: "yes" in text
+                    ),
+                    agenda.ask("x?"),
+                ),
+                agenda.ack("okay."),
             )
         },
     )
@@ -194,11 +215,23 @@ def test_listen_if_participated2():
             )
         ),
         {
-            "x": agenda.slot_that_listens_only_after_question(
-                lambda text: "yes" in text, agenda.ask("x?"), agenda.ack("okay.")
+            "x": agenda.slot(
+                base_types.merge_graphs(
+                    agenda.listener_with_memory_when_participated(
+                        lambda text: "yes" in text
+                    ),
+                    agenda.ask("x?"),
+                ),
+                agenda.ack("okay."),
             ),
-            "y": agenda.slot_that_listens_only_after_question(
-                lambda text: "yes" in text, agenda.ask("y?"), agenda.ack("okay.")
+            "y": agenda.slot(
+                base_types.merge_graphs(
+                    agenda.listener_with_memory_when_participated(
+                        lambda text: "yes" in text
+                    ),
+                    agenda.ask("y?"),
+                ),
+                agenda.ack("okay."),
             ),
         },
     )

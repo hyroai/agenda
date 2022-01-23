@@ -1,19 +1,18 @@
-from typing import Callable
-
 import gamla
-from computation_graph import base_types
 
 from agenda import composers, sentence, test_utils
 
 UNKNOWN = composers.UNKNOWN
 combine_utterances = composers.combine_utterances
-function_to_listener_with_memory = composers.function_to_listener_with_memory
+listener_with_memory = composers.listener_with_memory
+listener_with_memory_when_participated = (
+    composers.listener_with_memory_when_participated
+)
 optionally_needs = composers.optionally_needs
 slot = composers.slot
 when = composers.when
 complement = composers.complement
 str_to_statement = sentence.str_to_statement
-listen_if_participated_last_turn = composers.listen_if_participated_last_turn
 expect_convos = test_utils.expect_convos
 
 
@@ -32,15 +31,3 @@ def _generic(inner):
 ask = _generic(sentence.str_to_question)
 say = _generic(sentence.str_to_statement)
 ack = _generic(sentence.str_to_ack)
-
-
-def slot_that_listens_only_after_question(
-    listener: Callable, asker: Callable, acker: Callable
-):
-    return composers.slot(
-        base_types.merge_graphs(
-            composers.listen_if_participated_last_turn(listener), asker
-        ),
-        ask(""),
-        acker,
-    )
