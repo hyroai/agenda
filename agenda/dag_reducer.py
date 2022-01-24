@@ -6,6 +6,7 @@ import toposort
 import httpx
 import duckling
 import spacy
+import pyap
 from computation_graph import base_types, composers
 from computation_graph.composers import lift
 from agenda import composers as agenda_composers
@@ -85,6 +86,35 @@ def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> int
     )
 
 
+def get_texts_of_entities(entities):
+    return [ent.text for Y in entities for X in Y]
+
+
+_name_detector = gamla.compose_left(
+    lambda user_utterance: " ".join(
+        word[0].upper() + word[1:] for word in user_utterance.split()
+    ),
+    lambda capitalized_user_utterance: nlp(capitalized_user_utterance),
+    tuple,
+    gamla.filter(
+        gamla.compose_left(gamla.attrgetter("ent_type_"), gamla.equals("PERSON"))
+    ),
+    gamla.map(gamla.attrgetter("text")),
+    tuple,
+    lambda names: " ".join(names),
+)
+
+
+_address_detector = gamla.compose_left(
+    lambda user_utterance: pyap.parse(user_utterance, country="US"),
+    gamla.ternary(
+        gamla.nonempty,
+        gamla.compose_left(gamla.head, gamla.attrgetter("full_address")),
+        gamla.just(agenda.UNKNOWN),
+    ),
+)
+
+
 def _listen_to_bool_or_intent(examples: Tuple[str, ...]):
     def parse_bool(user_utterance: str):
         if examples and _sentences_similarity(user_utterance, examples) >= 0.9:
@@ -103,9 +133,15 @@ _FUNCTION_MAP = {
     "phone": gamla.compose_left(d.parse_phone_number, duckling_wrapper),
     "amount": gamla.compose_left(d.parse_number, duckling_wrapper),
     "bool": _listen_to_bool_or_intent,
+    "name": gamla.compose_left(
+        _name_detector, gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN))
+    ),
+    "address": gamla.compose_left(
+        _address_detector, gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN))
+    ),
 }
 
-_INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount"})
+_INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount", "name", "address"})
 
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "bool"})
 
@@ -165,7 +201,11 @@ def _determine_composer(keys: FrozenSet[str]) -> Callable[..., base_types.GraphT
             def listen_to_type_or_intent(user_utterance):
                 return _FUNCTION_MAP.get(type)(examples)(user_utterance)
 
-            return gamla.pipe(agenda.consumes_external_event(listen_to_type_or_intent), agenda.mark_state, agenda.remember)
+            return gamla.pipe(
+                agenda.consumes_external_event(listen_to_type_or_intent),
+                agenda.mark_state,
+                agenda.remember,
+            )
 
         return function_composer
     if keys == frozenset({"complement"}):

@@ -1,9 +1,16 @@
 slots:  
+  - &name
+    ask: What is your name?
+    listen:
+      type: name
+  - &address
+    ask: What is your address?
+    listen:
+      type: address    
   - &phone
     ask: What is your phone number?
     listen:
       type: phone
-  
   - &email
     ask: What is your email?
     listen:
@@ -23,12 +30,16 @@ goals:
   - say:  
       url: http://localhost:8000/order-pizza
     needs: 
+      - key: name
+        value: *name
+      - key: amount_of_pizzas  
+        value: *amount_of_pizzas
+      - key: address
+        value: *address  
       - key: phone
         value: *phone
       - key: email
         value: *email
-      - key: amount_of_pizzas  
-        value: *amount_of_pizzas
     when: *wants-to-order-pizza    
   - say: I'm transfering you to an agent.
     when:
