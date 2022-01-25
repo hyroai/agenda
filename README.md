@@ -51,7 +51,8 @@ definitions:
         - I want pizza
 goals:
   - say:
-      url: http://localhost:8000/order-pizza
+      url: http://localhost:8000/order-pizza  # Actually ordering a pizza and sending back a confirmation will happen through an external API!
+    when: *wants-to-order-pizza
     needs:
       - key: name
         value:
@@ -78,7 +79,6 @@ goals:
           ask: What is your email?
           listen:
           type: email
-    when: *wants-to-order-pizza
   - say: Sorry, I can only help with ordering pizza.
     when:
       complement: *wants-to-order-pizza
