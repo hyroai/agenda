@@ -33,7 +33,7 @@ Bot: "Got it. What is your phone number?"
 User: 234234234
 Bot: "Got it. What is your email?"
 User: sdfs@gmail.com
-Bot: "Got it. Thank you Yoni! I got your phone: 234234234, and your email: sdfs@gmail.com. We are sending you 4 pizzas to and my address is 881 Mill Street Greenville South Carolina."
+Bot: "Got it. Thank you Yoni! I got your phone: 234234234, and your email: sdfs@gmail.com. We are sending you 4 pizzas to 881 Mill Street Greenville South Carolina."
 ```
 
 Collecting data or making up transcriptions to cover all the options, even with machine learning is a pretty tedious task, and would be hard to maintain over time.
