@@ -1,8 +1,8 @@
 import asyncio
-import os
+import sys
 from typing import Callable
 
-from agenda import config_to_bot
+import config_to_bot
 import fastapi
 import gamla
 from agenda import server
@@ -25,17 +25,19 @@ async def _make_app(bot: Callable) -> fastapi.FastAPI:
     return app
 
 
-app = asyncio.get_event_loop().run_until_complete(
-    gamla.compose_left(
-        gamla.just(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "hello.yaml")
-        ),
-        config_to_bot.yaml_to_slot_bot,
-        _make_app,
-    )()
-)
+def app(path: str):
+    return asyncio.get_event_loop().run_until_complete(
+        gamla.compose_left(
+            gamla.just(path), config_to_bot.yaml_to_slot_bot, _make_app
+        )()
+    )
+
 
 if __name__ == "__main__":
     uvicorn.run(
-        app, host="0.0.0.0", port=9000, log_level="debug", timeout_keep_alive=1200
+        app(sys.argv[1]),
+        host="0.0.0.0",
+        port=9000,
+        log_level="debug",
+        timeout_keep_alive=1200,
     )

@@ -1,6 +1,6 @@
 from typing import Callable, Dict, FrozenSet, Iterable, Tuple, Union, List
 
-from agenda import dag_reducer
+from . import dag_reducer
 import gamla
 import yaml
 import agenda
