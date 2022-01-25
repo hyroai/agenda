@@ -107,14 +107,13 @@ def _reducer(current: _Node, children: Iterable[_ReducerState]) -> _ReducerState
 def _dict_to_triplets(
     current: _Node, children: Iterable[_ReducerState]
 ) -> ObjectAndTriplets:
-    node_id = current.get("name") or gamla.pipe(
+    node_id = gamla.pipe(
         current, gamla.freeze_deep, gamla.compute_stable_json_hash
     )
     return ObjectAndTriplets(
         node_id,
         gamla.pipe(
             children,
-            gamla.remove(gamla.compose_left(gamla.head, gamla.equals("name"))),
             gamla.mapcat(_child_to_triplets(node_id)),
             frozenset,
         ),

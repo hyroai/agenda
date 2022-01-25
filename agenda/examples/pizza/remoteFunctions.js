@@ -5,7 +5,6 @@ app.use(express.json());
 
 app.post("/order-pizza", function (req, res) {
   console.log("Got a POST request for /order-pizza");
-  console.log(req.body);
   if (
     !req.body.phone ||
     !req.body.email ||

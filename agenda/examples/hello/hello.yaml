@@ -1,7 +1,5 @@
-goals:
-  - name: hello-flow
 slots:
-  - name: hello-flow
+  - &hello-flow
     ack: you said it
     ask: say hello
     listen:
@@ -9,3 +7,5 @@ slots:
       needs:
         - key: incoming_utterance
           value: incoming_utterance
+goals:
+  - *hello-flow
