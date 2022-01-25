@@ -5,7 +5,7 @@ import gamla
 import yaml
 import agenda
 import dataclasses
-from computation_graph import run
+from computation_graph import run, base_types
 
 _Object = str
 
@@ -37,7 +37,7 @@ _subject_to_object: Callable[[FrozenSet[_Triplet]], Dict] = gamla.compose_left(
 )
 
 
-_infer_sink = gamla.compose_left(
+_infer_sink: Callable[[Dict], str] = gamla.compose_left(
     gamla.juxt(
         gamla.compose_left(dict.keys, set),
         gamla.compose_left(dict.values, gamla.concat, set),
@@ -63,7 +63,7 @@ def _subject_to_relation_object_map(
     )
 
 
-def parse_yaml_file(file_name: str):
+def parse_yaml_file(file_name: str) -> Dict:
     with open(file_name) as f:
         config_dict = yaml.safe_load(f)
     return config_dict
@@ -103,7 +103,7 @@ def _reducer(current: _Node, children: Iterable[_ReducerState]) -> _ReducerState
     assert False, current
 
 
-def _dict_to_triplets(current, children):
+def _dict_to_triplets(current: _Node, children: Iterable[_ReducerState]) -> ObjectAndTriplets:
     node_id = current.get("name") or gamla.pipe(
         current, gamla.freeze_deep, gamla.compute_stable_json_hash
     )
@@ -147,7 +147,7 @@ def yaml_dict_to_triplets(yaml_dict: Dict) -> FrozenSet[_Triplet]:
     )
 
 
-def _build_cg(triplets: FrozenSet[_Triplet]):
+def _build_cg(triplets: FrozenSet[_Triplet]) -> base_types.GraphType:
     dependencies = _subject_to_object(triplets)
     return gamla.pipe(
         dag_reducer.reduce_graph(
