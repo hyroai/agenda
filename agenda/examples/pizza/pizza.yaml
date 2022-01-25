@@ -1,4 +1,4 @@
-slots:  
+slots:
   - &name
     ask: What is your name?
     listen:
@@ -6,7 +6,7 @@ slots:
   - &address
     ask: What is your address?
     listen:
-      type: address    
+      type: address
   - &phone
     ask: What is your phone number?
     listen:
@@ -33,7 +33,7 @@ slots:
       options:
         - mushrooms
         - olives
-        - tomatoes     
+        - tomatoes
   - &size
     ask: What pizza size would you like?
     listen:
@@ -41,26 +41,26 @@ slots:
       options:
         - small
         - medium
-        - large         
-goals: 
-  - say:  
+        - large
+goals:
+  - say:
       url: http://localhost:8000/order-pizza
-    needs: 
+    needs:
       - key: name
         value: *name
-      - key: amount_of_pizzas  
+      - key: amount_of_pizzas
         value: *amount_of_pizzas
       - key: toppings
         value: *toppings
       - key: size
-        value: *size  
+        value: *size
       - key: address
-        value: *address  
+        value: *address
       - key: phone
         value: *phone
       - key: email
         value: *email
-    when: *wants-to-order-pizza    
+    when: *wants-to-order-pizza
   - say: I'm transfering you to an agent.
     when:
-      complement: *wants-to-order-pizza 
+      complement: *wants-to-order-pizza

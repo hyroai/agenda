@@ -1,10 +1,20 @@
 var express = require("express");
 var app = express();
 
+app.use(express.json());
+
 app.post("/order-pizza", function (req, res) {
   console.log("Got a POST request for /order-pizza");
-  console.log(req.body)
-  if (!req.body.phone || !req.body.email || !req.body.amount_of_pizzas || !req.body.name || !req.body.address || !req.body.size || !req.body.toppings) {
+  console.log(req.body);
+  if (
+    !req.body.phone ||
+    !req.body.email ||
+    !req.body.amount_of_pizzas ||
+    !req.body.name ||
+    !req.body.address ||
+    !req.body.size ||
+    !req.body.toppings
+  ) {
     res.json(null);
   } else {
     res.json(

@@ -28,7 +28,8 @@ _subject_to_object: Callable[[FrozenSet[_Triplet]], Dict] = gamla.compose_left(
         gamla.compose_left(
             gamla.mapcat(
                 gamla.compose_left(
-                    gamla.nth(2), gamla.unless(gamla.is_instance(tuple), gamla.wrap_tuple)
+                    gamla.nth(2),
+                    gamla.unless(gamla.is_instance(tuple), gamla.wrap_tuple),
                 )
             ),
             set,
@@ -103,7 +104,9 @@ def _reducer(current: _Node, children: Iterable[_ReducerState]) -> _ReducerState
     assert False, current
 
 
-def _dict_to_triplets(current: _Node, children: Iterable[_ReducerState]) -> ObjectAndTriplets:
+def _dict_to_triplets(
+    current: _Node, children: Iterable[_ReducerState]
+) -> ObjectAndTriplets:
     node_id = current.get("name") or gamla.pipe(
         current, gamla.freeze_deep, gamla.compute_stable_json_hash
     )

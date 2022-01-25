@@ -13,9 +13,9 @@ from computation_graph import base_types, composers
 from computation_graph.composers import lift
 
 
-d = duckling.DucklingWrapper()
+_d = duckling.DucklingWrapper()
 
-duckling_wrapper = gamla.ternary(
+_duckling_wrapper = gamla.ternary(
     gamla.nonempty,
     gamla.compose_left(
         gamla.map(gamla.get_in(["value", "value"])), gamla.sort, gamla.head
@@ -23,7 +23,7 @@ duckling_wrapper = gamla.ternary(
     gamla.just(agenda.UNKNOWN),
 )
 
-nlp = spacy.load("en_core_web_lg")
+_nlp = spacy.load("en_core_web_lg")
 
 _AFFIRMATIVE = {
     "affirmative",
@@ -74,12 +74,12 @@ _NEGATIVE = {
 
 
 def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> int:
-    user_sentence = nlp(user_utterance)
+    user_sentence = _nlp(user_utterance)
     return gamla.pipe(
         examples,
         gamla.map(
             gamla.compose_left(
-                lambda example: nlp(example),
+                lambda example: _nlp(example),
                 lambda sentence: sentence.similarity(user_sentence),
             )
         ),
@@ -92,7 +92,7 @@ _name_detector = gamla.compose_left(
     lambda user_utterance: " ".join(
         word[0].upper() + word[1:] for word in user_utterance.split()
     ),
-    lambda capitalized_user_utterance: nlp(capitalized_user_utterance),
+    lambda capitalized_user_utterance: _nlp(capitalized_user_utterance),
     tuple,
     gamla.filter(
         gamla.compose_left(gamla.attrgetter("ent_type_"), gamla.equals("PERSON"))
@@ -160,10 +160,11 @@ def _listen_to_single_choice(
         gamla.ternary(gamla.len_equals(1), gamla.head, gamla.just(agenda.UNKNOWN)),
     )
 
+
 _FUNCTION_MAP = {
-    "email": gamla.compose_left(d.parse_email, duckling_wrapper),
-    "phone": gamla.compose_left(d.parse_phone_number, duckling_wrapper),
-    "amount": gamla.compose_left(d.parse_number, duckling_wrapper),
+    "email": gamla.compose_left(_d.parse_email, _duckling_wrapper),
+    "phone": gamla.compose_left(_d.parse_phone_number, _duckling_wrapper),
+    "amount": gamla.compose_left(_d.parse_number, _duckling_wrapper),
     "bool": _listen_to_bool_or_intent,
     "name": gamla.compose_left(
         _name_detector, gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN))
@@ -175,24 +176,35 @@ _FUNCTION_MAP = {
     "single-choice": _listen_to_single_choice,
 }
 
-_INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount", "name", "address", "multiple-choice", "single-choice"})
+_INFORMATION_TYPES = frozenset(
+    {
+        "phone",
+        "email",
+        "bool",
+        "amount",
+        "name",
+        "address",
+        "multiple-choice",
+        "single-choice",
+    }
+)
 
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "bool"})
 
 
-def say(say):
+def _say(say):
     return agenda.say(say)
 
 
-def ack(ack):
+def _ack(ack):
     return agenda.ack(ack)
 
 
-def ask(ask):
+def _ask(ask):
     return agenda.ask(ask)
 
 
-def listen_to_type(type):
+def _listen_to_type(type):
 
     assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
 
@@ -210,7 +222,7 @@ def listen_to_type(type):
     )
 
 
-def listen_to_type_with_examples(type, examples):
+def _listen_to_type_with_examples(type, examples):
 
     assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
 
@@ -224,7 +236,7 @@ def listen_to_type_with_examples(type, examples):
     )
 
 
-def listen_to_type_with_options(type, options):
+def _listen_to_type_with_options(type, options):
     assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
 
     def listen_to_type_with_options(user_utterance):
@@ -237,17 +249,17 @@ def listen_to_type_with_options(type, options):
     )
 
 
-def complement(complement):
+def _complement(complement):
     return agenda.complement(complement)
 
 
-def kv(key, value):
+def _kv(key, value):
     if value == "incoming_utterance":
         return (key, agenda.event)
     return (key, value)
 
 
-def remote(url):
+def _remote(url):
     async def post_request(params):
 
         return gamla.pipe(
@@ -271,19 +283,19 @@ def remote(url):
     return post_request
 
 
-def say_with_needs(say, needs: Iterable[Tuple[str, base_types.GraphType]]):
+def _say_with_needs(say, needs: Iterable[Tuple[str, base_types.GraphType]]):
     return agenda.optionally_needs(agenda.say(say), dict(needs))
 
 
-def when(say, when):
+def _when(say, when):
     return agenda.when(when, agenda.say(say))
 
 
-def when_with_needs(say, needs, when):
+def _when_with_needs(say, needs, when):
     return agenda.when(when, agenda.optionally_needs(agenda.say(say), dict(needs)))
 
 
-def remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
+def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
     async def remote_function(params: Dict):
         return gamla.pipe(
             await gamla.post_json_with_extra_headers_and_params_async(
@@ -296,45 +308,45 @@ def remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: st
     return agenda.optionally_needs(remote_function, dict(needs))
 
 
-def ask_about(listen, ask):
+def _ask_about(listen, ask):
     return agenda.slot(
         base_types.merge_graphs(listen, agenda.ask(ask)), agenda.ack("Got it.")
     )
 
 
-def slot(ack, listen, ask):
+def _slot(ack, listen, ask):
     return agenda.slot(
         base_types.merge_graphs(listen, agenda.ask(ask)), agenda.ack(ack)
     )
 
 
-def goals(goals, slots):
+def _goals(goals, slots):
     return agenda.combine_utterances(*goals)
 
 
 _COMPOSERS_FOR_DAG_REDUCER = frozenset(
     {
-        say,
-        ack,
-        ask,
-        listen_to_type,
-        listen_to_type_with_examples,
-        listen_to_type_with_options,
-        complement,
-        kv,
-        remote,
-        say_with_needs,
-        when,
-        when_with_needs,
-        remote_with_needs,
-        ask_about,
-        slot,
-        goals,
+        _say,
+        _ack,
+        _ask,
+        _listen_to_type,
+        _listen_to_type_with_examples,
+        _listen_to_type_with_options,
+        _complement,
+        _kv,
+        _remote,
+        _say_with_needs,
+        _when,
+        _when_with_needs,
+        _remote_with_needs,
+        _ask_about,
+        _slot,
+        _goals,
     }
 )
 
 
-functions_to_case_dict = gamla.compose_left(
+_functions_to_case_dict = gamla.compose_left(
     gamla.map(
         lambda f: (
             gamla.equals(
@@ -378,7 +390,7 @@ def reducer(
         )
     except KeyError:
         return current
-    return functions_to_case_dict(_COMPOSERS_FOR_DAG_REDUCER)(cg_dict)
+    return _functions_to_case_dict(_COMPOSERS_FOR_DAG_REDUCER)(cg_dict)
 
 
 def reduce_graph(

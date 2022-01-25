@@ -1,13 +1,11 @@
-goals: 
+goals:
   - name: hello-flow
-slots:  
+slots:
   - name: hello-flow
-    ack: you said it 
+    ack: you said it
     ask: say hello
     listen:
       url: http://localhost:8000/listen-hello
       needs:
         - key: incoming_utterance
           value: incoming_utterance
-
-
