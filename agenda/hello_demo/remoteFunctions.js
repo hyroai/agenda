@@ -15,11 +15,11 @@ app.post("/listen-hello", function (req, res) {
 
 app.post("/order-pizza", function (req, res) {
   console.log("Got a POST request for /order-pizza");
-  if (!req.body.phone || !req.body.email || !req.body.amount_of_pizzas || !req.body.name || !req.body.address) {
+  if (!req.body.phone || !req.body.email || !req.body.amount_of_pizzas || !req.body.name || !req.body.address || !req.body.size || !req.body.toppings) {
     res.json(null);
   } else {
     res.json(
-      `Thank you ${req.body.name}! I got your phone: ${req.body.phone}, and your email: ${req.body.email}. We are sending you ${req.body.amount_of_pizzas} pizzas to ${req.body.address}.`
+      `Thank you ${req.body.name}! I got your phone: ${req.body.phone}, and your email: ${req.body.email}. We are sending you ${req.body.amount_of_pizzas} ${req.body.size} pizzas to ${req.body.address}.`
     );
   }
 });

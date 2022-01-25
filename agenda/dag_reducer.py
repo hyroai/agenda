@@ -137,6 +137,29 @@ def _listen_to_bool_or_intent(examples: Tuple[str, ...]):
     return parse_bool
 
 
+def _listen_to_multiple_choices(
+    options: Tuple[str, ...]
+) -> Callable[[str], Union[Tuple[str, ...], agenda.Unknown]]:
+    return gamla.compose_left(
+        lambda user_utterance: user_utterance.split(),
+        gamla.map(str.lower),
+        gamla.filter(gamla.contains([*options, "none"])),
+        tuple,
+        gamla.when(gamla.empty, gamla.just(agenda.UNKNOWN)),
+    )
+
+
+def _listen_to_single_choice(
+    options: Tuple[str, ...]
+) -> Callable[[str], Union[str, agenda.Unknown]]:
+    return gamla.compose_left(
+        lambda user_utterance: user_utterance.split(),
+        gamla.map(str.lower),
+        gamla.filter(gamla.contains(options)),
+        tuple,
+        gamla.ternary(gamla.len_equals(1), gamla.head, gamla.just(agenda.UNKNOWN)),
+    )
+
 _FUNCTION_MAP = {
     "email": gamla.compose_left(d.parse_email, duckling_wrapper),
     "phone": gamla.compose_left(d.parse_phone_number, duckling_wrapper),
@@ -148,9 +171,11 @@ _FUNCTION_MAP = {
     "address": gamla.compose_left(
         _address_detector, gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN))
     ),
+    "multiple-choice": _listen_to_multiple_choices,
+    "single-choice": _listen_to_single_choice,
 }
 
-_INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount", "name", "address"})
+_INFORMATION_TYPES = frozenset({"phone", "email", "bool", "amount", "name", "address", "multiple-choice", "single-choice"})
 
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "bool"})
 
@@ -194,6 +219,19 @@ def listen_to_type_with_examples(type, examples):
 
     return gamla.pipe(
         agenda.consumes_external_event(listen_to_type_or_intent),
+        agenda.mark_state,
+        agenda.remember,
+    )
+
+
+def listen_to_type_with_options(type, options):
+    assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
+
+    def listen_to_type_with_options(user_utterance):
+        return _FUNCTION_MAP.get(type)(options)(user_utterance)
+
+    return gamla.pipe(
+        agenda.consumes_external_event(listen_to_type_with_options),
         agenda.mark_state,
         agenda.remember,
     )
@@ -245,9 +283,7 @@ def when_with_needs(say, needs, when):
     return agenda.when(when, agenda.optionally_needs(agenda.say(say), dict(needs)))
 
 
-def remote_with_needs(
-    needs: Iterable[Tuple[str, base_types.GraphType]], url: str
-):
+def remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
     async def remote_function(params: Dict):
         return gamla.pipe(
             await gamla.post_json_with_extra_headers_and_params_async(
@@ -283,6 +319,7 @@ _COMPOSERS_FOR_DAG_REDUCER = frozenset(
         ask,
         listen_to_type,
         listen_to_type_with_examples,
+        listen_to_type_with_options,
         complement,
         kv,
         remote,

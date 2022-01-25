@@ -4,6 +4,7 @@ from agenda import composers, sentence, test_utils
 
 
 UNKNOWN = composers.UNKNOWN
+Unknown = composers.Unknown
 
 combine_utterances = composers.combine_utterances
 listener_with_memory = composers.listener_with_memory
