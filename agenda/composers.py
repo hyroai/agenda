@@ -80,9 +80,7 @@ def _resolve_ambiguity_using_logical_or(graph):
     )
 
 
-def _utter_sink_or_empty_sentence(
-    g: base_types.GraphType,
-) -> missing_cg_utils.NodeOrCallable:
+def _utter_sink_or_empty_sentence(g: base_types.GraphType) -> base_types.CallableOrNode:
     return utter_sink(g) or (lambda: sentence.EMPTY_SENTENCE)
 
 
