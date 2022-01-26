@@ -14,7 +14,6 @@ listener_with_memory_when_participated = (
 optionally_needs = composers.optionally_needs
 slot = composers.slot
 when = composers.when
-event = composers.event
 remember = composers.remember
 mark_state = composers.mark_state
 

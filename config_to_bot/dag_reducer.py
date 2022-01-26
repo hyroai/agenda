@@ -200,14 +200,10 @@ def _listen_to_type(type: str) -> base_types.GraphType:
         return _FUNCTION_MAP.get(type)(user_utterance)
 
     if type in _TYPES_TO_LISTEN_AFTER_ASKING:
-        return agenda.listener_with_memory_when_participated(
+        return agenda.agenda.listener_with_memory_when_participatedq(
             agenda.consumes_external_event(listen_to_type)
         )
-    return gamla.pipe(
-        agenda.consumes_external_event(listen_to_type),
-        agenda.mark_state,
-        agenda.remember,
-    )
+    return agenda.consumes_external_event(listen_to_type)
 
 
 def _listen_to_type_with_examples(
@@ -219,11 +215,7 @@ def _listen_to_type_with_examples(
     def listen_to_type_or_intent(user_utterance):
         return _FUNCTION_MAP.get(type)(examples)(user_utterance)
 
-    return gamla.pipe(
-        agenda.consumes_external_event(listen_to_type_or_intent),
-        agenda.mark_state,
-        agenda.remember,
-    )
+    return agenda.consumes_external_event(listen_to_type_or_intent)
 
 
 def _listen_to_type_with_options(
@@ -234,11 +226,7 @@ def _listen_to_type_with_options(
     def listen_to_type_with_options(user_utterance):
         return _FUNCTION_MAP.get(type)(options)(user_utterance)
 
-    return gamla.pipe(
-        agenda.consumes_external_event(listen_to_type_with_options),
-        agenda.mark_state,
-        agenda.remember,
-    )
+    return agenda.consumes_external_event(listen_to_type_with_options)
 
 
 def _complement(complement: base_types.GraphType) -> base_types.GraphType:
@@ -249,7 +237,7 @@ def _kv(
     key: str, value: Union[str, base_types.GraphType]
 ) -> Tuple[str, Union[str, base_types.GraphType]]:
     if value == "incoming_utterance":
-        return (key, agenda.event)
+        return (key, agenda.consumes_external_event(lambda x: x))
     return (key, value)
 
 
@@ -305,18 +293,27 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
             gamla.when(gamla.equals(None), gamla.just(agenda.UNKNOWN)),
         )
 
-    return agenda.optionally_needs(remote_function, dict(needs))
+    return agenda.optionally_needs(
+        lift.function_to_graph(remote_function),
+        gamla.pipe(dict(needs), gamla.valmap(agenda.mark_state)),
+    )
 
 
 def _ask_about(listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        base_types.merge_graphs(listen, agenda.ask(ask)), agenda.ack("Got it.")
+        agenda.combine_utterances(
+            gamla.pipe(listen, agenda.mark_state,agenda.remember), agenda.ask(ask)
+        ),
+        agenda.ack("Got it."),
     )
 
 
 def _slot(ack: str, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        base_types.merge_graphs(listen, agenda.ask(ask)), agenda.ack(ack)
+        agenda.combine_utterances(
+            gamla.pipe(listen, agenda.mark_state, agenda.remember), agenda.ask(ask)
+        ),
+        agenda.ack(ack),
     )
 
 

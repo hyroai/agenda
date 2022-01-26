@@ -31,6 +31,7 @@ event = graph.make_source_with_name("event")
 UNKNOWN = Unknown()
 
 
+@cg_graph.make_terminal("utter")
 def utter(x) -> str:
     return sentence.sentence_to_str(x)
 
