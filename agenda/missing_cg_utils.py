@@ -1,4 +1,5 @@
 import dataclasses
+from typing import Callable, Union
 
 import gamla
 from computation_graph import base_types, composers, graph
@@ -88,7 +89,10 @@ def remove_nodes(nodes):
     )
 
 
-def sink(x):
+NodeOrCallable = Union[base_types.ComputationNode, Callable]
+
+
+def sink(x: NodeOrCallable):
     return gamla.compose(
         gamla.unless(gamla.equals(None), edge_source),
         gamla.find(_edge_destination_equals(x)),

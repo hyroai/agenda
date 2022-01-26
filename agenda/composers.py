@@ -1,4 +1,4 @@
-from typing import Collection, Optional
+from typing import Collection, Dict, Optional
 
 import gamla
 from computation_graph import base_types, composers
@@ -80,7 +80,9 @@ def _resolve_ambiguity_using_logical_or(graph):
     )
 
 
-def utter_sink_or_empty_sentence(g):
+def _utter_sink_or_empty_sentence(
+    g: base_types.GraphType,
+) -> missing_cg_utils.NodeOrCallable:
     return utter_sink(g) or (lambda: sentence.EMPTY_SENTENCE)
 
 
@@ -145,7 +147,7 @@ def slot(asker_listener, acker):
     @composers.compose_left_dict(
         {
             "who_should_speak": who_should_speak,
-            "listener_utter": utter_sink_or_empty_sentence(asker_listener),
+            "listener_utter": _utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
         }
     )
@@ -239,10 +241,10 @@ def _combine_utterances_track_source(graphs, utterances):
     )
 
 
-def _combine_utter_graphs(*utter_graphs):
+def _combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.GraphType:
     return _make_gate(
         missing_cg_utils.compose_left_many_to_one(
-            map(utter_sink_or_empty_sentence, utter_graphs),
+            map(_utter_sink_or_empty_sentence, utter_graphs),
             lambda args: _combine_utterances_track_source(utter_graphs, args),
         ),
         utter_graphs,
@@ -264,7 +266,9 @@ def _dict_composer(markers, f):
 
 
 @_dict_composer([state, utter, participated])
-def optionally_needs(recipient, dependencies):
+def optionally_needs(
+    recipient: base_types.GraphType, dependencies: Dict[str, base_types.GraphType]
+):
     return base_types.merge_graphs(
         _combine_utter_graphs(recipient, *dependencies.values()),
         gamla.pipe(
@@ -292,7 +296,7 @@ def when(condition, do):
             ),
             {
                 "condition_state": state_sink(condition),
-                "condition_utter": utter_sink_or_empty_sentence(condition),
+                "condition_utter": _utter_sink_or_empty_sentence(condition),
                 "do_utter": utter_sink(do),
             },
         ),
