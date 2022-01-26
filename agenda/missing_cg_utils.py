@@ -1,4 +1,5 @@
 import dataclasses
+from typing import Callable, Dict
 
 import gamla
 from computation_graph import base_types, composers, graph
@@ -88,9 +89,10 @@ def remove_nodes(nodes):
     )
 
 
-def sink(x):
+def sink(x: base_types.CallableOrNode):
     return gamla.compose(
-        gamla.unless(gamla.equals(None), edge_source),
+        edge_source,
+        gamla.assert_that(gamla.not_equals(None)),
         gamla.find(_edge_destination_equals(x)),
     )
 
@@ -108,7 +110,9 @@ def compose_left_many_to_one(graphs, aggregation):
     return composers.compose_many_to_one(aggregation, graphs)
 
 
-package_into_dict = gamla.compose_left(
+package_into_dict: Callable[
+    [Dict[str, base_types.CallableOrNodeOrGraph]], base_types.GraphType
+] = gamla.compose_left(
     dict.items,
     gamla.map(
         gamla.compose_left(
