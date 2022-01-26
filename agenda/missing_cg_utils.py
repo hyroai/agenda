@@ -91,7 +91,8 @@ def remove_nodes(nodes):
 
 def sink(x: base_types.CallableOrNode):
     return gamla.compose(
-        gamla.unless(gamla.equals(None), edge_source),
+        edge_source,
+        gamla.assert_that(gamla.not_equals(None)),
         gamla.find(_edge_destination_equals(x)),
     )
 
