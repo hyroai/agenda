@@ -198,19 +198,15 @@ def complement(graph):
 listener_with_memory = gamla.compose(remember, mark_state, consumes_external_event)
 
 
-def listener_with_memory_when_participated(graph):
+def if_participated(graph):
     def combined(value, is_participated_last_turn: bool):
         return value if is_participated_last_turn else UNKNOWN
 
-    return gamla.pipe(
-        base_types.merge_graphs(
-            composers.make_compose_future(
-                combined, participated, "is_participated_last_turn", False
-            ),
-            composers.compose_left(graph, combined, key="value"),
+    return base_types.merge_graphs(
+        composers.make_compose_future(
+            combined, participated, "is_participated_last_turn", False
         ),
-        mark_state,
-        remember,
+        composers.compose_left(graph, combined, key="value"),
     )
 
 
