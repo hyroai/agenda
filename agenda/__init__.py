@@ -8,9 +8,7 @@ Unknown = composers.Unknown
 
 combine_utterances = composers.combine_utterances
 listener_with_memory = composers.listener_with_memory
-listener_with_memory_when_participated = (
-    composers.listener_with_memory_when_participated
-)
+if_participated = composers.if_participated
 optionally_needs = composers.optionally_needs
 slot = composers.slot
 when = composers.when
@@ -22,6 +20,8 @@ wrap_up = composers.wrap_up
 complement = composers.complement
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
+mark_state = composers.mark_state
+remember = composers.remember
 
 
 def _value_to_function_if_needed(value_or_function):

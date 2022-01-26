@@ -1,7 +1,16 @@
+from typing import Callable
 import gamla
 from computation_graph import base_types
 
 import agenda
+
+
+def _listen_with_memory_when_participated(function: Callable):
+    return gamla.pipe(
+        agenda.if_participated(agenda.consumes_external_event(function)),
+        agenda.mark_state,
+        agenda.remember,
+    )
 
 
 @agenda.expect_convos([[["Hi", "say hello"], ["hello", "you said it"], ["Hello", ""]]])
@@ -186,9 +195,7 @@ def test_listen_if_participated1():
         {
             "x": agenda.slot(
                 base_types.merge_graphs(
-                    agenda.listener_with_memory_when_participated(
-                        agenda.consumes_external_event(lambda text: "yes" in text)
-                    ),
+                    _listen_with_memory_when_participated(lambda text: "yes" in text),
                     agenda.ask("x?"),
                 ),
                 agenda.ack("okay."),
@@ -217,18 +224,14 @@ def test_listen_if_participated2():
         {
             "x": agenda.slot(
                 base_types.merge_graphs(
-                    agenda.listener_with_memory_when_participated(
-                        agenda.consumes_external_event(lambda text: "yes" in text)
-                    ),
+                    _listen_with_memory_when_participated(lambda text: "yes" in text),
                     agenda.ask("x?"),
                 ),
                 agenda.ack("okay."),
             ),
             "y": agenda.slot(
                 base_types.merge_graphs(
-                    agenda.listener_with_memory_when_participated(
-                        agenda.consumes_external_event(lambda text: "yes" in text)
-                    ),
+                    _listen_with_memory_when_participated(lambda text: "yes" in text),
                     agenda.ask("y?"),
                 ),
                 agenda.ack("okay."),
