@@ -200,9 +200,7 @@ def _listen_to_type(type: str) -> base_types.GraphType:
         return _FUNCTION_MAP.get(type)(user_utterance)
 
     if type in _TYPES_TO_LISTEN_AFTER_ASKING:
-        return agenda.agenda.listener_with_memory_when_participatedq(
-            agenda.consumes_external_event(listen_to_type)
-        )
+        return agenda.if_participated(agenda.consumes_external_event(listen_to_type))
     return agenda.consumes_external_event(listen_to_type)
 
 
@@ -301,18 +299,16 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
 
 def _ask_about(listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        agenda.combine_utterances(
-            gamla.pipe(listen, agenda.mark_state,agenda.remember), agenda.ask(ask)
-        ),
+        gamla.pipe(listen, agenda.mark_state, agenda.remember),
+        agenda.ask(ask),
         agenda.ack("Got it."),
     )
 
 
 def _slot(ack: str, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        agenda.combine_utterances(
-            gamla.pipe(listen, agenda.mark_state, agenda.remember), agenda.ask(ask)
-        ),
+        gamla.pipe(listen, agenda.mark_state, agenda.remember),
+        agenda.ask(ask),
         agenda.ack(ack),
     )
 

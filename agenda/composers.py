@@ -123,8 +123,17 @@ def _composer(markers, f):
     return composer
 
 
+def slot(listener, asker, acker):
+    # If the listener has an utter sink they we need to combine it with asker. Otherwise we just merge the graphs.
+    try:
+        utter_sink(listener)
+        return _binary_slot(combine_utterances(listener, asker), acker)
+    except AssertionError:
+        return _binary_slot(base_types.merge_graphs(listener, asker), acker)
+
+
 @_composer([utter, participated])
-def slot(asker_listener, acker):
+def _binary_slot(asker_listener, acker):
     @composers.compose_left_dict(
         {
             "listener_state": state_sink(asker_listener),
