@@ -17,16 +17,16 @@ def _error_message(error):
     return {"type": "error", "data": str(error)}
 
 
-def _create_socket_handler(build_bot: Callable, path: str):
+def _create_socket_handler(path: str):
     async def message_handler(websocket: fastapi.WebSocket):
         state: dict = {}
-        bot = build_bot(path)()
+        bot = config_to_bot.yaml_to_slot_bot(path)()
 
         async def responder_with_state(request):
             nonlocal state
             nonlocal bot
             if request.lower() == "reload":
-                bot = build_bot(path)()
+                bot = config_to_bot.yaml_to_slot_bot(path)()
                 state = {}
                 return "Reloading bot"
             if request.lower() == "start over":
@@ -55,9 +55,9 @@ def _create_socket_handler(build_bot: Callable, path: str):
     return message_handler
 
 
-async def _make_app(build_bot: Callable, path: str) -> fastapi.FastAPI:
+async def _make_app(path: str) -> fastapi.FastAPI:
     app = fastapi.FastAPI()
-    app.websocket("/converse")(_create_socket_handler(build_bot, path))
+    app.websocket("/converse")(_create_socket_handler(path))
     original_handler = Server.handle_exit
 
     async def handle_exit(*args, **kwargs):
@@ -71,9 +71,7 @@ async def _make_app(build_bot: Callable, path: str) -> fastapi.FastAPI:
 
 
 def app(path: str):
-    return asyncio.get_event_loop().run_until_complete(
-        _make_app(config_to_bot.yaml_to_slot_bot, path)
-    )
+    return asyncio.get_event_loop().run_until_complete(_make_app(path))
 
 
 if __name__ == "__main__":
