@@ -29,7 +29,7 @@ def _create_socket_handler(path: str):
                 bot = config_to_bot.yaml_to_slot_bot(path)()
                 state = {}
                 return "Reloading bot"
-            if request.lower() == "start over":
+            if request.lower() == "reset":
                 state = {}
                 return "Starting Over"
             try:
