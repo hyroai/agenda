@@ -1,6 +1,6 @@
 import asyncio
 import sys
-from typing import Callable, Any
+from typing import Callable, Any, Dict
 
 import config_to_bot
 import fastapi
@@ -17,12 +17,21 @@ def _error_message(error):
     return {"type": "error", "data": str(error)}
 
 
-def _create_socket_handler(bot: Callable):
+def _create_socket_handler(build_bot: Callable, path: str):
     async def message_handler(websocket: fastapi.WebSocket):
         state: dict = {}
+        bot = build_bot(path)()
 
         async def responder_with_state(request):
             nonlocal state
+            nonlocal bot
+            if request.lower() == "reload":
+                bot = build_bot(path)()
+                state = {}
+                return "Reloading bot"
+            if request.lower() == "start over":
+                state = {}
+                return "Starting Over"
             try:
                 computation_result = await bot({composers.event: request, **state})
                 state = computation_result
@@ -46,9 +55,9 @@ def _create_socket_handler(bot: Callable):
     return message_handler
 
 
-async def _make_app(bot: Callable) -> fastapi.FastAPI:
+async def _make_app(build_bot: Callable, path: str) -> fastapi.FastAPI:
     app = fastapi.FastAPI()
-    app.websocket("/converse")(_create_socket_handler(bot()))
+    app.websocket("/converse")(_create_socket_handler(build_bot, path))
     original_handler = Server.handle_exit
 
     async def handle_exit(*args, **kwargs):
@@ -63,7 +72,7 @@ async def _make_app(bot: Callable) -> fastapi.FastAPI:
 
 def app(path: str):
     return asyncio.get_event_loop().run_until_complete(
-        _make_app(config_to_bot.yaml_to_slot_bot(path))
+        _make_app(config_to_bot.yaml_to_slot_bot, path)
     )
 
 
