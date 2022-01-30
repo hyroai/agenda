@@ -2,7 +2,9 @@ import gamla
 
 from agenda import composers, sentence, test_utils
 
+
 UNKNOWN = composers.UNKNOWN
+Unknown = composers.Unknown
 
 combine_utterances = composers.combine_utterances
 listener_with_memory = composers.listener_with_memory
@@ -10,6 +12,11 @@ if_participated = composers.if_participated
 optionally_needs = composers.optionally_needs
 slot = composers.slot
 when = composers.when
+remember = composers.remember
+mark_state = composers.mark_state
+
+wrap_up = composers.wrap_up
+
 complement = composers.complement
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos

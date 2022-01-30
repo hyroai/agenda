@@ -1,0 +1,66 @@
+definitions:
+  - &name
+    ask: What is your name?
+    listen:
+      type: name
+  - &address
+    ask: What is your address?
+    listen:
+      type: address
+  - &phone
+    ask: What is your phone number?
+    listen:
+      type: phone
+  - &email
+    ask: What is your email?
+    listen:
+      type: email
+  - &amount_of_pizzas
+    ask: How many pies would you like?
+    listen:
+      type: amount
+  - &wants-to-order-pizza
+    ask: Would you like to order pizza?
+    listen:
+      type: bool
+      examples:
+        - I want to order pizza
+        - I want pizza
+  - &toppings
+    ask: What kind of toppings would you like?
+    listen:
+      type: multiple-choice
+      options:
+        - mushrooms
+        - olives
+        - tomatoes
+  - &size
+    ask: What pizza size would you like?
+    listen:
+      type: single-choice
+      options:
+        - small
+        - medium
+        - large
+goals:
+  - say:
+      url: http://localhost:8000/order-pizza
+    needs:
+      - key: name
+        value: *name
+      - key: amount_of_pizzas
+        value: *amount_of_pizzas
+      - key: toppings
+        value: *toppings
+      - key: size
+        value: *size
+      - key: address
+        value: *address
+      - key: phone
+        value: *phone
+      - key: email
+        value: *email
+    when: *wants-to-order-pizza
+  - say: I'm transfering you to an agent.
+    when:
+      complement: *wants-to-order-pizza
