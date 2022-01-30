@@ -1,4 +1,4 @@
-from typing import Callable, Dict, FrozenSet, Iterable, Tuple, Union, List
+from typing import Callable, Dict, FrozenSet, Iterable, Tuple, Union, List, Awaitable
 
 from . import dag_reducer
 import gamla
@@ -17,7 +17,7 @@ _Node = Union[List, Dict, str, Tuple[str, "_Node"]]
 
 
 @dataclasses.dataclass(frozen=True)
-class ObjectAndTriplets:
+class _ObjectAndTriplets:
     obj: Union[str, Tuple[str, ...]]
     triplets: _Triplet
 
@@ -64,34 +64,22 @@ def _subject_to_relation_object_map(
     )
 
 
-def parse_yaml_file(file_name: str) -> Dict:
+def _parse_yaml_file(file_name: str) -> Dict:
     with open(file_name) as f:
         config_dict = yaml.safe_load(f)
     return config_dict
 
 
-def yaml_to_slot_bot(path: str):
-    return gamla.compose_left(
-        gamla.just(path),
-        parse_yaml_file,
-        yaml_dict_to_triplets,
-        _build_cg,
-        agenda.wrap_up,
-        gamla.after(gamla.to_awaitable),
-    )
-
-
-_ObjectAndTriplets = Tuple[str, FrozenSet[_Triplet]]
-_RelationAndObjectAndTriplets = Tuple[str, ObjectAndTriplets]
-_ReducerState = Union[ObjectAndTriplets, _RelationAndObjectAndTriplets]
+_RelationAndObjectAndTriplets = Tuple[str, _ObjectAndTriplets]
+_ReducerState = Union[_ObjectAndTriplets, _RelationAndObjectAndTriplets]
 
 
 def _reducer(current: _Node, children: Iterable[_ReducerState]) -> _ReducerState:
     reduced_children = tuple(children)
     if not reduced_children:
-        return ObjectAndTriplets(current, frozenset())
+        return _ObjectAndTriplets(current, frozenset())
     if isinstance(current, list):
-        return ObjectAndTriplets(
+        return _ObjectAndTriplets(
             tuple(map(lambda c: c.obj, reduced_children)),
             frozenset(gamla.mapcat(lambda c: c.triplets)(reduced_children)),
         )
@@ -106,17 +94,11 @@ def _reducer(current: _Node, children: Iterable[_ReducerState]) -> _ReducerState
 
 def _dict_to_triplets(
     current: _Node, children: Iterable[_ReducerState]
-) -> ObjectAndTriplets:
-    node_id = gamla.pipe(
-        current, gamla.freeze_deep, gamla.compute_stable_json_hash
-    )
-    return ObjectAndTriplets(
+) -> _ObjectAndTriplets:
+    node_id = gamla.pipe(current, gamla.freeze_deep, gamla.compute_stable_json_hash)
+    return _ObjectAndTriplets(
         node_id,
-        gamla.pipe(
-            children,
-            gamla.mapcat(_child_to_triplets(node_id)),
-            frozenset,
-        ),
+        gamla.pipe(children, gamla.mapcat(_child_to_triplets(node_id)), frozenset),
     )
 
 
@@ -141,7 +123,7 @@ def _children(node: _Node) -> Iterable[_Node]:
         yield d
 
 
-def yaml_dict_to_triplets(yaml_dict: Dict) -> FrozenSet[_Triplet]:
+def _yaml_dict_to_triplets(yaml_dict: Dict) -> FrozenSet[_Triplet]:
     return gamla.pipe(
         gamla.tree_reduce(_children, _reducer, ("root", yaml_dict)),
         gamla.last,
@@ -157,3 +139,13 @@ def _build_cg(triplets: FrozenSet[_Triplet]) -> base_types.GraphType:
         ),
         gamla.itemgetter(_infer_sink(dependencies)),
     )
+
+
+yaml_to_slot_bot: Callable[[str], Callable[[], Awaitable]] = gamla.compose_left(
+    _parse_yaml_file,
+    _yaml_dict_to_triplets,
+    _build_cg,
+    agenda.wrap_up,
+    gamla.after(gamla.to_awaitable),
+    gamla.just,
+)

@@ -1,30 +1,30 @@
-var express = require("express");
-var app = express();
+const express = require("express");
+const app = express();
 
 app.use(express.json());
 
-app.post("/order-pizza", function (req, res) {
+app.post("/order-pizza", function ({ body }, res) {
   console.log("Got a POST request for /order-pizza");
   if (
-    !req.body.phone ||
-    !req.body.email ||
-    !req.body.amount_of_pizzas ||
-    !req.body.name ||
-    !req.body.address ||
-    !req.body.size ||
-    !req.body.toppings
+    !body.phone ||
+    !body.email ||
+    !body.amount_of_pizzas ||
+    !body.name ||
+    !body.address ||
+    !body.size ||
+    !body.toppings
   ) {
     res.json(null);
   } else {
     res.json(
-      `Thank you ${req.body.name}! I got your phone: ${req.body.phone}, and your email: ${req.body.email}. We are sending you ${req.body.amount_of_pizzas} ${req.body.size} pizzas to ${req.body.address}.`
+      `Thank you ${body.name}! I got your phone: ${body.phone}, and your email: ${body.email}. We are sending you ${body.amount_of_pizzas} ${body.size} pizzas to ${body.address}.`
     );
   }
 });
 
-var server = app.listen(8000, function () {
-  var host = server.address().address;
-  var port = server.address().port;
+const server = app.listen(8000, function () {
+  const host = server.address().address;
+  const port = server.address().port;
 
   console.log("Example app listening at http://%s:%s", host, port);
 });

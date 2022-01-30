@@ -1,4 +1,4 @@
-slots:
+definitions:
   - &name
     ask: What is your name?
     listen:

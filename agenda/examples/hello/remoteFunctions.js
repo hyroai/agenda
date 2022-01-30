@@ -1,5 +1,5 @@
-var express = require("express");
-var app = express();
+const express = require("express");
+const app = express();
 
 const listen = ({ incoming_utterance }) =>
   incoming_utterance.includes("hello") ||
@@ -13,9 +13,9 @@ app.post("/listen-hello", function (req, res) {
   res.json(listen(req.body));
 });
 
-var server = app.listen(8000, function () {
-  var host = server.address().address;
-  var port = server.address().port;
+const server = app.listen(8000, function () {
+  const host = server.address().address;
+  const port = server.address().port;
 
   console.log("Example app listening at http://%s:%s", host, port);
 });

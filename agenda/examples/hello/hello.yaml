@@ -1,4 +1,4 @@
-slots:
+definitions:
   - &hello-flow
     ack: you said it
     ask: say hello
