@@ -130,7 +130,7 @@ def slot(listener, asker, acker):
         return _binary_slot(base_types.merge_graphs(listener, asker), acker)
 
 
-def combine_slots(graphs: base_types.GraphType, acker, aggregator: Callable):
+def combine_slots(aggregator: Callable, acker, graphs: base_types.GraphType):
     return _binary_slot(aggregator(*graphs), acker)
 
 

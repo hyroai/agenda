@@ -18,8 +18,8 @@ mark_state = composers.mark_state
 wrap_up = composers.wrap_up
 
 complement = composers.complement
-any = slots_aggregators.any_true
-all = slots_aggregators.all_true
+any = state_aggregators.any_true
+all = state_aggregators.all_true
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
 mark_state = composers.mark_state

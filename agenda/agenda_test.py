@@ -244,6 +244,8 @@ def test_minimal_any_true():
 )
 def test_any_true():
     any_true = agenda.combine_slots(
+        agenda.any,
+        agenda.ack("You are all set."),
         [
             agenda.slot(
                 _listen_with_memory_when_participated(lambda text: "yes" in text),
@@ -256,8 +258,6 @@ def test_any_true():
                 agenda.ack("I got your answer for B."),
             ),
         ],
-        agenda.ack("You are all set."),
-        agenda.any,
     )
     return agenda.combine_utter_sinks(
         agenda.when(any_true, agenda.say("Happy to hear.")),
@@ -286,6 +286,8 @@ def test_any_true():
 )
 def test_all_true():
     all_true = agenda.combine_slots(
+        agenda.all,
+        agenda.ack("You are all set."),
         [
             agenda.slot(
                 _listen_with_memory_when_participated(lambda text: "yes" in text),
@@ -298,8 +300,6 @@ def test_all_true():
                 agenda.ack("Got it that you want B."),
             ),
         ],
-        agenda.ack("You are all set."),
-        agenda.all,
     )
     return agenda.combine_utter_sinks(
         agenda.when(all_true, agenda.say("Happy to hear.")),
