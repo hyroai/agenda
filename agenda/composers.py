@@ -107,8 +107,8 @@ def _handle_participation(condition_fn, g):
 
 
 @gamla.curry
-def composer(markers, f):
-    def composer(*graphs):
+def _remove_sinks_and_sources_and_resolve_ambiguity(markers, f):
+    def _remove_sinks_and_sources_and_resolve_ambiguity(*graphs):
         return base_types.merge_graphs(
             f(*graphs),
             _resolve_ambiguity_using_logical_or(
@@ -118,14 +118,14 @@ def composer(markers, f):
             ),
         )
 
-    return composer
+    return _remove_sinks_and_sources_and_resolve_ambiguity
 
 
 def slot(listener, asker, acker):
     # If the listener has an utter sink they we need to combine it with asker. Otherwise we just merge the graphs.
     try:
         utter_sink(listener)
-        return _binary_slot(combine_utterances(listener, asker), acker)
+        return _binary_slot(combine_utter_sinks(listener, asker), acker)
     except AssertionError:
         return _binary_slot(base_types.merge_graphs(listener, asker), acker)
 
@@ -134,7 +134,22 @@ def combine_slots(graphs: base_types.GraphType, acker, aggregator: Callable):
     return _binary_slot(aggregator(*graphs), acker)
 
 
-@composer([utter, participated])
+def combine_state(aggregator: Callable):
+    @_remove_sinks_and_sources_and_resolve_ambiguity([state, utter, participated])
+    def combine_state(*graphs):
+        return base_types.merge_graphs(
+            _combine_utter_graphs(*graphs),
+            mark_state(
+                missing_cg_utils.compose_left_many_to_one(
+                    gamla.pipe(graphs, gamla.map(state_sink), tuple), aggregator
+                )
+            ),
+        )
+
+    return combine_state
+
+
+@_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
 def _binary_slot(asker_listener, acker):
     @composers.compose_left_dict(
         {
@@ -180,7 +195,7 @@ def _binary_slot(asker_listener, acker):
     )
 
 
-@composer([state])
+@_remove_sinks_and_sources_and_resolve_ambiguity([state])
 def remember(graph):
     @mark_state
     @composers.compose_left_dict({"value": state_sink(graph), "should_forget": forget})
@@ -195,7 +210,7 @@ def remember(graph):
     return remember_or_forget
 
 
-@composer([state])
+@_remove_sinks_and_sources_and_resolve_ambiguity([state])
 def complement(graph):
     @mark_state
     @missing_cg_utils.compose_left_curry(state_sink(graph))
@@ -250,7 +265,7 @@ def _combine_utterances_track_source(graphs, utterances):
     )
 
 
-def combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.GraphType:
+def _combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.GraphType:
     return _make_gate(
         missing_cg_utils.compose_left_many_to_one(
             map(_utter_sink_or_empty_sentence, utter_graphs),
@@ -260,18 +275,20 @@ def combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.Grap
     )
 
 
-combine_utterances = composer([utter, participated])(combine_utter_graphs)
+combine_utter_sinks = _remove_sinks_and_sources_and_resolve_ambiguity(
+    [utter, participated]
+)(_combine_utter_graphs)
 
 
 @gamla.curry
 def _dict_composer(markers, f):
-    def composer(graph, d):
+    def _remove_sinks_and_sources_and_resolve_ambiguity(graph, d):
         return base_types.merge_graphs(
             f(graph, d),
             *map(missing_cg_utils.remove_nodes(markers), [graph, *d.values()]),
         )
 
-    return composer
+    return _remove_sinks_and_sources_and_resolve_ambiguity
 
 
 @_dict_composer([state, utter, participated])
@@ -279,7 +296,7 @@ def optionally_needs(
     recipient: base_types.GraphType, dependencies: Dict[str, base_types.GraphType]
 ):
     return base_types.merge_graphs(
-        combine_utter_graphs(recipient, *dependencies.values()),
+        _combine_utter_graphs(recipient, *dependencies.values()),
         gamla.pipe(
             dependencies,
             gamla.valmap(state_sink),
@@ -291,7 +308,7 @@ def optionally_needs(
     )
 
 
-@composer([state, utter, participated])
+@_remove_sinks_and_sources_and_resolve_ambiguity([state, utter, participated])
 def when(condition, do):
     return _make_gate(
         composers.compose_dict(

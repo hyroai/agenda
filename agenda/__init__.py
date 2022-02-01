@@ -1,12 +1,12 @@
 import gamla
 
-from agenda import composers, sentence, test_utils, slots_aggregators
+from agenda import composers, sentence, test_utils, state_aggregators
 
 
 UNKNOWN = composers.UNKNOWN
 Unknown = composers.Unknown
 
-combine_utterances = composers.combine_utterances
+combine_utter_sinks = composers.combine_utter_sinks
 listener_with_memory = composers.listener_with_memory
 if_participated = composers.if_participated
 optionally_needs = composers.optionally_needs
@@ -18,8 +18,8 @@ mark_state = composers.mark_state
 wrap_up = composers.wrap_up
 
 complement = composers.complement
-any_true = slots_aggregators.any_true
-all_true = slots_aggregators.all_true
+any = slots_aggregators.any_true
+all = slots_aggregators.all_true
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
 mark_state = composers.mark_state

@@ -310,7 +310,8 @@ def _goals(
     goals: Tuple[base_types.GraphType, ...],
     definitions: Tuple[base_types.GraphType, ...],
 ) -> base_types.GraphType:
-    return agenda.combine_utterances(*goals)
+    del definitions
+    return agenda.combine_utter_sinks(*goals)
 
 
 COMPOSERS_FOR_DAG_REDUCER = frozenset(

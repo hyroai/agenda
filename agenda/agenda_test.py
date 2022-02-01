@@ -158,7 +158,7 @@ def test_complement():
         agenda.ask("how are you?"),
         agenda.ack("okay."),
     )
-    return agenda.combine_utterances(
+    return agenda.combine_utter_sinks(
         agenda.when(good_or_bad, agenda.say("happy to hear.")),
         agenda.when(agenda.complement(good_or_bad), agenda.say("sorry to hear.")),
     )
@@ -216,13 +216,13 @@ def test_listen_if_participated2():
     )
 
 
-@agenda.expect_convos([[["Hi", "Would you like A?"], ["yes", "Got it."]]])
+@agenda.expect_convos([[["Hi", "Would you like A?"], ["yes", "I acknowledge your answer"]]])
 def test_minimal_any_true():
-    return agenda.any_true(
+    return agenda.any(
         agenda.slot(
             _listen_with_memory_when_participated(lambda text: "yes" in text),
             agenda.ask("Would you like A?"),
-            agenda.ack("Got it."),
+            agenda.ack("I acknowledge your answer"),
         )
     )
 
@@ -232,12 +232,12 @@ def test_minimal_any_true():
         [["Hi", "Would you like A?"], ["yes", "Got it. Happy to hear."]],
         [
             ["Hi", "Would you like A?"],
-            ["no", "Got it. Would you like B?"],
+            ["no", "I got your answer for A. Would you like B?"],
             ["yes", "Got it. Happy to hear."],
         ],
         [
             ["Hi", "Would you like A?"],
-            ["no", "Got it. Would you like B?"],
+            ["no", "I got your answer for A. Would you like B?"],
             ["no", "Got it. Have a good day."],
         ],
     ]
@@ -248,18 +248,18 @@ def test_any_true():
             agenda.slot(
                 _listen_with_memory_when_participated(lambda text: "yes" in text),
                 agenda.ask("Would you like A?"),
-                agenda.ack("Got it."),
+                agenda.ack("I got your answer for A."),
             ),
             agenda.slot(
                 _listen_with_memory_when_participated(lambda text: "yes" in text),
                 agenda.ask("Would you like B?"),
-                agenda.ack("Got it."),
+                agenda.ack("I got your answer for B."),
             ),
         ],
-        agenda.ack("Happy to hear that."),
-        agenda.any_true,
+        agenda.ack("You are all set."),
+        agenda.any,
     )
-    return agenda.combine_utterances(
+    return agenda.combine_utter_sinks(
         agenda.when(any_true, agenda.say("Happy to hear.")),
         agenda.when(agenda.complement(any_true), agenda.say("Have a good day.")),
     )
@@ -298,10 +298,10 @@ def test_all_true():
                 agenda.ack("Got it that you want B."),
             ),
         ],
-        agenda.ack("Happy to hear."),
-        agenda.all_true,
+        agenda.ack("You are all set."),
+        agenda.all,
     )
-    return agenda.combine_utterances(
+    return agenda.combine_utter_sinks(
         agenda.when(all_true, agenda.say("Happy to hear.")),
         agenda.when(agenda.complement(all_true), agenda.say("Have a good day.")),
     )
