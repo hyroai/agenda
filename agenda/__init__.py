@@ -1,6 +1,6 @@
 import gamla
 
-from agenda import composers, sentence, test_utils
+from agenda import composers, sentence, test_utils, slots_aggregators
 
 
 UNKNOWN = composers.UNKNOWN
@@ -18,10 +18,13 @@ mark_state = composers.mark_state
 wrap_up = composers.wrap_up
 
 complement = composers.complement
+any_true = slots_aggregators.any_true
+all_true = slots_aggregators.all_true
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
 mark_state = composers.mark_state
 remember = composers.remember
+combine_slots = composers.combine_slots
 
 
 def _value_to_function_if_needed(value_or_function):

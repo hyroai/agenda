@@ -1,4 +1,4 @@
-from typing import Collection, Dict, Optional
+from typing import Collection, Dict, Optional, Callable
 
 import gamla
 from computation_graph import base_types, composers
@@ -54,19 +54,17 @@ state_sink = missing_cg_utils.sink(state)
 def _combine_edges_to_disjunction(edges: Collection[base_types.ComputationEdge]):
     assert len(edges) > 1
 
-    def any_node(*args):
+    def any_node(args):
         return any(args)
 
-    return (
-        graph.make_standard_edge(
-            source=tuple(map(base_types.edge_source, edges)),
-            key=None,
-            destination=any_node,
+    return base_types.merge_graphs(
+        missing_cg_utils.compose_left_many_to_one(
+            tuple(map(base_types.edge_source, edges)), any_node
         ),
-        graph.make_standard_edge(
-            source=any_node,
+        composers.compose_left(
+            any_node,
+            base_types.edge_destination(gamla.head(edges)),
             key=base_types.edge_key(gamla.head(edges)),
-            destination=base_types.edge_destination(gamla.head(edges)),
         ),
     )
 
@@ -109,7 +107,7 @@ def _handle_participation(condition_fn, g):
 
 
 @gamla.curry
-def _composer(markers, f):
+def composer(markers, f):
     def composer(*graphs):
         return base_types.merge_graphs(
             f(*graphs),
@@ -132,7 +130,11 @@ def slot(listener, asker, acker):
         return _binary_slot(base_types.merge_graphs(listener, asker), acker)
 
 
-@_composer([utter, participated])
+def combine_slots(graphs: base_types.GraphType, acker, aggregator: Callable):
+    return _binary_slot(aggregator(*graphs), acker)
+
+
+@composer([utter, participated])
 def _binary_slot(asker_listener, acker):
     @composers.compose_left_dict(
         {
@@ -178,7 +180,7 @@ def _binary_slot(asker_listener, acker):
     )
 
 
-@_composer([state])
+@composer([state])
 def remember(graph):
     @mark_state
     @composers.compose_left_dict({"value": state_sink(graph), "should_forget": forget})
@@ -193,7 +195,7 @@ def remember(graph):
     return remember_or_forget
 
 
-@_composer([state])
+@composer([state])
 def complement(graph):
     @mark_state
     @missing_cg_utils.compose_left_curry(state_sink(graph))
@@ -248,7 +250,7 @@ def _combine_utterances_track_source(graphs, utterances):
     )
 
 
-def _combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.GraphType:
+def combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.GraphType:
     return _make_gate(
         missing_cg_utils.compose_left_many_to_one(
             map(_utter_sink_or_empty_sentence, utter_graphs),
@@ -258,7 +260,7 @@ def _combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.Gra
     )
 
 
-combine_utterances = _composer([utter, participated])(_combine_utter_graphs)
+combine_utterances = composer([utter, participated])(combine_utter_graphs)
 
 
 @gamla.curry
@@ -277,7 +279,7 @@ def optionally_needs(
     recipient: base_types.GraphType, dependencies: Dict[str, base_types.GraphType]
 ):
     return base_types.merge_graphs(
-        _combine_utter_graphs(recipient, *dependencies.values()),
+        combine_utter_graphs(recipient, *dependencies.values()),
         gamla.pipe(
             dependencies,
             gamla.valmap(state_sink),
@@ -289,7 +291,7 @@ def optionally_needs(
     )
 
 
-@_composer([state, utter, participated])
+@composer([state, utter, participated])
 def when(condition, do):
     return _make_gate(
         composers.compose_dict(

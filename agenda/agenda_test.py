@@ -214,3 +214,94 @@ def test_listen_if_participated2():
             ),
         },
     )
+
+
+@agenda.expect_convos([[["Hi", "Would you like A?"], ["yes", "Got it."]]])
+def test_minimal_any_true():
+    return agenda.any_true(
+        agenda.slot(
+            _listen_with_memory_when_participated(lambda text: "yes" in text),
+            agenda.ask("Would you like A?"),
+            agenda.ack("Got it."),
+        )
+    )
+
+
+@agenda.expect_convos(
+    [
+        [["Hi", "Would you like A?"], ["yes", "Got it. Happy to hear."]],
+        [
+            ["Hi", "Would you like A?"],
+            ["no", "Got it. Would you like B?"],
+            ["yes", "Got it. Happy to hear."],
+        ],
+        [
+            ["Hi", "Would you like A?"],
+            ["no", "Got it. Would you like B?"],
+            ["no", "Got it. Have a good day."],
+        ],
+    ]
+)
+def test_any_true():
+    any_true = agenda.combine_slots(
+        [
+            agenda.slot(
+                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                agenda.ask("Would you like A?"),
+                agenda.ack("Got it."),
+            ),
+            agenda.slot(
+                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                agenda.ask("Would you like B?"),
+                agenda.ack("Got it."),
+            ),
+        ],
+        agenda.ack("Happy to hear that."),
+        agenda.any_true,
+    )
+    return agenda.combine_utterances(
+        agenda.when(any_true, agenda.say("Happy to hear.")),
+        agenda.when(agenda.complement(any_true), agenda.say("Have a good day.")),
+    )
+
+
+@agenda.expect_convos(
+    [
+        [
+            ["Hi", "Would you like A?"],
+            ["yes", "Got it that you want A. Would you like B?"],
+        ],
+        [["Hi", "Would you like A?"], ["no", "Got it. Have a good day."]],
+        [
+            ["Hi", "Would you like A?"],
+            ["yes", "Got it that you want A. Would you like B?"],
+            ["no", "Got it. Have a good day."],
+        ],
+        [
+            ["Hi", "Would you like A?"],
+            ["yes", "Got it that you want A. Would you like B?"],
+            ["yes", "Got it. Happy to hear."],
+        ],
+    ]
+)
+def test_all_true():
+    all_true = agenda.combine_slots(
+        [
+            agenda.slot(
+                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                agenda.ask("Would you like A?"),
+                agenda.ack("Got it that you want A."),
+            ),
+            agenda.slot(
+                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                agenda.ask("Would you like B?"),
+                agenda.ack("Got it that you want B."),
+            ),
+        ],
+        agenda.ack("Happy to hear."),
+        agenda.all_true,
+    )
+    return agenda.combine_utterances(
+        agenda.when(all_true, agenda.say("Happy to hear.")),
+        agenda.when(agenda.complement(all_true), agenda.say("Have a good day.")),
+    )
