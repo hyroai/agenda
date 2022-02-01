@@ -1,6 +1,6 @@
 from typing import Callable
+
 import gamla
-from computation_graph import base_types
 
 import agenda
 
@@ -216,7 +216,9 @@ def test_listen_if_participated2():
     )
 
 
-@agenda.expect_convos([[["Hi", "Would you like A?"], ["yes", "I acknowledge your answer"]]])
+@agenda.expect_convos(
+    [[["Hi", "Would you like A?"], ["yes", "I acknowledge your answer"]]]
+)
 def test_minimal_any_true():
     return agenda.any(
         agenda.slot(
