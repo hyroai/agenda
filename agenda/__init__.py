@@ -1,12 +1,12 @@
 import gamla
 
-from agenda import composers, sentence, test_utils
+from agenda import composers, sentence, test_utils, state_aggregators
 
 
 UNKNOWN = composers.UNKNOWN
 Unknown = composers.Unknown
 
-combine_utterances = composers.combine_utterances
+combine_utter_sinks = composers.combine_utter_sinks
 listener_with_memory = composers.listener_with_memory
 if_participated = composers.if_participated
 optionally_needs = composers.optionally_needs
@@ -18,10 +18,13 @@ mark_state = composers.mark_state
 wrap_up = composers.wrap_up
 
 complement = composers.complement
+any = state_aggregators.any_true
+all = state_aggregators.all_true
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
 mark_state = composers.mark_state
 remember = composers.remember
+combine_slots = composers.combine_slots
 
 
 def _value_to_function_if_needed(value_or_function):

@@ -1,4 +1,4 @@
-from typing import Collection, Dict, Optional
+from typing import Collection, Dict, Optional, Callable
 
 import gamla
 from computation_graph import base_types, composers
@@ -54,19 +54,17 @@ state_sink = missing_cg_utils.sink(state)
 def _combine_edges_to_disjunction(edges: Collection[base_types.ComputationEdge]):
     assert len(edges) > 1
 
-    def any_node(*args):
+    def any_node(args):
         return any(args)
 
-    return (
-        graph.make_standard_edge(
-            source=tuple(map(base_types.edge_source, edges)),
-            key=None,
-            destination=any_node,
+    return base_types.merge_graphs(
+        missing_cg_utils.compose_left_many_to_one(
+            tuple(map(base_types.edge_source, edges)), any_node
         ),
-        graph.make_standard_edge(
-            source=any_node,
+        composers.compose_left(
+            any_node,
+            base_types.edge_destination(gamla.head(edges)),
             key=base_types.edge_key(gamla.head(edges)),
-            destination=base_types.edge_destination(gamla.head(edges)),
         ),
     )
 
@@ -109,8 +107,8 @@ def _handle_participation(condition_fn, g):
 
 
 @gamla.curry
-def _composer(markers, f):
-    def composer(*graphs):
+def _remove_sinks_and_sources_and_resolve_ambiguity(markers, f):
+    def _remove_sinks_and_sources_and_resolve_ambiguity(*graphs):
         return base_types.merge_graphs(
             f(*graphs),
             _resolve_ambiguity_using_logical_or(
@@ -120,19 +118,38 @@ def _composer(markers, f):
             ),
         )
 
-    return composer
+    return _remove_sinks_and_sources_and_resolve_ambiguity
 
 
 def slot(listener, asker, acker):
     # If the listener has an utter sink they we need to combine it with asker. Otherwise we just merge the graphs.
     try:
         utter_sink(listener)
-        return _binary_slot(combine_utterances(listener, asker), acker)
+        return _binary_slot(combine_utter_sinks(listener, asker), acker)
     except AssertionError:
         return _binary_slot(base_types.merge_graphs(listener, asker), acker)
 
 
-@_composer([utter, participated])
+def combine_slots(aggregator: Callable, acker, graphs: base_types.GraphType):
+    return _binary_slot(aggregator(*graphs), acker)
+
+
+def combine_state(aggregator: Callable):
+    @_remove_sinks_and_sources_and_resolve_ambiguity([state, utter, participated])
+    def combine_state(*graphs):
+        return base_types.merge_graphs(
+            _combine_utter_graphs(*graphs),
+            mark_state(
+                missing_cg_utils.compose_left_many_to_one(
+                    gamla.pipe(graphs, gamla.map(state_sink), tuple), aggregator
+                )
+            ),
+        )
+
+    return combine_state
+
+
+@_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
 def _binary_slot(asker_listener, acker):
     @composers.compose_left_dict(
         {
@@ -178,7 +195,7 @@ def _binary_slot(asker_listener, acker):
     )
 
 
-@_composer([state])
+@_remove_sinks_and_sources_and_resolve_ambiguity([state])
 def remember(graph):
     @mark_state
     @composers.compose_left_dict({"value": state_sink(graph), "should_forget": forget})
@@ -193,7 +210,7 @@ def remember(graph):
     return remember_or_forget
 
 
-@_composer([state])
+@_remove_sinks_and_sources_and_resolve_ambiguity([state])
 def complement(graph):
     @mark_state
     @missing_cg_utils.compose_left_curry(state_sink(graph))
@@ -258,18 +275,20 @@ def _combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.Gra
     )
 
 
-combine_utterances = _composer([utter, participated])(_combine_utter_graphs)
+combine_utter_sinks = _remove_sinks_and_sources_and_resolve_ambiguity(
+    [utter, participated]
+)(_combine_utter_graphs)
 
 
 @gamla.curry
 def _dict_composer(markers, f):
-    def composer(graph, d):
+    def _remove_sinks_and_sources_and_resolve_ambiguity(graph, d):
         return base_types.merge_graphs(
             f(graph, d),
             *map(missing_cg_utils.remove_nodes(markers), [graph, *d.values()]),
         )
 
-    return composer
+    return _remove_sinks_and_sources_and_resolve_ambiguity
 
 
 @_dict_composer([state, utter, participated])
@@ -289,7 +308,7 @@ def optionally_needs(
     )
 
 
-@_composer([state, utter, participated])
+@_remove_sinks_and_sources_and_resolve_ambiguity([state, utter, participated])
 def when(condition, do):
     return _make_gate(
         composers.compose_dict(
