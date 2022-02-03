@@ -139,8 +139,8 @@ def combine_state(aggregator: Callable):
         return base_types.merge_graphs(
             _combine_utter_graphs(*graphs),
             mark_state(
-                missing_cg_utils.compose_left_many_to_one(
-                    gamla.pipe(graphs, gamla.map(state_sink), tuple), aggregator
+                composers.aggregation(
+                    aggregator, gamla.pipe(graphs, gamla.map(state_sink), tuple)
                 )
             ),
         )

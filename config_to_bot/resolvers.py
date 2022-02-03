@@ -232,6 +232,14 @@ def _complement(complement: base_types.GraphType) -> base_types.GraphType:
     return agenda.complement(complement)
 
 
+def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
+    return agenda.combine_slots(agenda.all, agenda.ack(""), all)
+
+
+def _any(any: Iterable[base_types.GraphType]) -> base_types.GraphType:
+    return agenda.combine_slots(agenda.any, agenda.ack(""), any)
+
+
 def _kv(
     key: str, value: Union[str, base_types.GraphType]
 ) -> Tuple[str, Union[str, base_types.GraphType]]:
@@ -328,6 +336,8 @@ COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
         _listen_to_type_with_examples,
         _listen_to_type_with_options,
         _complement,
+        _all,
+        _any,
         _kv,
         _remote,
         _say_with_needs,
