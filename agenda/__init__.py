@@ -1,7 +1,6 @@
 import gamla
 
-from agenda import composers, sentence, test_utils, state_aggregators
-
+from agenda import composers, sentence, state_aggregators, test_utils
 
 UNKNOWN = composers.UNKNOWN
 Unknown = composers.Unknown

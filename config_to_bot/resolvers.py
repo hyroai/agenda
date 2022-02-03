@@ -1,12 +1,14 @@
-from typing import Callable, Tuple, Union, Iterable, Dict, Any
-import gamla
+from typing import Any, Callable, Dict, FrozenSet, Iterable, Tuple, Union
+
 import duckling
-import spacy
-import pyap
-import agenda
+import gamla
 import httpx
+import pyap
+import spacy
 from computation_graph import base_types
 from computation_graph.composers import lift
+
+import agenda
 
 _d = duckling.DucklingWrapper()
 
@@ -19,6 +21,11 @@ _duckling_wrapper = gamla.ternary(
 )
 
 _nlp = spacy.load("en_core_web_lg")
+
+
+def _construct_doc(sentence: str):
+    return _nlp(sentence)
+
 
 _AFFIRMATIVE = {
     "affirmative",
@@ -72,8 +79,7 @@ def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> int
         examples,
         gamla.map(
             gamla.compose_left(
-                lambda example: _nlp(example),
-                lambda sentence: sentence.similarity(user_sentence),
+                _construct_doc, lambda sentence: sentence.similarity(user_sentence)
             )
         ),
         gamla.sort,
@@ -85,14 +91,14 @@ _name_detector: Callable[[str], str] = gamla.compose_left(
     lambda user_utterance: " ".join(
         word[0].upper() + word[1:] for word in user_utterance.split()
     ),
-    lambda capitalized_user_utterance: _nlp(capitalized_user_utterance),
+    _construct_doc,
     tuple,
     gamla.filter(
         gamla.compose_left(gamla.attrgetter("ent_type_"), gamla.equals("PERSON"))
     ),
     gamla.map(gamla.attrgetter("text")),
     tuple,
-    lambda names: " ".join(names),
+    " ".join,
 )
 
 
@@ -111,7 +117,9 @@ _text_to_lower_case_words: Callable[[str], Iterable[str]] = gamla.compose_left(
 )
 
 
-def _listen_to_bool_or_intent(examples: Tuple[str, ...]) -> Union[bool, agenda.Unknown]:
+def _listen_to_bool_or_intent(
+    examples: Tuple[str, ...]
+) -> Callable[[str], Union[bool, agenda.Unknown]]:
     def parse_bool(user_utterance: str):
         if examples and _sentences_similarity(user_utterance, examples) >= 0.9:
             return True
@@ -190,7 +198,7 @@ def _listen_to_type(type: str) -> base_types.GraphType:
     assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
 
     def listen_to_type(user_utterance: str):
-        return _FUNCTION_MAP.get(type)(user_utterance)
+        return _FUNCTION_MAP.get(type)(user_utterance)  # type: ignore
 
     if type in _TYPES_TO_LISTEN_AFTER_ASKING:
         return agenda.if_participated(agenda.consumes_external_event(listen_to_type))
@@ -314,7 +322,7 @@ def _goals(
     return agenda.combine_utter_sinks(*goals)
 
 
-COMPOSERS_FOR_DAG_REDUCER = frozenset(
+COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
     {
         _listen_to_type,
         _listen_to_type_with_examples,

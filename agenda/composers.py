@@ -1,10 +1,7 @@
-from typing import Collection, Dict, Optional, Callable
+from typing import Callable, Collection, Dict, Optional
 
 import gamla
-from computation_graph import base_types, composers
-from computation_graph import graph
-from computation_graph import graph as cg_graph
-from computation_graph import run
+from computation_graph import base_types, composers, graph, run
 from computation_graph.composers import logic, memory
 from computation_graph.trace import graphviz
 
@@ -31,7 +28,7 @@ event = graph.make_source_with_name("event")
 UNKNOWN = Unknown()
 
 
-@cg_graph.make_terminal("utter")
+@graph.make_terminal("utter")
 def utter(x) -> str:
     return sentence.sentence_to_str(x)
 
@@ -41,7 +38,7 @@ def state(x):
 
 
 def consumes_external_event(x):
-    return composers.compose_source(x, event, None)
+    return composers.compose_source(x, None, event)
 
 
 mark_utter = missing_cg_utils.compose_curry(utter)
@@ -101,7 +98,9 @@ def _handle_participation(condition_fn, g):
         return base_types.EMPTY_GRAPH
     indicator_graph = missing_cg_utils.conjunction(participated, condition_fn(g))
     return base_types.merge_graphs(
-        _replace_participated(cg_graph.infer_graph_sink(indicator_graph), g),
+        _replace_participated(
+            gamla.pipe(indicator_graph, graph.get_leaves, gamla.head), g
+        ),
         indicator_graph,
     )
 
