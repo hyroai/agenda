@@ -61,6 +61,6 @@ goals:
       - key: email
         value: *email
     when: *wants-to-order-pizza
-  - say: I'm transfering you to an agent.
+  - say: I'm transferring you to an agent.
     when:
       complement: *wants-to-order-pizza

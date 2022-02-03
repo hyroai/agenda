@@ -1,8 +1,6 @@
-from typing import Callable
 import gamla
-from agenda import missing_cg_utils, composers
-from computation_graph import base_types
 
+from agenda import composers
 
 _known = gamla.compose_left(gamla.remove(gamla.equals(composers.UNKNOWN)), tuple)
 
@@ -23,7 +21,6 @@ def _all_true(args):
     if len(known_values) < len(args):
         return composers.UNKNOWN
     return True
-
 
 
 any_true = composers.combine_state(_any_true)

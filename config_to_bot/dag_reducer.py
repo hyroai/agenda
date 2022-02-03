@@ -1,15 +1,15 @@
-from typing import Callable, Dict, FrozenSet, Iterable, Any
-
 import inspect
 from types import MappingProxyType
+from typing import Any, Callable, Dict, FrozenSet, Iterable
+
 import gamla
 import toposort
 from computation_graph import base_types
+
 from config_to_bot import resolvers
 
-
 _functions_to_case_dict: Callable[
-    Iterable[Callable], Callable[[Dict], Any]
+    [Iterable[Callable]], Callable[[Dict], Any]
 ] = gamla.compose_left(
     gamla.map(
         lambda f: (

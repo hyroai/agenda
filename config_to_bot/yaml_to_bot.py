@@ -1,25 +1,23 @@
-from typing import Callable, Dict, FrozenSet, Iterable, Tuple, Union, List, Awaitable
+import dataclasses
+from typing import Awaitable, Callable, Dict, FrozenSet, Iterable, List, Tuple, Union
+
+import gamla
+import yaml  # type: ignore
+from computation_graph import base_types
+
+import agenda
 
 from . import dag_reducer
-import gamla
-import yaml
-import agenda
-import dataclasses
-from computation_graph import run, base_types
-
-_Object = str
-
-_Relation = str
 
 _Triplet = Tuple[str, str, Union[str, Tuple[str]]]
 
-_Node = Union[List, Dict, str, Tuple[str, "_Node"]]
+_Node = Union[List, Dict, str, Tuple[str, "_Node"]]  # type: ignore
 
 
 @dataclasses.dataclass(frozen=True)
 class _ObjectAndTriplets:
     obj: Union[str, Tuple[str, ...]]
-    triplets: _Triplet
+    triplets: FrozenSet[_Triplet]
 
 
 _subject_to_object: Callable[[FrozenSet[_Triplet]], Dict] = gamla.compose_left(
@@ -77,10 +75,10 @@ _ReducerState = Union[_ObjectAndTriplets, _RelationAndObjectAndTriplets]
 def _reducer(current: _Node, children: Iterable[_ReducerState]) -> _ReducerState:
     reduced_children = tuple(children)
     if not reduced_children:
-        return _ObjectAndTriplets(current, frozenset())
+        return _ObjectAndTriplets(current, frozenset())  # type: ignore
     if isinstance(current, list):
         return _ObjectAndTriplets(
-            tuple(map(lambda c: c.obj, reduced_children)),
+            tuple(map(lambda c: c.obj, reduced_children)),  # type: ignore
             frozenset(gamla.mapcat(lambda c: c.triplets)(reduced_children)),
         )
     if isinstance(current, dict):
@@ -88,7 +86,7 @@ def _reducer(current: _Node, children: Iterable[_ReducerState]) -> _ReducerState
     if isinstance(current, tuple):
         relation, data = current
         assert len(reduced_children) == 1, data
-        return relation, reduced_children[0]
+        return relation, reduced_children[0]  # type: ignore
     assert False, current
 
 
