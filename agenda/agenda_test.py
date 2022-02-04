@@ -1,16 +1,18 @@
-from typing import Callable
-
 import gamla
 
 import agenda
 
+_listen_with_memory_when_participated = gamla.compose_left(
+    agenda.consumes_external_event,
+    agenda.if_participated,
+    agenda.mark_state,
+    agenda.remember,
+)
 
-def _listen_with_memory_when_participated(function: Callable):
-    return gamla.pipe(
-        agenda.if_participated(agenda.consumes_external_event(function)),
-        agenda.mark_state,
-        agenda.remember,
-    )
+
+_either = gamla.compose_left(
+    gamla.lazyjuxt, gamla.after(gamla.compose(gamla.head, gamla.filter(gamla.identity)))
+)
 
 
 @agenda.expect_convos([[["Hi", "say hello"], ["hello", "you said it"], ["Hello", ""]]])
@@ -18,7 +20,7 @@ def test_slot():
     what_needs_to_be_said = "hello"
     return agenda.slot(
         agenda.listener_with_memory(
-            lambda x: x == what_needs_to_be_said or agenda.UNKNOWN
+            _either(gamla.equals(what_needs_to_be_said), gamla.just(agenda.UNKNOWN))
         ),
         agenda.ask(f"say {what_needs_to_be_said}"),
         agenda.ack("you said it"),
@@ -66,12 +68,14 @@ def test_needs():
 def test_when1():
     topping = agenda.listener_with_memory(
         lambda incoming: next(
-            filter(lambda x: x in incoming, ["mushroom", "olives"]), agenda.UNKNOWN
+            filter(gamla.contains(incoming), ["mushroom", "olives"]), agenda.UNKNOWN
         )
     )
     return agenda.when(
         agenda.slot(
-            agenda.listener_with_memory(lambda x: "pizza" in x or agenda.UNKNOWN),
+            agenda.listener_with_memory(
+                _either(gamla.inside("pizza"), gamla.just(agenda.UNKNOWN))
+            ),
             agenda.ask("what can i do for you today?"),
             agenda.ack("okay."),
         ),
@@ -105,7 +109,9 @@ def test_when1():
 def test_when2():
     return agenda.when(
         agenda.slot(
-            agenda.listener_with_memory(lambda x: "pizza" in x or agenda.UNKNOWN),
+            agenda.listener_with_memory(
+                _either(gamla.inside("pizza"), gamla.just(agenda.UNKNOWN))
+            ),
             agenda.ask("what can i do for you today?"),
             agenda.ack("okay."),
         ),
@@ -176,7 +182,7 @@ def test_listen_if_participated1():
         ),
         {
             "x": agenda.slot(
-                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("x?"),
                 agenda.ack("okay."),
             )
@@ -203,12 +209,12 @@ def test_listen_if_participated2():
         ),
         {
             "x": agenda.slot(
-                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("x?"),
                 agenda.ack("okay."),
             ),
             "y": agenda.slot(
-                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("y?"),
                 agenda.ack("okay."),
             ),
@@ -222,7 +228,7 @@ def test_listen_if_participated2():
 def test_minimal_any_true():
     return agenda.any(
         agenda.slot(
-            _listen_with_memory_when_participated(lambda text: "yes" in text),
+            _listen_with_memory_when_participated(gamla.inside("yes")),
             agenda.ask("Would you like A?"),
             agenda.ack("I acknowledge your answer"),
         )
@@ -250,12 +256,12 @@ def test_any_true():
         agenda.ack("You are all set."),
         [
             agenda.slot(
-                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like A?"),
                 agenda.ack("I got your answer for A."),
             ),
             agenda.slot(
-                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like B?"),
                 agenda.ack("I got your answer for B."),
             ),
@@ -292,12 +298,12 @@ def test_all_true():
         agenda.ack("You are all set."),
         [
             agenda.slot(
-                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like A?"),
                 agenda.ack("Got it that you want A."),
             ),
             agenda.slot(
-                _listen_with_memory_when_participated(lambda text: "yes" in text),
+                _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like B?"),
                 agenda.ack("Got it that you want B."),
             ),
