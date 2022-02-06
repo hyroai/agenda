@@ -33,6 +33,7 @@ def utter(x) -> str:
     return sentence.sentence_to_str(x)
 
 
+@graph.make_terminal("state")
 def state(x):
     return x
 

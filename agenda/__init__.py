@@ -21,7 +21,6 @@ any = state_aggregators.any_true
 all = state_aggregators.all_true
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
-mark_state = composers.mark_state
 remember = composers.remember
 combine_slots = composers.combine_slots
 

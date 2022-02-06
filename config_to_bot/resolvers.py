@@ -6,7 +6,7 @@ import httpx
 import pyap
 import spacy
 from computation_graph import base_types
-from computation_graph.composers import lift
+from computation_graph.composers import duplication, lift
 
 import agenda
 
@@ -117,27 +117,31 @@ _text_to_lower_case_words: Callable[[str], Iterable[str]] = gamla.compose_left(
 )
 
 
-def _listen_to_bool_or_intent(
+def _listen_to_intent(
     examples: Tuple[str, ...]
 ) -> Callable[[str], Union[bool, agenda.Unknown]]:
     def parse_bool(user_utterance: str):
         if examples and _sentences_similarity(user_utterance, examples) >= 0.9:
             return True
-        if gamla.pipe(
-            user_utterance,
-            _text_to_lower_case_words,
-            gamla.anymap(gamla.contains(_AFFIRMATIVE)),
-        ):
-            return True
-        if gamla.pipe(
-            user_utterance,
-            _text_to_lower_case_words,
-            gamla.anymap(gamla.contains(_NEGATIVE)),
-        ):
-            return False
-        return agenda.UNKNOWN
+        return False
 
     return parse_bool
+
+
+def _listen_to_bool(user_utterance: str):
+    if gamla.pipe(
+        user_utterance,
+        _text_to_lower_case_words,
+        gamla.anymap(gamla.contains(_AFFIRMATIVE)),
+    ):
+        return True
+    if gamla.pipe(
+        user_utterance,
+        _text_to_lower_case_words,
+        gamla.anymap(gamla.contains(_NEGATIVE)),
+    ):
+        return False
+    return agenda.UNKNOWN
 
 
 def _listen_to_multiple_choices(
@@ -168,7 +172,8 @@ _FUNCTION_MAP = {
     "email": gamla.compose_left(_d.parse_email, _duckling_wrapper),
     "phone": gamla.compose_left(_d.parse_phone_number, _duckling_wrapper),
     "amount": gamla.compose_left(_d.parse_number, _duckling_wrapper),
-    "bool": _listen_to_bool_or_intent,
+    "bool": _listen_to_bool,
+    "intent": _listen_to_intent,
     "name": gamla.compose_left(
         _name_detector, gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN))
     ),
@@ -181,6 +186,7 @@ _INFORMATION_TYPES = frozenset(
     {
         "phone",
         "email",
+        "intent",
         "bool",
         "amount",
         "name",
@@ -306,9 +312,17 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
     )
 
 
+def _listen(listen: base_types.GraphType):
+    return gamla.pipe(
+        listen, agenda.mark_state, agenda.remember, duplication.duplicate_graph
+    )
+
+
 def _ask_about(listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        gamla.pipe(listen, agenda.mark_state, agenda.remember),
+        gamla.pipe(
+            listen, agenda.mark_state, agenda.remember, duplication.duplicate_graph
+        ),
         agenda.ask(ask),
         agenda.ack("Got it."),
     )
@@ -316,7 +330,9 @@ def _ask_about(listen: base_types.GraphType, ask: str) -> base_types.GraphType:
 
 def _slot(ack: str, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        gamla.pipe(listen, agenda.mark_state, agenda.remember),
+        gamla.pipe(
+            listen, agenda.mark_state, agenda.remember, duplication.duplicate_graph
+        ),
         agenda.ask(ask),
         agenda.ack(ack),
     )
@@ -335,6 +351,7 @@ COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
         _listen_to_type,
         _listen_to_type_with_examples,
         _listen_to_type_with_options,
+        _listen,
         _complement,
         _all,
         _any,
