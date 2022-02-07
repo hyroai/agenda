@@ -38,6 +38,11 @@ def state(x):
     return x
 
 
+@graph.make_terminal("debug_states")
+def debug_states(args):
+    return args
+
+
 def consumes_external_event(x):
     return composers.compose_source(x, None, event)
 
@@ -208,6 +213,17 @@ def remember(graph):
         return value
 
     return remember_or_forget
+
+
+@_remove_sinks_and_sources_and_resolve_ambiguity([state])
+def ever(graph):
+    @mark_state
+    @composers.compose_left_dict({"value": state_sink(graph)})
+    @memory.with_state("state", None)
+    def ever_inner(state, value):
+        return state or value
+
+    return ever_inner
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([state])

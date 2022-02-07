@@ -5,7 +5,7 @@ import gamla
 import httpx
 import pyap
 import spacy
-from computation_graph import base_types
+from computation_graph import base_types, composers
 from computation_graph.composers import duplication, lift
 
 import agenda
@@ -314,7 +314,7 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
 
 def _listen(listen: base_types.GraphType):
     return gamla.pipe(
-        listen, agenda.mark_state, agenda.remember, duplication.duplicate_graph
+        listen, agenda.mark_state, agenda.ever, duplication.duplicate_graph
     )
 
 
@@ -346,6 +346,20 @@ def _goals(
     return agenda.combine_utter_sinks(*goals)
 
 
+def _goals_with_debug(
+    goals: Tuple[base_types.GraphType, ...],
+    definitions: Tuple[base_types.GraphType, ...],
+    debug: Tuple[base_types.GraphType],
+) -> base_types.GraphType:
+    del definitions
+    return base_types.merge_graphs(
+        agenda.combine_utter_sinks(*goals),
+        composers.compose_many_to_one(
+            agenda.debug_states, gamla.pipe(debug, gamla.map(agenda.state_sink), tuple)
+        ),
+    )
+
+
 COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
     {
         _listen_to_type,
@@ -364,5 +378,6 @@ COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
         _ask_about,
         _slot,
         _goals,
+        _goals_with_debug,
     }
 )

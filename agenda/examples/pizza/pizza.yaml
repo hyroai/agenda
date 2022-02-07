@@ -25,10 +25,10 @@ definitions:
       type: bool
   - &wants-pizza-intent
     listen:
-      type: intent   
+      type: intent
       examples:
-      - I want to order pizza
-      - I want pizza
+        - I want to order pizza
+        - I want pizza
   - &wants-pizza
     any:
       - *wants-pizza-question
@@ -36,7 +36,7 @@ definitions:
   - &is-vegan
     ask: Are you vegan?
     listen:
-      type: bool     
+      type: bool
   - &toppings
     ask: What kind of toppings would you like?
     listen:
@@ -61,7 +61,7 @@ goals:
     when:
       all:
         - *wants-pizza
-        - *is-vegan    
+        - *is-vegan
   - say:
       url: http://localhost:8000/order-pizza
     needs:
@@ -79,7 +79,10 @@ goals:
         value: *phone
       - key: email
         value: *email
-    when: 
+    when:
       all:
         - *wants-pizza
         - complement: *is-vegan
+debug:
+  - *wants-pizza-question
+  - *wants-pizza-intent

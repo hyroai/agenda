@@ -22,7 +22,10 @@ all = state_aggregators.all_true
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
 remember = composers.remember
+ever = composers.ever
 combine_slots = composers.combine_slots
+debug_states = composers.debug_states
+state_sink = composers.state_sink
 
 
 def _value_to_function_if_needed(value_or_function):
