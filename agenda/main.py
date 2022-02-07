@@ -41,7 +41,7 @@ def _create_socket_handler(path: str):
                         state[graph.make_computation_node(composers.debug_states)],
                         gamla.map(
                             gamla.when(
-                                gamla.equals(composers.UNKNOWN), gamla.just("Unknown")
+                                gamla.equals(composers.UNKNOWN), gamla.just(None)
                             )
                         ),
                         tuple,

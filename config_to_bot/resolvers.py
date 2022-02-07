@@ -121,9 +121,7 @@ def _listen_to_intent(
     examples: Tuple[str, ...]
 ) -> Callable[[str], Union[bool, agenda.Unknown]]:
     def parse_bool(user_utterance: str):
-        if examples and _sentences_similarity(user_utterance, examples) >= 0.9:
-            return True
-        return False
+        return bool(examples) and _sentences_similarity(user_utterance, examples) >= 0.9
 
     return parse_bool
 
