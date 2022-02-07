@@ -28,17 +28,28 @@ def _create_socket_handler(path: str):
             if request.lower() == "reload":
                 bot = config_to_bot.yaml_to_slot_bot(path)()
                 state = {}
-                return "Reloading bot"
+                return ("Reloading bot",)
             if request.lower() == "reset":
                 state = {}
-                return "Starting Over"
+                return ("Starting Over",)
             try:
                 computation_result = await bot({composers.event: request, **state})
                 state = computation_result
-                return state[graph.make_computation_node(composers.utter)]
+                return (
+                    state[graph.make_computation_node(composers.utter)],
+                    gamla.pipe(
+                        state[graph.make_computation_node(composers.debug_states)],
+                        gamla.map(
+                            gamla.when(
+                                gamla.equals(composers.UNKNOWN), gamla.just("Unknown")
+                            )
+                        ),
+                        tuple,
+                    ),
+                )
             except Exception as err:
                 logging.exception(err)
-                return _error_message(err)
+                return gamla.wrap_tuple(_error_message(err))
 
         await websocket.accept()
         while True:

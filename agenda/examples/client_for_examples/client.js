@@ -5,18 +5,23 @@ const prompt = require("prompt-async");
 const socket = new WebSocket(`${"ws://0.0.0.0:9000"}/converse`);
 
 // Listen for messages
-socket.addEventListener("message", function (event) {
-  someArray.push("Bot: " + event.data.replace(/(^"|"$)/g, ""));
+socket.addEventListener("message", function ({ data }) {
+  eventData = JSON.parse(data);
+  resultArray.push("Bot: " + eventData[0].replace(/(^"|"$)/g, ""));
+  if (eventData.length > 1) {
+    debugArray.push("States: " + eventData[1]);
+  }
   render();
 });
 
-const someArray = [];
+const resultArray = [];
+const debugArray = [];
 
 prompt.start();
 const start = async () => {
   while (true) {
     const { userInput } = await prompt.get(["userInput"]);
-    someArray.push("User: " + userInput);
+    resultArray.push("User: " + userInput);
     render();
     await socket.send(JSON.stringify(userInput));
   }
@@ -24,6 +29,6 @@ const start = async () => {
 
 const render = () => {
   console.clear();
-  console.log(someArray.join("\n"));
+  console.log(resultArray.join("\n"));
 };
 start();
