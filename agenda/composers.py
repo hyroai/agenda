@@ -33,8 +33,14 @@ def utter(x) -> str:
     return sentence.sentence_to_str(x)
 
 
+@graph.make_terminal("state")
 def state(x):
     return x
+
+
+@graph.make_terminal("debug_states")
+def debug_states(args):
+    return args
 
 
 def consumes_external_event(x):
@@ -139,8 +145,8 @@ def combine_state(aggregator: Callable):
         return base_types.merge_graphs(
             _combine_utter_graphs(*graphs),
             mark_state(
-                missing_cg_utils.compose_left_many_to_one(
-                    gamla.pipe(graphs, gamla.map(state_sink), tuple), aggregator
+                composers.aggregation(
+                    aggregator, gamla.pipe(graphs, gamla.map(state_sink), tuple)
                 )
             ),
         )
@@ -207,6 +213,17 @@ def remember(graph):
         return value
 
     return remember_or_forget
+
+
+@_remove_sinks_and_sources_and_resolve_ambiguity([state])
+def ever(graph):
+    @mark_state
+    @composers.compose_left_dict({"value": state_sink(graph)})
+    @memory.with_state("state", None)
+    def ever_inner(state, value):
+        return state or value
+
+    return ever_inner
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([state])

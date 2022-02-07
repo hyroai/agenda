@@ -19,13 +19,24 @@ definitions:
     ask: How many pies would you like?
     listen:
       type: amount
-  - &wants-to-order-pizza
+  - &wants-pizza-question
     ask: Would you like to order pizza?
     listen:
       type: bool
+  - &wants-pizza-intent
+    listen:
+      type: intent
       examples:
         - I want to order pizza
         - I want pizza
+  - &wants-pizza
+    any:
+      - *wants-pizza-question
+      - *wants-pizza-intent
+  - &is-vegan
+    ask: Are you vegan?
+    listen:
+      type: bool
   - &toppings
     ask: What kind of toppings would you like?
     listen:
@@ -43,6 +54,14 @@ definitions:
         - medium
         - large
 goals:
+  - say: I'm transferring you to an agent.
+    when:
+      complement: *wants-pizza
+  - say: We currently do not sell vegan pizzas.
+    when:
+      all:
+        - *wants-pizza
+        - *is-vegan
   - say:
       url: http://localhost:8000/order-pizza
     needs:
@@ -60,7 +79,10 @@ goals:
         value: *phone
       - key: email
         value: *email
-    when: *wants-to-order-pizza
-  - say: I'm transferring you to an agent.
     when:
-      complement: *wants-to-order-pizza
+      all:
+        - *wants-pizza
+        - complement: *is-vegan
+debug:
+  - *wants-pizza-question
+  - *wants-pizza-intent
