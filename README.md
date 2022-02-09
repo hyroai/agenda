@@ -1,6 +1,40 @@
 # Agenda
 
-## Intro
+## Setup
+
+```
+git clone https://github.com/hyroai/agenda.git
+cd agenda
+pip install -e .
+cd config_to_bot/debugger
+npm install
+
+```
+
+In addition run `npm install` in each example that you wish to run in `config_to_bot/examples`
+
+## Duckling Setup
+
+Agenda uses some parsers from Duckling. They require JVM in order to use their Library. To install the latest JDK visit https://www.oracle.com/java/technologies/downloads/
+
+## Running pizza example:
+
+- Running remote functions server:
+
+```
+cd examples/pizza
+npm start
+```
+
+- Running bot's server: `python main.py {path-to-pizza-yaml-file}`
+- Running client:
+
+```
+cd debugger
+npm start
+```
+
+## Information on Agenda
 
 `Agenda` is a declarative specification language for conversations, focused on the goals and dependencies, rather than sequential flows or conversation trees.
 
@@ -51,7 +85,7 @@ definitions:
         - I want pizza
 goals:
   - say:
-      url: http://localhost:8000/order-pizza  # Actually ordering a pizza and sending back a confirmation will happen through an external API!
+      url: http://localhost:8000/order-pizza # Actually ordering a pizza and sending back a confirmation will happen through an external API!
     when: *wants-to-order-pizza
     needs:
       - key: name
