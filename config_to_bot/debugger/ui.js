@@ -1,12 +1,12 @@
 import WebSocket from "ws";
 import React, { useState, useEffect, useReducer } from "react";
-import { render, Box, Text, Newline } from "ink";
+import { render, Box, Text } from "ink";
 import TextInput from "ink-text-input";
 
 const textToBotUtterance = ({ botUtterance, state }) => (
 	<Box>
 		<Text color="blue">Bot: {botUtterance}</Text>
-		{state ? <Text color="red">  {JSON.stringify(state)}</Text> : null}
+		{state ? <Text color="red"> {JSON.stringify(state)}</Text> : null}
 	</Box>
 );
 const textToUsertUtterance = ({ userUtterance }) => (
