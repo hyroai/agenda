@@ -10,7 +10,12 @@ cd config_to_bot/debugger
 npm install
 
 ```
-In addition run `npm install` in each example that you wish to run in `/examples`
+In addition run `npm install` in each example that you wish to run in `config_to_bot/examples`
+
+## Duckling Setup
+
+Agenda uses some parsers from Duckling. They require JVM in order to use their Library. To install the latest JDK visit https://www.oracle.com/java/technologies/downloads/
+
 
 ## Intro
 
