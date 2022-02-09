@@ -33,7 +33,7 @@ def _create_socket_handler(path: str):
                 state = {}
                 return {"botUtterance": "Starting Over"}
             try:
-                computation_result = await bot({composers.event: request, **state})
+                computation_result = await bot(state, {composers.event: request})
                 state = computation_result
                 return {
                     "botUtterance": state[graph.make_computation_node(composers.utter)],
