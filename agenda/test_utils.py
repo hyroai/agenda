@@ -11,7 +11,7 @@ def expect_convos(convos, f):
         for convo in convos:
             prev = {}
             for input_event, expected in convo:
-                prev = cg({**prev, composers.event: input_event})
+                prev = cg(prev, {composers.event: input_event})
                 result = prev[graph.make_computation_node(composers.utter)]
                 assert result == expected, f"expected: {expected} actual: {result}"
 

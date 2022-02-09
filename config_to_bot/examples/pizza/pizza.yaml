@@ -56,7 +56,7 @@ definitions:
 goals:
   - say: I'm transferring you to an agent.
     when:
-      complement: *wants-pizza
+      not: *wants-pizza
   - say: We currently do not sell vegan pizzas.
     when:
       all:
@@ -82,7 +82,7 @@ goals:
     when:
       all:
         - *wants-pizza
-        - complement: *is-vegan
+        - not: *is-vegan
 debug:
   - *wants-pizza-question
   - *wants-pizza-intent
