@@ -10,6 +10,7 @@ cd config_to_bot/debugger
 npm install
 
 ```
+In addition run `npm install` in each example that you wish to run in `/examples`
 
 ## Intro
 
