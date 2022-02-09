@@ -16,7 +16,6 @@ setuptools.setup(
         "computation-graph",
         "immutables",
         "dataclasses",
-        "PyYAML",
         "duckling",
         "httpx",
         "pyap",
