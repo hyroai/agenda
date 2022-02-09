@@ -1,0 +1,55 @@
+{
+  "name": "ink_client_for_examples",
+  "version": "0.0.0",
+  "license": "MIT",
+  "bin": "cli.js",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "test": "xo && ava"
+  },
+  "files": [
+    "cli.js",
+    "ui.js"
+  ],
+  "dependencies": {
+    "import-jsx": "^4.0.1",
+    "ink": "^3.2.0",
+    "ink-text-input": "^4.0.3",
+    "meow": "^9.0.0",
+    "react": "^17.0.2"
+  },
+  "devDependencies": {
+    "@ava/babel": "^2.0.0",
+    "@babel/core": "^7.17.0",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-react": "^7.16.7",
+    "@babel/register": "^7.17.0",
+    "ava": "^4.0.1",
+    "chalk": "^4.1.2",
+    "eslint-config-xo-react": "^0.26.0",
+    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "ink-testing-library": "^2.1.0",
+    "xo": "^0.39.1"
+  },
+  "ava": {
+    "babel": true,
+    "require": [
+      "@babel/register"
+    ]
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ]
+  },
+  "xo": {
+    "extends": "xo-react",
+    "rules": {
+      "react/prop-types": "off"
+    }
+  }
+}
