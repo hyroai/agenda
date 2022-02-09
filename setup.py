@@ -23,7 +23,7 @@ setuptools.setup(
         "asyncio",
         "logging",
         "fastapi",
-        "uvicorn",
+        "uvicorn==0.15.0",
         "starlette",
         "inspect",
         "toposort",
