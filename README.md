@@ -1,5 +1,16 @@
 # Agenda
 
+## Setup
+
+```
+git clone https://github.com/hyroai/agenda.git
+cd agenda
+pip install -e .
+cd config_to_bot/debugger
+npm install
+
+```
+
 ## Intro
 
 `Agenda` is a declarative specification language for conversations, focused on the goals and dependencies, rather than sequential flows or conversation trees.
@@ -51,7 +62,7 @@ definitions:
         - I want pizza
 goals:
   - say:
-      url: http://localhost:8000/order-pizza  # Actually ordering a pizza and sending back a confirmation will happen through an external API!
+      url: http://localhost:8000/order-pizza # Actually ordering a pizza and sending back a confirmation will happen through an external API!
     when: *wants-to-order-pizza
     needs:
       - key: name
@@ -94,3 +105,20 @@ For Joe's pizza place, the actual API that orders the pizza is not a part of the
 - Acknowledgement: the bot will ack information it received automatically and naturally, with no need to specify this.
 - All utterances are fully configurable.
 - Many built-in functions to support collection of emails, dates, times, names, amounts booleans etc'...
+
+## Running pizza example:
+
+- Running remote functions server:
+
+```
+cd examples/pizza
+npm start
+```
+
+- Running bot's server: `python main.py {path-to-pizza-yaml-file}`
+- Running client:
+
+```
+cd debugger
+npm start
+```
