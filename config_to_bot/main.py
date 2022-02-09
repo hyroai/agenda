@@ -37,7 +37,8 @@ def _create_socket_handler(path: str):
                 return {
                     "botUtterance": state[graph.make_computation_node(composers.utter)],
                     "state": gamla.pipe(
-                        state[graph.make_computation_node(composers.debug_states)],
+                        graph.make_computation_node(composers.debug_states),
+                        gamla.dict_to_getter_with_default(state, ()),
                         gamla.map(
                             gamla.when(
                                 gamla.equals(composers.UNKNOWN), gamla.just(None)
