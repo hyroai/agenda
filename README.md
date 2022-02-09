@@ -10,14 +10,31 @@ cd config_to_bot/debugger
 npm install
 
 ```
+
 In addition run `npm install` in each example that you wish to run in `config_to_bot/examples`
 
 ## Duckling Setup
 
 Agenda uses some parsers from Duckling. They require JVM in order to use their Library. To install the latest JDK visit https://www.oracle.com/java/technologies/downloads/
 
+## Running pizza example:
 
-## Intro
+- Running remote functions server:
+
+```
+cd examples/pizza
+npm start
+```
+
+- Running bot's server: `python main.py {path-to-pizza-yaml-file}`
+- Running client:
+
+```
+cd debugger
+npm start
+```
+
+## Information on Agenda
 
 `Agenda` is a declarative specification language for conversations, focused on the goals and dependencies, rather than sequential flows or conversation trees.
 
@@ -111,20 +128,3 @@ For Joe's pizza place, the actual API that orders the pizza is not a part of the
 - Acknowledgement: the bot will ack information it received automatically and naturally, with no need to specify this.
 - All utterances are fully configurable.
 - Many built-in functions to support collection of emails, dates, times, names, amounts booleans etc'...
-
-## Running pizza example:
-
-- Running remote functions server:
-
-```
-cd examples/pizza
-npm start
-```
-
-- Running bot's server: `python main.py {path-to-pizza-yaml-file}`
-- Running client:
-
-```
-cd debugger
-npm start
-```
