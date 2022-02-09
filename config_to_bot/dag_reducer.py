@@ -32,6 +32,7 @@ _functions_to_case_dict: Callable[
     dict,
     gamla.keymap(gamla.before(gamla.compose_left(dict.keys, frozenset))),
     gamla.case_dict,
+    gamla.before(gamla.keymap(gamla.when(gamla.equals("not"), gamla.just("not_")))),
 )
 
 

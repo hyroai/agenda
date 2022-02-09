@@ -232,8 +232,8 @@ def _listen_to_type_with_options(
     return agenda.consumes_external_event(listen_to_type_with_options)
 
 
-def _complement(complement: base_types.GraphType) -> base_types.GraphType:
-    return agenda.complement(complement)
+def _complement(not_: base_types.GraphType) -> base_types.GraphType:
+    return agenda.complement(not_)
 
 
 def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
