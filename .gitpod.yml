@@ -5,7 +5,7 @@ tasks:
       pip install --force-reinstall JPype1==0.6.3
       python -m spacy download en_core_web_lg
       yarn install --cwd=config_to_bot/debugger/
-      pre-commit install --install-hooks
-      pytest
+      python -m pre_commit install --install-hooks
+      python -m pytest
 image:
   file: .gitpod.Dockerfile
