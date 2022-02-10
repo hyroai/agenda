@@ -11,17 +11,8 @@ class Unknown:
     pass
 
 
-# sources:
-
-
-def forget():
-    raise NotImplementedError
-
-
-def participated():
-    raise NotImplementedError
-
-
+forget = graph.make_source_with_name("forget")
+participated = graph.make_source_with_name("participated")
 event = graph.make_source_with_name("event")
 
 UNKNOWN = Unknown()
