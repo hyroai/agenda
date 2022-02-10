@@ -13,6 +13,7 @@ _ACK = "ack"
 _CONSTITUENTS = "constituents"
 _TYPE = "type"
 
+GENERIC_ACK = "Got it."
 EMPTY_SENTENCE = immutables.Map({_TYPE: _SENTENCE, _CONSTITUENTS: frozenset()})
 
 constituents = gamla.itemgetter(_CONSTITUENTS)
@@ -75,7 +76,7 @@ def _add_constituent(sentence, element):
 def _add_ack(sentence, element):
     assert element != EMPTY_SENTENCE
     if _has_ack(sentence):
-        return sentence.set(_ACK, str_to_ack("Got it."))
+        return sentence.set(_ACK, str_to_ack(GENERIC_ACK))
     return sentence.set(_ACK, element)
 
 
