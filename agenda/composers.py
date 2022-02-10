@@ -3,7 +3,6 @@ from typing import Callable, Collection, Dict, Optional
 import gamla
 from computation_graph import base_types, composers, graph, run
 from computation_graph.composers import logic, memory
-from computation_graph.trace import graphviz
 
 from agenda import missing_cg_utils, sentence
 
@@ -357,7 +356,6 @@ wrap_up = gamla.compose_left(
         base_types.ambiguity_groups,
         gamla.compose(gamla.empty, base_types.ambiguity_groups),
     ),
-    gamla.side_effect(graphviz.visualize_graph),
     _final_replace(participated, lambda: True),
     _final_replace(forget, lambda: False),
     lambda g: run.to_callable(g, frozenset()),
