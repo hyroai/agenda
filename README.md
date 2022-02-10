@@ -9,10 +9,10 @@ git clone https://github.com/hyroai/agenda.git
 cd agenda
 pip install -e .
 cd config_to_bot/debugger
-npm install
+yarn install
 ```
 
-In addition run `npm install` in each example that you wish to run in `config_to_bot/examples`
+In addition run `yarn install` in each example that you wish to run in `config_to_bot/examples`
 
 ### Duckling Setup
 
@@ -24,7 +24,7 @@ Agenda uses some parsers from Duckling. They require JVM in order to use their L
 
 ```
 cd examples/pizza
-npm start
+yarn start
 ```
 
 - Running bot's server: `python main.py {path-to-pizza-yaml-file}`
@@ -32,7 +32,7 @@ npm start
 
 ```
 cd debugger
-npm start
+yarn start
 ```
 
 ## Example
