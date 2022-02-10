@@ -9,7 +9,7 @@ RUN pyenv global 3.9.10
 RUN python -m pip install --no-cache-dir --upgrade pip
 RUN echo "alias pip='python -m pip'" >> ~/.bash_aliases
 
-RUN pip install spacy
+RUN python -m pip install spacy
 RUN python -m spacy download en_core_web_lg
 
 # `duckling` compatbility issue.
