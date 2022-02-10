@@ -28,5 +28,5 @@ setuptools.setup(
     ],
     package_data={"": [], "agenda": ["py.typed"]},
     include_package_data=True,
-    extras_require={"test": ["pytest"]},
+    extras_require={"dev": ["pytest", "pre-commit"]},
 )
