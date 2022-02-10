@@ -15,6 +15,7 @@ setuptools.setup(
         "gamla>=121",
         "computation-graph>=32",
         "immutables",
+        "Jpype1==0.6.3",
         "dataclasses",
         "duckling",
         "httpx",
