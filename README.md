@@ -1,5 +1,7 @@
 # Agenda
 
+`Agenda` is a declarative specification language for conversations, focused on the goals and dependencies, rather than sequential flows or conversation trees.
+
 ## Setup
 
 ```
@@ -8,16 +10,15 @@ cd agenda
 pip install -e .
 cd config_to_bot/debugger
 npm install
-
 ```
 
 In addition run `npm install` in each example that you wish to run in `config_to_bot/examples`
 
-## Duckling Setup
+### Duckling Setup
 
 Agenda uses some parsers from Duckling. They require JVM in order to use their Library. To install the latest JDK visit https://www.oracle.com/java/technologies/downloads/
 
-## Running pizza example:
+### Running pizza example
 
 - Running remote functions server:
 
@@ -34,11 +35,9 @@ cd debugger
 npm start
 ```
 
-## Information on Agenda
+## Example
 
-`Agenda` is a declarative specification language for conversations, focused on the goals and dependencies, rather than sequential flows or conversation trees.
-
-For example, let's assume we are building a bot for pizza place. In terms of conversation trees, there are many options as to how this conversation can go, here are a couple of examples:
+Let's iamgine we're buliding a bot for pizza place. In terms of conversation trees, there are many options as to how this conversation can go, here are a couple of examples:
 
 ```
 User: hi there
@@ -122,7 +121,7 @@ Given this spec, agenda will create a bot that can handle the conversations abov
 
 For Joe's pizza place, the actual API that orders the pizza is not a part of the bot code, so it is convenient to do this in an external server for the user to define. This allows combining agenda with any backend coding language, or use multiple backends within the same bot.
 
-## Features:
+## Features summary
 
 - Remote functions: Using remote servers for some of the bot parts.
 - Acknowledgement: the bot will ack information it received automatically and naturally, with no need to specify this.
