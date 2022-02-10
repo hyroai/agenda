@@ -42,7 +42,7 @@ def test_needs():
                     lambda x: x in options and x or agenda.UNKNOWN
                 ),
                 agenda.ask(f"say {' or '.join(options)}"),
-                agenda.ack("Got it."),
+                agenda.ack(agenda.GENERIC_ACK),
             )
         },
     )

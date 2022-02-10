@@ -5,6 +5,7 @@ from agenda import composers, sentence, state_aggregators, test_utils
 UNKNOWN = composers.UNKNOWN
 Unknown = composers.Unknown
 
+GENERIC_ACK = sentence.GENERIC_ACK
 combine_utter_sinks = composers.combine_utter_sinks
 listener_with_memory = composers.listener_with_memory
 if_participated = composers.if_participated
