@@ -37,7 +37,7 @@ npm start
 
 ## Example
 
-Let's iamgine we're buliding a bot for pizza place. In terms of conversation trees, there are many options as to how this conversation can go, here are a couple of examples:
+Let's imagine building a bot for pizza place. In terms of conversation trees, there are many options as to how this conversation can go, here are a couple of examples:
 
 ```
 User: hi there
