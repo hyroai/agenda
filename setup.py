@@ -23,7 +23,7 @@ setuptools.setup(
         "spacy",
         "asyncio",
         "fastapi",
-        "uvicorn==0.15.0",
+        "uvicorn[standard]==0.15.0",
         "starlette",
         "toposort",
     ],
