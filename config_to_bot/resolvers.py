@@ -237,11 +237,11 @@ def _complement(not_: base_types.GraphType) -> base_types.GraphType:
 
 
 def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
-    return agenda.combine_slots(agenda.all, agenda.ack(""), all)
+    return agenda.combine_slots(agenda.all, agenda.ack("Got it."), all)
 
 
 def _any(any: Iterable[base_types.GraphType]) -> base_types.GraphType:
-    return agenda.combine_slots(agenda.any, agenda.ack(""), any)
+    return agenda.combine_slots(agenda.any, agenda.ack("Got it."), any)
 
 
 def _kv(
