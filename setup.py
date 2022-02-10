@@ -19,7 +19,6 @@ setuptools.setup(
         "duckling",
         "httpx",
         "pyap",
-        "pygrahpviz",
         "spacy",
         "asyncio",
         "fastapi",
