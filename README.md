@@ -6,17 +6,16 @@
 
 ```
 git clone https://github.com/hyroai/agenda.git
-cd agenda
-pip install -e .
-cd config_to_bot/debugger
-yarn install
+pip install -e ./agenda
+yarn install --cwd=config_to_bot/debugger
 ```
 
 In addition run `yarn install` in each example that you wish to run in `config_to_bot/examples`
 
-### Duckling Setup
+### Issues with dependencies
 
-Agenda uses some parsers from Duckling. They require JVM in order to use their Library. To install the latest JDK visit https://www.oracle.com/java/technologies/downloads/
+`spacy` requires to run: `python -m spacy download en_core_web_lg`
+`duckling` has a compatibility issue with latest `JPype1`. To fix, run: `pip install --force-reinstall JPype1==0.6.3`
 
 ### Running pizza example
 
@@ -27,7 +26,7 @@ cd examples/pizza
 yarn start
 ```
 
-- Running bot's server: `python main.py {path-to-pizza-yaml-file}`
+- Running bot's server: `python config_to_bot/main.py config_to_bot/examples/pizza/pizza.yaml`
 - Running client:
 
 ```

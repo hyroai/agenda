@@ -5,6 +5,7 @@ tasks:
       pip install -e .
       # `duckling` compatbility issue.
       pip install --force-reinstall JPype1==0.6.3
+      python -m spacy download en_core_web_lg
       yarn install --cwd=config_to_bot/debugger/
 image:
   file: .gitpod.Dockerfile
