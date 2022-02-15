@@ -38,13 +38,12 @@ def _create_socket_handler(path: str):
                     "botUtterance": state[graph.make_computation_node(composers.utter)],
                     "state": gamla.pipe(
                         graph.make_computation_node(composers.debug_states),
-                        gamla.dict_to_getter_with_default((), state),
-                        gamla.map(
+                        gamla.dict_to_getter_with_default({}, state),
+                        gamla.valmap(
                             gamla.when(
                                 gamla.equals(composers.UNKNOWN), gamla.just(None)
                             )
                         ),
-                        tuple,
                     ),
                 }
             except Exception as err:

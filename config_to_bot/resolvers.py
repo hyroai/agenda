@@ -9,6 +9,7 @@ from computation_graph import base_types, composers
 from computation_graph.composers import duplication, lift
 
 import agenda
+from agenda import missing_cg_utils
 
 _d = duckling.DucklingWrapper()
 
@@ -352,12 +353,13 @@ def _goals_with_debug(
     del definitions
     return base_types.merge_graphs(
         agenda.combine_utter_sinks(*goals),
-        composers.compose_many_to_one(
+        composers.compose_unary(
             agenda.debug_states,
             gamla.pipe(
                 debug,
-                gamla.map(gamla.packstack(gamla.identity, agenda.state_sink)),
-                tuple,
+                dict,
+                gamla.valmap(agenda.state_sink),
+                missing_cg_utils.package_into_dict,
             ),
         ),
     )

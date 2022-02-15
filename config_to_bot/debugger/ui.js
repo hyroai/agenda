@@ -4,24 +4,30 @@ import React, { useEffect, useReducer, useState } from "react";
 import TextInput from "ink-text-input";
 import WebSocket from "ws";
 
-const textToBotUtterance = ({ botUtterance, state }) => (
-  <Box>
-    <Text color="white">🤖 {botUtterance}</Text>
-    {state != null & state != [] ? (
-      <Text color="red">
-        {" "}
-        {JSON.stringify(
-          state.map((element) => {
-            if (element == null) {
-              return "unknown";
-            }
-            return element
-          })
-        ).replace(/['"]+/g, '')}
-      </Text>
-    ) : null}
-  </Box>
-);
+const items = (obj) => {
+  var i,
+    arr = [];
+  for (i in obj) {
+    arr.push(obj[i]);
+  }
+  return arr;
+};
+
+const textToBotUtterance = ({ botUtterance, state }) => {
+  return (
+    <Box>
+      <Text color="white">🤖 {botUtterance}</Text>
+      {state != null && Object.keys(state).length != 0 ? (
+        <Text color="red">
+          {" "}
+          {JSON.stringify(state)
+            .replace(/['"]+/g, "")
+            .replace("null", "unknown")}
+        </Text>
+      ) : null}
+    </Box>
+  );
+};
 const textToUsertUtterance = ({ userUtterance }) => (
   <Text color="green">👩 {userUtterance}</Text>
 );
@@ -55,15 +61,13 @@ const FullScreen = ({ children }) => {
 };
 
 const App = () => {
-  const [events, addEvent] = useReducer((state, current) => {
-    if (
-      current.userUtterance == "reset" ||
-      current.userUtterance == "reload"
-    ) {
-      return [];
-    }
-    return [...state, current];
-  }, []);
+  const [events, addEvent] = useReducer(
+    (state, current) =>
+      current.userUtterance == "reset" || current.userUtterance == "reload"
+        ? []
+        : [...state, current],
+    []
+  );
   const [textInput, setTextInput] = useState("");
   const [socket, setSocket] = useState(null);
   useEffect(() => {
@@ -91,27 +95,25 @@ const App = () => {
   );
 
   return (
-    <FullScreen>
-      <Box marginLeft={4} flexDirection="column">
-        <Box flexDirection="column">{events.map(renderEvent)}</Box>
-        <Box marginTop={2}>
-          <TextInput
-            value={textInput}
-            onChange={setTextInput}
-            onSubmit={() => {
-              if (!socket) {
-                return;
-              }
-              if (socket.readyState === WebSocket.OPEN) {
-                addEvent({ userUtterance: textInput });
-                socket.send(JSON.stringify(textInput));
-                setTextInput("");
-              }
-            }}
-          />
-        </Box>
+    <Box marginLeft={4} flexDirection="column">
+      <Box flexDirection="column">{events.map(renderEvent)}</Box>
+      <Box marginTop={2}>
+        <TextInput
+          value={textInput}
+          onChange={setTextInput}
+          onSubmit={() => {
+            if (!socket) {
+              return;
+            }
+            if (socket.readyState === WebSocket.OPEN) {
+              addEvent({ userUtterance: textInput });
+              socket.send(JSON.stringify(textInput));
+              setTextInput("");
+            }
+          }}
+        />
       </Box>
-    </FullScreen>
+    </Box>
   );
 };
 
