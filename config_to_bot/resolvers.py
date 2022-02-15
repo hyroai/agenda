@@ -198,6 +198,35 @@ _INFORMATION_TYPES = frozenset(
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "bool"})
 
 
+def _listen_to_amount_of(type: str, of: str):
+    assert type == "amount", f"We currently do not support {type} type"
+    noun = _nlp(of)
+
+    @agenda.consumes_external_event
+    def listen_to_amount_of(user_utterance):
+        return gamla.pipe(
+            user_utterance,
+            _nlp,
+            gamla.filter(lambda t: t.similarity(noun) > 0.5),
+            gamla.mapcat(gamla.attrgetter("children")),
+            gamla.filter(
+                gamla.compose_left(gamla.attrgetter("dep_"), gamla.equals("nummod"))
+            ),
+            gamla.map(gamla.attrgetter("text")),
+            tuple,
+            gamla.ternary(
+                gamla.len_greater(0),
+                gamla.compose_left(gamla.head, _FUNCTION_MAP.get("amount")),
+                gamla.just(agenda.UNKNOWN),
+            ),
+        )
+
+    return agenda.first_known(
+        agenda.mark_state(listen_to_amount_of),
+        agenda.mark_state(_listen_to_type("amount")),
+    )
+
+
 def _listen_to_type(type: str) -> base_types.GraphType:
 
     assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
@@ -235,6 +264,10 @@ def _listen_to_type_with_options(
 
 def _complement(not_: base_types.GraphType) -> base_types.GraphType:
     return agenda.complement(not_)
+
+
+def _greater_equals(amount_of: base_types.GraphType, greater_equals: int):
+    return agenda.greater_equals(greater_equals)(amount_of)
 
 
 def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
@@ -313,24 +346,24 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
 
 def _listen(listen: base_types.GraphType):
     return gamla.pipe(
-        listen, agenda.mark_state, agenda.ever, duplication.duplicate_graph
+        listen,
+        gamla.unless(agenda.state_sink_or_none, agenda.mark_state),
+        agenda.ever,
+        duplication.duplicate_graph,
     )
 
 
 def _ask_about(listen: base_types.GraphType, ask: str) -> base_types.GraphType:
-    return agenda.slot(
-        gamla.pipe(
-            listen, agenda.mark_state, agenda.remember, duplication.duplicate_graph
-        ),
-        agenda.ask(ask),
-        agenda.ack(agenda.GENERIC_ACK),
-    )
+    return _slot(agenda.GENERIC_ACK, listen, ask)
 
 
 def _slot(ack: str, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
         gamla.pipe(
-            listen, agenda.mark_state, agenda.remember, duplication.duplicate_graph
+            listen,
+            gamla.unless(agenda.state_sink_or_none, agenda.mark_state),
+            agenda.remember,
+            duplication.duplicate_graph,
         ),
         agenda.ask(ask),
         agenda.ack(ack),
@@ -384,5 +417,7 @@ COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
         _slot,
         _goals,
         _goals_with_debug,
+        _greater_equals,
+        _listen_to_amount_of,
     }
 )

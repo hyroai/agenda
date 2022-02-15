@@ -19,6 +19,7 @@ definitions:
     ask: How many pies would you like?
     listen:
       type: amount
+      of: pie
   - &wants-pizza-question
     ask: Would you like to order pizza?
     listen:

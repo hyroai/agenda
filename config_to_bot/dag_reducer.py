@@ -1,4 +1,5 @@
 import inspect
+import keyword
 from types import MappingProxyType
 from typing import Any, Callable, Dict, FrozenSet, Iterable
 
@@ -8,31 +9,28 @@ from computation_graph import base_types
 
 from config_to_bot import resolvers
 
+_resolver_signature = gamla.compose_left(
+    inspect.signature,
+    gamla.attrgetter("parameters"),
+    MappingProxyType.values,
+    gamla.map(gamla.attrgetter("name")),
+    frozenset,
+)
+_preprocess_key = gamla.compose_left(
+    gamla.when(keyword.iskeyword, gamla.wrap_str("{}_")),
+    gamla.replace_in_text("-", "_"),
+)
 _functions_to_case_dict: Callable[
     [Iterable[Callable]], Callable[[Dict], Any]
 ] = gamla.compose_left(
     gamla.map(
-        lambda f: (
-            gamla.equals(
-                frozenset(
-                    gamla.pipe(
-                        f,
-                        inspect.signature,
-                        gamla.attrgetter("parameters"),
-                        MappingProxyType.values,
-                        gamla.map(gamla.attrgetter("name")),
-                        tuple,
-                    )
-                )
-            ),
-            gamla.double_star(f),
-        )
+        gamla.juxt(gamla.compose(gamla.equals, _resolver_signature), gamla.double_star)
     ),
     gamla.suffix((gamla.equals(None), gamla.identity)),
     dict,
     gamla.keymap(gamla.before(gamla.compose_left(dict.keys, frozenset))),
     gamla.case_dict,
-    gamla.before(gamla.keymap(gamla.when(gamla.equals("not"), gamla.just("not_")))),
+    gamla.before(gamla.keymap(_preprocess_key)),
 )
 
 
