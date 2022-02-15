@@ -84,5 +84,7 @@ goals:
         - *wants-pizza
         - not: *is-vegan
 debug:
-  - *wants-pizza-question
-  - *wants-pizza-intent
+  - key: wants-pizza-question
+    value: *wants-pizza-question
+  - key: wants-pizza-intent
+    value: *wants-pizza-intent

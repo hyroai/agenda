@@ -7,7 +7,19 @@ import WebSocket from "ws";
 const textToBotUtterance = ({ botUtterance, state }) => (
   <Box>
     <Text color="white">🤖 {botUtterance}</Text>
-    {state ? <Text color="red"> {JSON.stringify(state)}</Text> : null}
+    {state != null & state != [] ? (
+      <Text color="red">
+        {" "}
+        {JSON.stringify(
+          state.map((element) => {
+            if (element == null) {
+              return "unknown";
+            }
+            return element
+          })
+        ).replace(/['"]+/g, '')}
+      </Text>
+    ) : null}
   </Box>
 );
 const textToUsertUtterance = ({ userUtterance }) => (
@@ -43,10 +55,15 @@ const FullScreen = ({ children }) => {
 };
 
 const App = () => {
-  const [events, addEvent] = useReducer(
-    (state, current) => [...state, current],
-    []
-  );
+  const [events, addEvent] = useReducer((state, current) => {
+    if (
+      current.userUtterance == "reset" ||
+      current.userUtterance == "reload"
+    ) {
+      return [];
+    }
+    return [...state, current];
+  }, []);
   const [textInput, setTextInput] = useState("");
   const [socket, setSocket] = useState(null);
   useEffect(() => {
