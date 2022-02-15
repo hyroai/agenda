@@ -95,25 +95,27 @@ const App = () => {
   );
 
   return (
-    <Box marginLeft={4} flexDirection="column">
-      <Box flexDirection="column">{events.map(renderEvent)}</Box>
-      <Box marginTop={2}>
-        <TextInput
-          value={textInput}
-          onChange={setTextInput}
-          onSubmit={() => {
-            if (!socket) {
-              return;
-            }
-            if (socket.readyState === WebSocket.OPEN) {
-              addEvent({ userUtterance: textInput });
-              socket.send(JSON.stringify(textInput));
-              setTextInput("");
-            }
-          }}
-        />
+    <FullScreen>
+      <Box marginLeft={4} flexDirection="column">
+        <Box flexDirection="column">{events.map(renderEvent)}</Box>
+        <Box marginTop={2}>
+          <TextInput
+            value={textInput}
+            onChange={setTextInput}
+            onSubmit={() => {
+              if (!socket) {
+                return;
+              }
+              if (socket.readyState === WebSocket.OPEN) {
+                addEvent({ userUtterance: textInput });
+                socket.send(JSON.stringify(textInput));
+                setTextInput("");
+              }
+            }}
+          />
+        </Box>
       </Box>
-    </Box>
+    </FullScreen>
   );
 };
 
