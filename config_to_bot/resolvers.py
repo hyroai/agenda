@@ -89,9 +89,6 @@ def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> int
 
 
 _name_detector: Callable[[str], str] = gamla.compose_left(
-    lambda user_utterance: " ".join(
-        word[0].upper() + word[1:] for word in user_utterance.split()
-    ),
     _construct_doc,
     tuple,
     gamla.filter(
