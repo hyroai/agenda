@@ -4,24 +4,18 @@ import React, { useEffect, useReducer, useState } from "react";
 import TextInput from "ink-text-input";
 import WebSocket from "ws";
 
-const debugStatesToText = (keyValue, i) => (
-  <Box key={i}>
-    <Text color="red">
-      {i != 0 ? "," : ""} {keyValue[0]} :{" "}
-    </Text>
-    <Text color="white">{JSON.stringify(keyValue[1]).replace("null", "unknown")}</Text>
+const debugStatesToText = ([key, value], i) => (
+  <Box key={i} marginRight={1}>
+    <Text>{key}: </Text>
+    <Text color="red">{JSON.stringify(value).replace("null", "?")}</Text>
   </Box>
 );
 
 const textToBotUtterance = ({ botUtterance, state }) => (
-  <Box>
-    <Text color="white">🤖 {botUtterance}</Text>
-    {state != null && Object.keys(state).length != 0 ? (
-      <Box>
-        <Text>[</Text>
-        {Object.entries(state).map(debugStatesToText)}
-        <Text>]</Text>
-      </Box>
+  <Box flexDirection="column">
+    <Text color="white">🤖 {botUtteran</Text>
+    {state && Object.keys(state).length != 0 ? (
+      <Box>{Object.entries(state).map(debugStatesToText)}</Box>
     ) : null}
   </Box>
 );
