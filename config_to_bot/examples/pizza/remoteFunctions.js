@@ -18,7 +18,7 @@ app.post(
       toppings
     ) {
       res.json(
-        `Thank you ${name}! I got your phone: ${phone}, and your email: ${email}. We are sending you ${amount_of_pizzas} ${size} pizzas to ${address}.`
+        `Thank you ${name}! I got your phone: ${phone}, and your email: ${email}. We are sending you ${amount_of_pizzas} ${size} pizzas with ${toppings} to ${address}.`
       );
     } else {
       res.json(null);
