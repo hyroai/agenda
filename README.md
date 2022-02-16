@@ -4,7 +4,7 @@
 
 ## Setup
 
-```
+```bash
 git clone https://github.com/hyroai/agenda.git
 pip install -e ./agenda
 yarn install --cwd=config_to_bot/debugger
@@ -58,15 +58,15 @@ Bot: Got it. Thank you Yoni! I got your phone: 2345345345, and your email: sdfsd
 
 ```
 User: i want pizza
-Bot: "Got it. What is your name?"
+Bot: Got it. What is your name?
 User: yoni and my address is 881 Mill Street Greenville South Carolina
-Bot: "Got it. How many pies would you like?"
+Bot: Got it. How many pies would you like?
 User: 4
-Bot: "Got it. What is your phone number?"
+Bot: Got it. What is your phone number?
 User: 234234234
-Bot: "Got it. What is your email?"
+Bot: Got it. What is your email?
 User: sdfs@gmail.com
-Bot: "Got it. Thank you Yoni! I got your phone: 234234234, and your email: sdfs@gmail.com. We are sending you 4 pizzas to 881 Mill Street Greenville South Carolina."
+Bot: Got it. Thank you Yoni! I got your phone: 234234234, and your email: sdfs@gmail.com. We are sending you 4 pizzas to 881 Mill Street Greenville South Carolina.
 ```
 
 Collecting data or making up transcriptions to cover all the options, even with machine learning is a pretty tedious task, and would be hard to maintain over time.
@@ -123,7 +123,6 @@ For Joe's pizza place, the actual API that orders the pizza is not a part of the
 
 ## Features summary
 
-- Remote functions: Using remote servers for some of the bot parts.
-- Acknowledgement: the bot will ack information it received automatically and naturally, with no need to specify this.
-- All utterances are fully configurable.
-- Many built-in functions to support collection of emails, dates, times, names, amounts booleans etc'...
+- Use remote servers for some of the bot parts (e.g. fulfill some request or recognize an intent).
+- Automatic acking when new information is received.
+- Built-in support to listening to emails, dates, times, names, amounts and booleans.
