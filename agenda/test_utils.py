@@ -1,13 +1,14 @@
 import gamla
 from computation_graph import graph
 
+import agenda
 from agenda import composers
 
 
 @gamla.curry
 def expect_convos(convos, f):
     def inner():
-        cg = composers.wrap_up(f())
+        cg = composers.wrap_up(agenda.sentence_renderer(lambda: "Got it."))(f())
         for convo in convos:
             prev = {}
             for input_event, expected in convo:
