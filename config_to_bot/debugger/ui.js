@@ -4,10 +4,25 @@ import React, { useEffect, useReducer, useState } from "react";
 import TextInput from "ink-text-input";
 import WebSocket from "ws";
 
+const debugStatesToText = (keyValue, i) => (
+  <Box key={i}>
+    <Text color="red">
+      {i != 0 ? "," : ""} {keyValue[0]} :{" "}
+    </Text>
+    <Text color="white">{JSON.stringify(keyValue[1])}</Text>
+  </Box>
+);
+
 const textToBotUtterance = ({ botUtterance, state }) => (
   <Box>
     <Text color="white">🤖 {botUtterance}</Text>
-    {state ? <Text color="red"> {JSON.stringify(state)}</Text> : null}
+    {state != null && Object.keys(state).length != 0 ? (
+      <Box>
+        <Text>[</Text>
+        {Object.entries(state).map(debugStatesToText)}
+        <Text>]</Text>
+      </Box>
+    ) : null}
   </Box>
 );
 const textToUsertUtterance = ({ userUtterance }) => (
@@ -44,7 +59,10 @@ const FullScreen = ({ children }) => {
 
 const App = () => {
   const [events, addEvent] = useReducer(
-    (state, current) => [...state, current],
+    (state, current) =>
+      ["reset", "reload"].includes(current.userUtterance)
+        ? []
+        : [...state, current],
     []
   );
   const [textInput, setTextInput] = useState("");
