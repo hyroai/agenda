@@ -9,7 +9,7 @@ const debugStatesToText = (keyValue, i) => (
     <Text color="red">
       {i != 0 ? "," : ""} {keyValue[0]} :{" "}
     </Text>
-    <Text color="white">{JSON.stringify(keyValue[1])}</Text>
+    <Text color="white">{JSON.stringify(keyValue[1]).replace("null", "unknown")}</Text>
   </Box>
 );
 
