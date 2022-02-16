@@ -39,9 +39,9 @@ state_sink_or_none = composers.state_sink_or_none
 
 
 def _value_to_function_if_needed(value_or_function):
-    if isinstance(value_or_function, str):
-        return lambda: value_or_function
-    return value_or_function
+    if callable(value_or_function):
+        return value_or_function
+    return lambda: value_or_function
 
 
 def _generic(inner):
@@ -55,3 +55,7 @@ say = _generic(sentence.str_to_statement)
 ack = _generic(sentence.str_to_ack)
 
 consumes_external_event = composers.consumes_external_event
+
+
+def sentence_renderer(ack_renderer):
+    return lambda x: sentence.sentence_to_str(ack_renderer, x)

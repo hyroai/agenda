@@ -21,7 +21,7 @@ UNKNOWN = Unknown()
 
 @graph.make_terminal("utter")
 def utter(x) -> str:
-    return sentence.sentence_to_str(x)
+    return x
 
 
 @graph.make_terminal("state")
@@ -351,18 +351,34 @@ def when(condition, do):
     )
 
 
-def _final_replace(x, y):
+def _replace_source(x, y):
     return missing_cg_utils.transform_edges(
         missing_cg_utils.edge_source_equals(x), missing_cg_utils.replace_edge_source(y)
     )
 
 
-wrap_up = gamla.compose_left(
-    gamla.assert_that_with_message(
-        base_types.ambiguity_groups,
-        gamla.compose(gamla.empty, base_types.ambiguity_groups),
-    ),
-    _final_replace(participated, lambda: True),
-    _final_replace(forget, lambda: False),
-    lambda g: run.to_callable(g, frozenset()),
-)
+def _replace_destination(x, y):
+    return missing_cg_utils.transform_edges(
+        missing_cg_utils.edge_destination_equals(x),
+        missing_cg_utils.replace_edge_destination(y),
+    )
+
+
+def _interject(old, new):
+    return gamla.compose_left(
+        _replace_destination(old, new),
+        lambda g: base_types.merge_graphs(g, composers.compose_unary(old, new)),
+    )
+
+
+def wrap_up(sentence_renderer: Callable[[sentence.SentenceOrPart], str]):
+    return gamla.compose_left(
+        gamla.assert_that_with_message(
+            base_types.ambiguity_groups,
+            gamla.compose(gamla.empty, base_types.ambiguity_groups),
+        ),
+        _replace_source(participated, lambda: True),
+        _replace_source(forget, lambda: False),
+        _interject(utter, sentence_renderer),
+        lambda g: run.to_callable(g, frozenset()),
+    )

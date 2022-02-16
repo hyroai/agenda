@@ -36,7 +36,7 @@ def _operate_on_subgraph(selector, transformation):
     )
 
 
-def _edge_destination_equals(x):
+def edge_destination_equals(x):
     if not isinstance(x, base_types.ComputationNode):
         x = graph.make_computation_node(x)
     return lambda edge: edge.destination == x
@@ -67,6 +67,16 @@ def in_literal(graph, literal):
     return composers.compose_unary(lambda x: literal in x, graph)
 
 
+def replace_edge_destination(replacement):
+    if not isinstance(replacement, base_types.ComputationNode):
+        replacement = graph.make_computation_node(replacement)
+
+    def replace_edge_destination(edge):
+        return dataclasses.replace(edge, destination=replacement)
+
+    return replace_edge_destination
+
+
 def replace_edge_source(replacement):
     if not isinstance(replacement, base_types.ComputationNode):
         replacement = graph.make_computation_node(replacement)
@@ -81,7 +91,7 @@ def remove_nodes(nodes):
     return gamla.compose_left(
         *map(
             lambda x: gamla.remove(
-                gamla.anyjuxt(edge_source_equals(x), _edge_destination_equals(x))
+                gamla.anyjuxt(edge_source_equals(x), edge_destination_equals(x))
             ),
             nodes,
         ),
@@ -93,7 +103,7 @@ def sink(x: base_types.CallableOrNode):
     return gamla.compose(
         edge_source,
         gamla.assert_that(gamla.not_equals(None)),
-        gamla.find(_edge_destination_equals(x)),
+        gamla.find(edge_destination_equals(x)),
     )
 
 

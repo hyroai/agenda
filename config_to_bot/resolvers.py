@@ -357,7 +357,7 @@ def _ask_about(listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return _slot(agenda.GENERIC_ACK, listen, ask)
 
 
-def _slot(ack: str, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
+def _slot(ack, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
     return agenda.slot(
         gamla.pipe(
             listen,

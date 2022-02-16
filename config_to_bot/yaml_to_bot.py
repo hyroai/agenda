@@ -1,4 +1,5 @@
 import dataclasses
+import random
 from typing import Awaitable, Callable, Dict, FrozenSet, Iterable, List, Tuple, Union
 
 import gamla
@@ -139,11 +140,18 @@ def _build_cg(triplets: FrozenSet[_Triplet]) -> base_types.GraphType:
     )
 
 
+def _ack_generator() -> str:
+    x = random.choice(["Okay.", "Alright.", "Got it.", "Cool."])
+    # TODO(uri): For a reason I don't full understand, unless we have a `print` or `breakpoint` here, it always selects the same option.
+    print(x)  # noqa: T001
+    return x
+
+
 yaml_to_slot_bot: Callable[[str], Callable[[], Awaitable]] = gamla.compose_left(
     _parse_yaml_file,
     _yaml_dict_to_triplets,
     _build_cg,
-    agenda.wrap_up,
+    agenda.wrap_up(agenda.sentence_renderer(_ack_generator)),
     gamla.after(gamla.to_awaitable),
     gamla.just,
 )

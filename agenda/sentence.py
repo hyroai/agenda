@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union
 
 import gamla
 import immutables
@@ -13,7 +13,12 @@ _ACK = "ack"
 _CONSTITUENTS = "constituents"
 _TYPE = "type"
 
-GENERIC_ACK = "Got it."
+
+class _GenericAck:
+    pass
+
+
+GENERIC_ACK = _GenericAck()
 EMPTY_SENTENCE = immutables.Map({_TYPE: _SENTENCE, _CONSTITUENTS: frozenset()})
 
 constituents = gamla.itemgetter(_CONSTITUENTS)
@@ -27,7 +32,7 @@ _has_question = gamla.inside(_QUESTION)
 _has_ack = gamla.inside(_ACK)
 
 
-def sentence_to_str(sentence: SentenceOrPart) -> str:
+def sentence_to_str(generic_ack_renderer, sentence: SentenceOrPart) -> str:
     if not _is_sentence(sentence):
         sentence = _sentence_part_reducer(EMPTY_SENTENCE, sentence)
     statements = " ".join(map(gamla.itemgetter(_TEXT), sentence.get(_STATEMENT, [])))
@@ -35,7 +40,16 @@ def sentence_to_str(sentence: SentenceOrPart) -> str:
     question = question_obj.get(_TEXT) if question_obj else ""
     ack_obj = sentence.get(_ACK)
     ack = ack_obj.get(_TEXT) if ack_obj else ""
-    return " ".join(filter(gamla.identity, [ack, statements, question]))
+    return " ".join(
+        filter(
+            gamla.identity,
+            [
+                generic_ack_renderer() if ack == GENERIC_ACK else ack,
+                statements,
+                question,
+            ],
+        )
+    )
 
 
 def str_to_statement(text):
@@ -52,11 +66,10 @@ def str_to_question(text):
     return immutables.Map({_TYPE: _QUESTION, _TEXT: text})
 
 
-def str_to_ack(text):
-    assert isinstance(text, str)
-    if not text:
+def str_to_ack(ack_represntation: Union[str, _GenericAck]) -> SentenceOrPart:
+    if not ack_represntation:
         return EMPTY_SENTENCE
-    return immutables.Map({_TYPE: _ACK, _TEXT: text})
+    return immutables.Map({_TYPE: _ACK, _TEXT: ack_represntation})
 
 
 def _set_question(sentence, element):
