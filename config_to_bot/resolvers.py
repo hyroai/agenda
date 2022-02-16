@@ -263,6 +263,10 @@ def _complement(not_: base_types.GraphType) -> base_types.GraphType:
     return agenda.complement(not_)
 
 
+def _equals(is_: base_types.GraphType, equals: int):
+    return agenda.equals(equals)(is_)
+
+
 def _greater_equals(amount_of: base_types.GraphType, greater_equals: int):
     return agenda.greater_equals(greater_equals)(amount_of)
 
@@ -414,6 +418,7 @@ COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
         _slot,
         _goals,
         _goals_with_debug,
+        _equals,
         _greater_equals,
         _listen_to_amount_of,
     }
