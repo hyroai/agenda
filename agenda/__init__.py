@@ -18,15 +18,24 @@ mark_state = composers.mark_state
 wrap_up = composers.wrap_up
 
 complement = composers.complement
+equals = composers.equals
+less_than = composers.less_than
+less_equals = composers.less_equals
+greater_equals = composers.greater_equals
+not_equals = composers.not_equals
+inside = composers.inside
+contains = composers.contains
 any = state_aggregators.any_true
 all = state_aggregators.all_true
+first_known = state_aggregators.first_known
+
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
-remember = composers.remember
 ever = composers.ever
 combine_slots = composers.combine_slots
 debug_states = composers.debug_states
 state_sink = composers.state_sink
+state_sink_or_none = composers.state_sink_or_none
 
 
 def _value_to_function_if_needed(value_or_function):

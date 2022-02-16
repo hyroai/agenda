@@ -1,4 +1,5 @@
 import gamla
+from computation_graph.composers import debug
 
 from agenda import composers
 
@@ -25,3 +26,12 @@ def _all_true(args):
 
 any_true = composers.combine_state(_any_true)
 all_true = composers.combine_state(_all_true)
+first_known = composers.combine_state(
+    debug.name_callable(
+        gamla.compose_left(
+            _known,
+            gamla.ternary(gamla.nonempty, gamla.head, gamla.just(composers.UNKNOWN)),
+        ),
+        "first_known",
+    )
+)

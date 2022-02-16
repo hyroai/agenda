@@ -1,3 +1,4 @@
+import operator
 from typing import Callable, Collection, Dict, Optional
 
 import gamla
@@ -24,8 +25,8 @@ def utter(x) -> str:
 
 
 @graph.make_terminal("state")
-def state(x):
-    return x
+def state(state):
+    return state
 
 
 @graph.make_terminal("debug_states")
@@ -37,11 +38,13 @@ def consumes_external_event(x):
     return composers.compose_source(x, None, event)
 
 
-mark_utter = missing_cg_utils.compose_curry(utter)
-mark_state = missing_cg_utils.compose_curry(state)
-
 utter_sink = missing_cg_utils.sink(utter)
 state_sink = missing_cg_utils.sink(state)
+state_sink_or_none = gamla.excepts((AssertionError,), gamla.just(None), state_sink)
+
+
+mark_utter = missing_cg_utils.compose_curry(utter)
+mark_state = missing_cg_utils.compose_curry(state)
 
 
 def _combine_edges_to_disjunction(edges: Collection[base_types.ComputationEdge]):
@@ -117,7 +120,7 @@ def _remove_sinks_and_sources_and_resolve_ambiguity(markers, f):
 
 
 def slot(listener, asker, acker):
-    # If the listener has an utter sink they we need to combine it with asker. Otherwise we just merge the graphs.
+    # If the listener has an utter sink then we need to combine it with asker. Otherwise, we just merge the graphs.
     try:
         utter_sink(listener)
         return _binary_slot(combine_utter_sinks(listener, asker), acker)
@@ -216,17 +219,29 @@ def ever(graph):
     return ever_inner
 
 
-@_remove_sinks_and_sources_and_resolve_ambiguity([state])
-def complement(graph):
-    @mark_state
-    @missing_cg_utils.compose_left_curry(state_sink(graph))
-    def complement(value):
-        if value is UNKNOWN:
-            return UNKNOWN
-        return not value
+def _map_state(func):
+    @_remove_sinks_and_sources_and_resolve_ambiguity([state])
+    def map_state(graph):
+        @mark_state
+        @missing_cg_utils.compose_left_curry(state_sink(graph))
+        def apply_func_unless_unknown(value):
+            if UNKNOWN is value:
+                return UNKNOWN
+            return func(value)
 
-    return complement
+        return apply_func_unless_unknown
 
+    return map_state
+
+
+complement = _map_state(operator.not_)
+equals = gamla.compose(_map_state, gamla.equals)
+less_than = gamla.compose(_map_state, gamla.less_than)
+less_equals = gamla.compose(_map_state, gamla.less_equals)
+greater_equals = gamla.compose(_map_state, gamla.greater_equals)
+not_equals = gamla.compose(_map_state, gamla.not_equals)
+inside = gamla.compose(_map_state, gamla.inside)
+contains = gamla.compose(_map_state, gamla.contains)
 
 listener_with_memory = gamla.compose(remember, mark_state, consumes_external_event)
 
