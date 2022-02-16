@@ -4,15 +4,6 @@ import React, { useEffect, useReducer, useState } from "react";
 import TextInput from "ink-text-input";
 import WebSocket from "ws";
 
-const items = (obj) => {
-  var i,
-    arr = [];
-  for (i in obj) {
-    arr.push(obj[i]);
-  }
-  return arr;
-};
-
 const debugStatesToText = (keyValue, i) => (
   <Box key={i}>
     <Text color="red">
@@ -22,20 +13,18 @@ const debugStatesToText = (keyValue, i) => (
   </Box>
 );
 
-const textToBotUtterance = ({ botUtterance, state }) => {
-  return (
-    <Box>
-      <Text color="white">🤖 {botUtterance}</Text>
-      {state != null && Object.keys(state).length != 0 ? (
-        <Box>
-          <Text>[</Text>
-          {Object.entries(state).map(debugStatesToText)}
-          <Text>]</Text>
-        </Box>
-      ) : null}
-    </Box>
-  );
-};
+const textToBotUtterance = ({ botUtterance, state }) => (
+  <Box>
+    <Text color="white">🤖 {botUtterance}</Text>
+    {state != null && Object.keys(state).length != 0 ? (
+      <Box>
+        <Text>[</Text>
+        {Object.entries(state).map(debugStatesToText)}
+        <Text>]</Text>
+      </Box>
+    ) : null}
+  </Box>
+);
 const textToUsertUtterance = ({ userUtterance }) => (
   <Text color="green">👩 {userUtterance}</Text>
 );
