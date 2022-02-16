@@ -13,17 +13,25 @@ const items = (obj) => {
   return arr;
 };
 
+const debugStatesToText = (keyValue, i) => (
+  <Box key={i}>
+    <Text color="red">
+      {i != 0 ? "," : ""} {keyValue[0]} :{" "}
+    </Text>
+    <Text color="white">{JSON.stringify(keyValue[1])}</Text>
+  </Box>
+);
+
 const textToBotUtterance = ({ botUtterance, state }) => {
   return (
     <Box>
       <Text color="white">🤖 {botUtterance}</Text>
       {state != null && Object.keys(state).length != 0 ? (
-        <Text color="red">
-          {" "}
-          {JSON.stringify(state)
-            .replace(/['"]+/g, "")
-            .replace("null", "unknown")}
-        </Text>
+        <Box>
+          <Text>[</Text>
+          {Object.entries(state).map(debugStatesToText)}
+          <Text>]</Text>
+        </Box>
       ) : null}
     </Box>
   );
@@ -63,7 +71,7 @@ const FullScreen = ({ children }) => {
 const App = () => {
   const [events, addEvent] = useReducer(
     (state, current) =>
-      current.userUtterance == "reset" || current.userUtterance == "reload"
+      ["reset", "reload"].includes(current.userUtterance)
         ? []
         : [...state, current],
     []
