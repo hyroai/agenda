@@ -13,7 +13,7 @@ const debugStatesToText = ([key, value], i) => (
 
 const textToBotUtterance = ({ botUtterance, state }) => (
   <Box flexDirection="column">
-    <Text color="white">🤖 {botUtteran</Text>
+    <Text color="white">🤖 {botUtterance}</Text>
     {state && Object.keys(state).length != 0 ? (
       <Box>{Object.entries(state).map(debugStatesToText)}</Box>
     ) : null}
