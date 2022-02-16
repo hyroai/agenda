@@ -83,6 +83,3 @@ goals:
       all:
         - *wants-pizza
         - not: *is-vegan
-debug:
-  - *wants-pizza-question
-  - *wants-pizza-intent
