@@ -5,7 +5,7 @@ import gamla
 import httpx
 import pyap
 import spacy
-from computation_graph import base_types, composers
+from computation_graph import base_types, composers, graph
 from computation_graph.composers import duplication, lift
 
 import agenda
@@ -379,22 +379,44 @@ def _goals(
     return agenda.combine_utter_sinks(*goals)
 
 
+@graph.make_terminal("debug_states")
+def debug_states(args):
+    return args
+
+
+def _debug_dict(cg: base_types.GraphType):
+    return {
+        "state": agenda.state_sink(cg),
+        "utter": gamla.excepts(
+            (AssertionError,), gamla.just(lambda: ""), agenda.utter_sink
+        )(cg),
+    }
+
+
 def _goals_with_debug(
     goals: Tuple[base_types.GraphType, ...],
     definitions: Tuple[base_types.GraphType, ...],
-    debug: Tuple[Tuple[str, base_types.GraphType], ...],
+    debug: Union[
+        Tuple[Tuple[str, base_types.GraphType], ...], Tuple[base_types.GraphType, ...]
+    ],
 ) -> base_types.GraphType:
     del definitions
     return base_types.merge_graphs(
         agenda.combine_utter_sinks(*goals),
         composers.compose_unary(
-            agenda.debug_states,
+            debug_states,
             gamla.pipe(
                 debug,
                 dict,
-                gamla.valmap(agenda.state_sink),
+                gamla.valmap(
+                    gamla.compose_left(_debug_dict, missing_cg_utils.package_into_dict)
+                ),
                 missing_cg_utils.package_into_dict,
             ),
+        )
+        if isinstance(gamla.head(debug), tuple)
+        else composers.compose_many_to_one(
+            debug_states, gamla.pipe(debug, gamla.map(_debug_dict), tuple)
         ),
     )
 

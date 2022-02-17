@@ -4,6 +4,7 @@ import sys
 
 import fastapi
 import gamla
+import immutables
 import uvicorn
 from computation_graph import graph
 from starlette import websockets
@@ -37,11 +38,20 @@ def _create_socket_handler(path: str):
                 return {
                     "botUtterance": state[graph.make_computation_node(composers.utter)],
                     "state": gamla.pipe(
-                        graph.make_computation_node(composers.debug_states),
+                        graph.make_computation_node(config_to_bot.debug_states),
                         gamla.dict_to_getter_with_default({}, state),
                         gamla.valmap(
-                            gamla.when(
-                                gamla.equals(composers.UNKNOWN), gamla.just(None)
+                            gamla.valmap(
+                                gamla.compose_left(
+                                    gamla.when(
+                                        gamla.equals(composers.UNKNOWN),
+                                        gamla.just(None),
+                                    ),
+                                    gamla.when(
+                                        gamla.is_instance(immutables.Map),
+                                        gamla.itemgetter("text"),
+                                    ),
+                                )
                             )
                         ),
                     ),

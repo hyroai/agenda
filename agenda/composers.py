@@ -29,11 +29,6 @@ def state(state):
     return state
 
 
-@graph.make_terminal("debug_states")
-def debug_states(args):
-    return args
-
-
 def consumes_external_event(x):
     return composers.compose_source(x, None, event)
 
