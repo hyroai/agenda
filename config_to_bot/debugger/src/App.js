@@ -91,41 +91,39 @@ const App = () => {
     [ReadyState.UNINSTANTIATED]: "Uninstantiated",
   }[readyState];
   return (
-    <>
-      <div style={rowSpacing}>
-        <div>{connectionStatus}</div>
-        {readyState === ReadyState.OPEN && (
-          <div style={rowSpacing}>
-            <div style={rowSpacing}>{events.map(renderEvent)}</div>
-            <div style={{ display: "flex" }}>
-              <div>{">"}&nbsp;</div>
-              <input
-                style={{
-                  outline: "none",
-                  display: "flex",
-                  flex: 1,
-                  fontFamily: "monospace",
-                  background: "transparent",
-                  color: "white",
-                  border: "none",
-                }}
-                autoFocus={true}
-                type="text"
-                value={textInput}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && readyState === ReadyState.OPEN) {
-                    addEvent({ userUtterance: textInput });
-                    sendJsonMessage(textInput);
-                    setTextInput("");
-                  }
-                }}
-                onChange={(e) => setTextInput(e.target.value)}
-              />
-            </div>
+    <div style={rowSpacing}>
+      <div>{connectionStatus}</div>
+      {readyState === ReadyState.OPEN && (
+        <div style={rowSpacing}>
+          <div style={rowSpacing}>{events.map(renderEvent)}</div>
+          <div style={{ display: "flex" }}>
+            <div>{">"}&nbsp;</div>
+            <input
+              style={{
+                outline: "none",
+                display: "flex",
+                flex: 1,
+                fontFamily: "monospace",
+                background: "transparent",
+                color: "white",
+                border: "none",
+              }}
+              autoFocus={true}
+              type="text"
+              value={textInput}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && readyState === ReadyState.OPEN) {
+                  addEvent({ userUtterance: textInput });
+                  sendJsonMessage(textInput);
+                  setTextInput("");
+                }
+              }}
+              onChange={(e) => setTextInput(e.target.value)}
+            />
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   );
 };
 
