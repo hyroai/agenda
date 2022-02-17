@@ -267,8 +267,8 @@ def _equals(is_: base_types.GraphType, equals: int):
     return agenda.equals(equals)(is_)
 
 
-def _greater_equals(amount_of: base_types.GraphType, greater_equals: int):
-    return agenda.greater_equals(greater_equals)(amount_of)
+def _greater_equals(is_: base_types.GraphType, greater_equals: int):
+    return agenda.greater_equals(greater_equals)(is_)
 
 
 def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
@@ -399,8 +399,13 @@ def _goals_with_debug(
     )
 
 
+def _first_known(first_known: Tuple):
+    return agenda.first_known(*first_known)
+
+
 COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
     {
+        _first_known,
         _listen_to_type,
         _listen_to_type_with_examples,
         _listen_to_type_with_options,
