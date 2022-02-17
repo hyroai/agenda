@@ -17,9 +17,7 @@ definitions:
       type: email
   - &amount_of_pizzas
     ask: How many pies would you like?
-    listen:
-      type: amount
-      of: pie
+    amount-of: pie
   - &wants-pizza-question
     ask: Would you like to order pizza?
     listen:
