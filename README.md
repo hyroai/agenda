@@ -40,33 +40,75 @@ yarn start
 Let's imagine building a bot for pizza place. In terms of conversation trees, there are many options as to how this conversation can go, here are a couple of examples:
 
 ```
-User: hi there
-Bot: Would you like to order pizza?
-User: yes
-Bot: Got it. What is your name?
-User: yoni
-Bot: Got it. How many pies would you like?
-User: 4
-Bot: Got it. What is your address?
-User: 881 Mill Street Greenville South Carolina
-Bot: Got it. What is your phone number?
-User: 2345345345
-Bot: Got it. What is your email?
-User: sdfsdf@gmail.com
-Bot: Got it. Thank you Yoni! I got your phone: 2345345345, and your email: sdfsdf@gmail.com. We are sending you 4 pizzas to 881 Mill Street Greenville South Carolina.
+    👩 hi there
+
+    🤖 Would you like to order pizza?
+
+    👩 yup
+
+    🤖 Alright. Are you vegan?
+
+    👩 no I am not
+
+    🤖 Cool. What is your name?
+
+    👩 Alice
+
+    🤖 Cool. How many pies would you like?
+
+    👩 2
+
+    🤖 Okay. What kind of toppings would you like?
+
+    👩 mushrooms
+
+    🤖 Cool. What pizza size would you like?
+
+    👩 large
+
+    🤖 Cool. What is your address?
+
+    👩 881 Mill Street Greenville SC
+
+    🤖 Got it. What is your phone number?
+
+    👩 212 222 2222
+
+    🤖 Alright. What is your email?
+
+    👩 alice@gmail.com
+
+    🤖 Cool. Thank you Alice! I got your phone: 212 222 2222, and your email: alice@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
 ```
 
 ```
-User: i want pizza
-Bot: Got it. What is your name?
-User: yoni and my address is 881 Mill Street Greenville South Carolina
-Bot: Got it. How many pies would you like?
-User: 4
-Bot: Got it. What is your phone number?
-User: 234234234
-Bot: Got it. What is your email?
-User: sdfs@gmail.com
-Bot: Got it. Thank you Yoni! I got your phone: 234234234, and your email: sdfs@gmail.com. We are sending you 4 pizzas to 881 Mill Street Greenville South Carolina.
+    👩 Hi!
+
+    🤖 Would you like to order pizza?
+
+    👩 yes
+
+    🤖 Alright. Are you vegan?
+
+    👩 nope
+
+    🤖 Cool. What is your name?
+
+    👩 Alice, my address is 881 Mill Street Greenville SC
+
+    🤖 Cool. How many pies would you like?
+
+    👩 2 large pizzas with mushrooms
+
+    🤖 Cool. What is your phone number?
+
+    👩 212 222 2222
+
+    🤖 Okay. What is your email?
+
+    👩 alice@gmail.com
+
+    🤖 Okay. Thank you Alice! I got your phone: 212 222 2222, and your email: alice@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
 ```
 
 Collecting data or making up transcriptions to cover all the options, even with machine learning is a pretty tedious task, and would be hard to maintain over time.
@@ -75,46 +117,89 @@ Instead one would prefer to say what **is needed** to order pizza:
 
 ```yaml
 definitions:
-  - &wants-to-order-pizza
+  - &name
+    ask: What is your name?
+    listen:
+      type: name
+  - &address
+    ask: What is your address?
+    listen:
+      type: address
+  - &phone
+    ask: What is your phone number?
+    listen:
+      type: phone
+  - &email
+    ask: What is your email?
+    listen:
+      type: email
+  - &amount_of_pizzas
+    ask: How many pies would you like?
+    amount-of: pie
+  - &wants-pizza-question
     ask: Would you like to order pizza?
     listen:
       type: bool
+  - &wants-pizza-intent
+    listen:
+      type: intent
       examples:
         - I want to order pizza
         - I want pizza
+  - &wants-pizza
+    any:
+      - *wants-pizza-question
+      - *wants-pizza-intent
+  - &is-vegan
+    ask: Are you vegan?
+    listen:
+      type: bool
+  - &toppings
+    ask: What kind of toppings would you like?
+    listen:
+      type: multiple-choice
+      options:
+        - mushrooms
+        - olives
+        - tomatoes
+  - &size
+    ask: What pizza size would you like?
+    listen:
+      type: single-choice
+      options:
+        - small
+        - medium
+        - large
 goals:
+  - say: I'm transferring you to an agent.
+    when:
+      not: *wants-pizza
+  - say: We currently do not sell vegan pizzas.
+    when:
+      all:
+        - *wants-pizza
+        - *is-vegan
   - say:
-      url: http://localhost:8000/order-pizza # Actually ordering a pizza and sending back a confirmation will happen through an external API!
-    when: *wants-to-order-pizza
+      url: http://localhost:8000/order-pizza
     needs:
       - key: name
-        value:
-          ask: What is your name?
-          listen:
-          type: name
+        value: *name
       - key: amount_of_pizzas
-        value:
-          ask: How many pies would you like?
-          listen:
-          type: amount
+        value: *amount_of_pizzas
+      - key: toppings
+        value: *toppings
+      - key: size
+        value: *size
       - key: address
-        value:
-          ask: What is your address?
-          listen:
-          type: address
+        value: *address
       - key: phone
-        value:
-          ask: What is your phone number?
-          listen:
-          type: phone
+        value: *phone
       - key: email
-        value:
-          ask: What is your email?
-          listen:
-          type: email
-  - say: Sorry, I can only help with ordering pizza.
+        value: *email
     when:
-      complement: *wants-to-order-pizza
+      all:
+        - *wants-pizza
+        - not: *is-vegan
 ```
 
 Given this spec, agenda will create a bot that can handle the conversations above, and many other variations. **No custom training or data collection is needed**, and if requirements change, all the conversation designer needs to do is change the configuration.
