@@ -97,13 +97,17 @@ const App = () => {
         {readyState === ReadyState.OPEN && (
           <div style={rowSpacing}>
             <div style={rowSpacing}>{events.map(renderEvent)}</div>
-            <div>
-              {"> "}
+            <div style={{ display: "flex" }}>
+              <div>{">"}&nbsp;</div>
               <input
                 style={{
+                  outline: "none",
+                  display: "flex",
+                  flex: 1,
                   fontFamily: "monospace",
                   background: "transparent",
                   color: "white",
+                  border: "none",
                 }}
                 autoFocus={true}
                 type="text"
