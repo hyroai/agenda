@@ -7,7 +7,7 @@
 ```bash
 git clone https://github.com/hyroai/agenda.git
 pip install -e ./agenda
-yarn install --cwd=config_to_bot/debugger
+yarn install --cwd=./agenda/config_to_bot/debugger
 ```
 
 In addition run `yarn install` in each example that you wish to run in `config_to_bot/examples`
