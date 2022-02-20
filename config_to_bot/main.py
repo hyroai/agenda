@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import traceback
 
 import fastapi
 import gamla
@@ -14,8 +15,16 @@ from agenda import composers
 from config_to_bot import resolvers, yaml_to_bot
 
 
+def _bot_utterance(utterance, state):
+    return {
+        "type": "botUtterance",
+        "utterance": utterance,
+        **({"state": state} if state else {}),
+    }
+
+
 def _error_message(error):
-    return {"type": "error", "data": str(error)}
+    return {"type": "botError", "message": str(error), "trace": traceback.format_exc()}
 
 
 def _create_socket_handler(path: str):
@@ -23,42 +32,43 @@ def _create_socket_handler(path: str):
         state: dict = {}
         bot = yaml_to_bot.yaml_to_slot_bot(path)()
 
+        @gamla.excepts(
+            Exception,
+            gamla.compose_left(gamla.side_effect(logging.exception), _error_message),
+        )
         async def responder_with_state(request):
             nonlocal state
             nonlocal bot
-            if request.lower() == "reload":
+
+            if request["type"] == "reload":
+                state = {}
                 bot = yaml_to_bot.yaml_to_slot_bot(path)()
+                return _bot_utterance("Reloading bot", None)
+            if request["type"] == "reset":
                 state = {}
-                return {"botUtterance": "Reloading bot"}
-            if request.lower() == "reset":
-                state = {}
-                return {"botUtterance": "Starting Over"}
-            try:
-                state = await bot(state, {composers.event: request})
-                return {
-                    "botUtterance": state[graph.make_computation_node(composers.utter)],
-                    "state": gamla.pipe(
-                        graph.make_computation_node(resolvers.debug_states),
-                        gamla.dict_to_getter_with_default({}, state),
+                return _bot_utterance("Starting Over", None)
+
+            state = await bot(state, {composers.event: request["utterance"]})
+            return _bot_utterance(
+                state[graph.make_computation_node(composers.utter)],
+                gamla.pipe(
+                    graph.make_computation_node(resolvers.debug_states),
+                    gamla.dict_to_getter_with_default({}, state),
+                    gamla.valmap(
                         gamla.valmap(
-                            gamla.valmap(
-                                gamla.compose_left(
-                                    gamla.when(
-                                        gamla.equals(composers.UNKNOWN),
-                                        gamla.just(None),
-                                    ),
-                                    gamla.when(
-                                        gamla.is_instance(immutables.Map),
-                                        gamla.itemgetter("text"),
-                                    ),
-                                )
+                            gamla.compose_left(
+                                gamla.when(
+                                    gamla.equals(composers.UNKNOWN), gamla.just(None)
+                                ),
+                                gamla.when(
+                                    gamla.is_instance(immutables.Map),
+                                    gamla.itemgetter("text"),
+                                ),
                             )
-                        ),
+                        )
                     ),
-                }
-            except Exception as err:
-                logging.exception(err)
-                return gamla.wrap_tuple(_error_message(err))
+                ),
+            )
 
         await websocket.accept()
         while True:
