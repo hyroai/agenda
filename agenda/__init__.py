@@ -14,6 +14,7 @@ slot = composers.slot
 when = composers.when
 remember = composers.remember
 mark_state = composers.mark_state
+participated = composers.participated
 
 wrap_up = composers.wrap_up
 
@@ -28,7 +29,6 @@ contains = composers.contains
 any = state_aggregators.any_true
 all = state_aggregators.all_true
 first_known = state_aggregators.first_known
-
 str_to_statement = sentence.str_to_statement
 expect_convos = test_utils.expect_convos
 ever = composers.ever

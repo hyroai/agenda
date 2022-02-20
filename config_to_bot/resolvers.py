@@ -388,7 +388,16 @@ def _debug_dict(cg: base_types.GraphType):
     return {
         "state": agenda.state_sink(cg),
         "utter": gamla.excepts(
-            (AssertionError,), gamla.just(lambda: ""), agenda.utter_sink
+            AssertionError, gamla.just(lambda: ""), agenda.utter_sink
+        )(cg),
+        "participated": gamla.excepts(
+            StopIteration,
+            gamla.just(lambda: agenda.UNKNOWN),
+            gamla.compose_left(
+                gamla.filter(missing_cg_utils.edge_source_equals(agenda.participated)),
+                gamla.map(base_types.edge_destination),
+                gamla.head,
+            ),
         )(cg),
     }
 
