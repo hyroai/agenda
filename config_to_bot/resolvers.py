@@ -218,10 +218,7 @@ def _listen_to_amount_of(type: str, of: str):
             ),
         )
 
-    return agenda.first_known(
-        agenda.mark_state(listen_to_amount_of),
-        agenda.mark_state(_listen_to_type("amount")),
-    )
+    return listen_to_amount_of
 
 
 def _listen_to_type(type: str) -> base_types.GraphType:
@@ -267,8 +264,8 @@ def _equals(is_: base_types.GraphType, equals: int):
     return agenda.equals(equals)(is_)
 
 
-def _greater_equals(amount_of: base_types.GraphType, greater_equals: int):
-    return agenda.greater_equals(greater_equals)(amount_of)
+def _greater_equals(is_: base_types.GraphType, greater_equals: int):
+    return agenda.greater_equals(greater_equals)(is_)
 
 
 def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
@@ -430,8 +427,31 @@ def _goals_with_debug(
     )
 
 
+def _first_known(first_known: Tuple):
+    return agenda.first_known(*first_known)
+
+
+def _amount_of(amount_of: str, ask: str):
+    return agenda.combine_slots(
+        agenda.first_known,
+        agenda.ack(agenda.GENERIC_ACK),
+        [
+            gamla.pipe(_listen_to_amount_of("amount", amount_of), agenda.mark_state),
+            agenda.slot(
+                gamla.pipe(
+                    "amount", _listen_to_type, agenda.mark_state, agenda.remember
+                ),
+                agenda.ask(ask),
+                agenda.ack(agenda.GENERIC_ACK),
+            ),
+        ],
+    )
+
+
 COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
     {
+        _amount_of,
+        _first_known,
         _listen_to_type,
         _listen_to_type_with_examples,
         _listen_to_type_with_options,
@@ -451,6 +471,5 @@ COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
         _goals_with_debug,
         _equals,
         _greater_equals,
-        _listen_to_amount_of,
     }
 )

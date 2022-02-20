@@ -118,13 +118,15 @@ def slot(listener, asker, acker):
     # If the listener has an utter sink then we need to combine it with asker. Otherwise, we just merge the graphs.
     try:
         utter_sink(listener)
-        return _binary_slot(combine_utter_sinks(listener, asker), acker)
+        return _utter_unless_known_and_ack(combine_utter_sinks(listener, asker), acker)
     except AssertionError:
-        return _binary_slot(base_types.merge_graphs(listener, asker), acker)
+        return _utter_unless_known_and_ack(
+            base_types.merge_graphs(listener, asker), acker
+        )
 
 
 def combine_slots(aggregator: Callable, acker, graphs: base_types.GraphType):
-    return _binary_slot(aggregator(*graphs), acker)
+    return _utter_unless_known_and_ack(aggregator(*graphs), acker)
 
 
 def combine_state(aggregator: Callable):
@@ -143,7 +145,7 @@ def combine_state(aggregator: Callable):
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
-def _binary_slot(asker_listener, acker):
+def _utter_unless_known_and_ack(asker_listener, acker):
     @composers.compose_left_dict(
         {
             "listener_state": state_sink(asker_listener),

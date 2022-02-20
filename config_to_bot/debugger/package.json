@@ -1,56 +1,44 @@
 {
-  "name": "ink_client_for_examples",
-  "version": "0.0.0",
-  "license": "MIT",
-  "bin": "cli.js",
-  "engines": {
-    "node": ">=10"
-  },
-  "scripts": {
-    "start": "node index.js",
-    "test": "xo && ava"
-  },
-  "files": [
-    "cli.js",
-    "ui.js"
-  ],
+  "name": "debugger2",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
-    "import-jsx": "^4.0.1",
-    "ink": "^3.2.0",
-    "ink-text-input": "^4.0.3",
-    "meow": "^9.0.0",
-    "react": "^17.0.2"
+    "@testing-library/jest-dom": "^5.16.2",
+    "@testing-library/react": "^12.1.3",
+    "@testing-library/user-event": "^13.5.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "5.0.0",
+    "react-use-websocket": "^3.0.0",
+    "styled-components": "^5.3.3",
+    "terminal.css": "^0.7.2",
+    "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "@ava/babel": "^2.0.0",
-    "@babel/core": "^7.17.0",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-react": "^7.16.7",
-    "@babel/register": "^7.17.0",
-    "ava": "^4.0.1",
-    "chalk": "^4.1.2",
-    "eslint-config-xo-react": "^0.26.0",
-    "eslint-plugin-react": "^7.28.0",
-    "eslint-plugin-react-hooks": "^4.3.0",
-    "ink-testing-library": "^2.1.0",
-    "xo": "^0.39.1"
+    "react-scripts": "5.0.0"
   },
-  "ava": {
-    "babel": true,
-    "require": [
-      "@babel/register"
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
     ]
   },
-  "babel": {
-    "presets": [
-      "@babel/preset-env",
-      "@babel/preset-react"
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
     ]
-  },
-  "xo": {
-    "extends": "xo-react",
-    "rules": {
-      "react/prop-types": "off"
-    }
   }
 }
