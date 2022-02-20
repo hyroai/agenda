@@ -11,7 +11,7 @@ from computation_graph import graph
 from starlette import websockets
 from uvicorn.main import Server
 
-from agenda import composers, sentence
+from agenda import composers
 from config_to_bot import resolvers, yaml_to_bot
 
 
@@ -61,13 +61,7 @@ def _create_socket_handler(path: str):
                                     gamla.equals(composers.UNKNOWN): gamla.just(None),
                                     gamla.is_instance(
                                         immutables.Map
-                                    ): gamla.compose_left(
-                                        gamla.itemgetter("text"),
-                                        gamla.when(
-                                            gamla.is_instance(sentence.GenericAck),
-                                            gamla.just(""),
-                                        ),
-                                    ),
+                                    ): yaml_to_bot.sentence_to_str,
                                     gamla.just(True): gamla.identity,
                                 }
                             )
