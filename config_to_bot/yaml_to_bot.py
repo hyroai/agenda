@@ -7,8 +7,7 @@ import yaml  # type: ignore
 from computation_graph import base_types
 
 import agenda
-
-from . import dag_reducer
+from config_to_bot import dag_reducer
 
 _Triplet = Tuple[str, str, Union[str, Tuple[str]]]
 
@@ -146,6 +145,8 @@ def _ack_generator() -> str:
     print(x)  # noqa: T001
     return x
 
+
+sentence_to_str = agenda.sentence_renderer(_ack_generator)
 
 yaml_to_slot_bot: Callable[[str], Callable[[], Awaitable]] = gamla.compose_left(
     _parse_yaml_file,
