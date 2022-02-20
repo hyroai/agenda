@@ -14,11 +14,11 @@ _CONSTITUENTS = "constituents"
 _TYPE = "type"
 
 
-class _GenericAck:
+class GenericAck:
     pass
 
 
-GENERIC_ACK = _GenericAck()
+GENERIC_ACK = GenericAck()
 EMPTY_SENTENCE = immutables.Map({_TYPE: _SENTENCE, _CONSTITUENTS: frozenset()})
 
 constituents = gamla.itemgetter(_CONSTITUENTS)
@@ -66,7 +66,7 @@ def str_to_question(text):
     return immutables.Map({_TYPE: _QUESTION, _TEXT: text})
 
 
-def str_to_ack(ack_represntation: Union[str, _GenericAck]) -> SentenceOrPart:
+def str_to_ack(ack_represntation: Union[str, GenericAck]) -> SentenceOrPart:
     if not ack_represntation:
         return EMPTY_SENTENCE
     return immutables.Map({_TYPE: _ACK, _TEXT: ack_represntation})
