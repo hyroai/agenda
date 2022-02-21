@@ -113,7 +113,42 @@ Let's imagine building a bot for pizza place. In terms of conversation trees, th
 
 Collecting data or making up transcriptions to cover all the options, even with machine learning is a pretty tedious task, and would be hard to maintain over time.
 
-Instead one would prefer to say what **is needed** to order pizza:
+Instead one would prefer to say what **is needed** to order pizza, alongside the other goals of the conversation.
+
+```yaml
+goals:
+  - say: I'm transferring you to an agent.
+    when:
+      not: *wants-pizza
+  - say: We currently do not sell vegan pizzas.
+    when:
+      all:
+        - *wants-pizza
+        - *is-vegan
+  - say:
+      url: http://localhost:8000/order-pizza
+    needs:
+      - key: name
+        value: *name
+      - key: amount_of_pizzas
+        value: *amount_of_pizzas
+      - key: toppings
+        value: *toppings
+      - key: size
+        value: *size
+      - key: address
+        value: *address
+      - key: phone
+        value: *phone
+      - key: email
+        value: *email
+    when:
+      all:
+        - *wants-pizza
+        - not: *is-vegan
+```
+
+Subsequently we can define how to ask and listen to each one of the needed details.
 
 ```yaml
 definitions:
@@ -170,36 +205,6 @@ definitions:
         - small
         - medium
         - large
-goals:
-  - say: I'm transferring you to an agent.
-    when:
-      not: *wants-pizza
-  - say: We currently do not sell vegan pizzas.
-    when:
-      all:
-        - *wants-pizza
-        - *is-vegan
-  - say:
-      url: http://localhost:8000/order-pizza
-    needs:
-      - key: name
-        value: *name
-      - key: amount_of_pizzas
-        value: *amount_of_pizzas
-      - key: toppings
-        value: *toppings
-      - key: size
-        value: *size
-      - key: address
-        value: *address
-      - key: phone
-        value: *phone
-      - key: email
-        value: *email
-    when:
-      all:
-        - *wants-pizza
-        - not: *is-vegan
 ```
 
 Given this spec, agenda will create a bot that can handle the conversations above, and many other variations. **No custom training or data collection is needed**, and if requirements change, all the conversation designer needs to do is change the configuration.
