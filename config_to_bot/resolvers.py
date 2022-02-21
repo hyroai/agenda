@@ -1,3 +1,4 @@
+import datetime
 from typing import Any, Callable, Dict, FrozenSet, Iterable, Tuple, Union
 
 import duckling
@@ -11,15 +12,31 @@ from computation_graph.composers import duplication, lift
 import agenda
 from agenda import missing_cg_utils
 
-_d = duckling.DucklingWrapper()
-
-_duckling_wrapper = gamla.ternary(
+_duckling_value_or_unknown = gamla.ternary(
     gamla.nonempty,
     gamla.compose_left(
         gamla.map(gamla.get_in(["value", "value"])), gamla.sort, gamla.head
     ),
     gamla.just(agenda.UNKNOWN),
 )
+_duckling_context = duckling.Context(
+    duckling.parse_ref_time(
+        duckling.load_time_zones("/usr/share/zoneinfo"),
+        "UTC",
+        round(datetime.datetime.utcnow().timestamp()),
+    ),
+    duckling.default_locale_lang(duckling.parse_lang("EN")),
+)
+
+
+def _ducklings_parser(dim: str):
+    return gamla.compose_left(
+        lambda text: duckling.parse(text, _duckling_context, []),
+        gamla.filter(gamla.compose_left(gamla.itemgetter("dim"), gamla.equals(dim))),
+        tuple,
+        _duckling_value_or_unknown,
+    )
+
 
 _nlp = spacy.load("en_core_web_lg")
 
@@ -165,9 +182,9 @@ def _listen_to_single_choice(
 
 
 _FUNCTION_MAP = {
-    "email": gamla.compose_left(_d.parse_email, _duckling_wrapper),
-    "phone": gamla.compose_left(_d.parse_phone_number, _duckling_wrapper),
-    "amount": gamla.compose_left(_d.parse_number, _duckling_wrapper),
+    "email": _ducklings_parser("email"),
+    "phone": _ducklings_parser("phone-number"),
+    "amount": _ducklings_parser("number"),
     "bool": _listen_to_bool,
     "intent": _listen_to_intent,
     "name": gamla.compose_left(
