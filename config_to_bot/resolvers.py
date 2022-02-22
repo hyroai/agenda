@@ -1,3 +1,4 @@
+import re
 from typing import Any, Callable, Dict, FrozenSet, Iterable, Tuple, Union
 
 import duckling
@@ -111,7 +112,7 @@ _address_detector: Callable[[str], Union[str, agenda.Unknown]] = gamla.compose_l
 
 
 _text_to_lower_case_words: Callable[[str], Iterable[str]] = gamla.compose_left(
-    str.split, gamla.map(str.lower)
+    lambda text: re.findall(r"[\w']+|[.,!?;]", text)
 )
 
 
