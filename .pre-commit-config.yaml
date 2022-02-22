@@ -64,3 +64,21 @@ repos:
     rev: v0.6.8
     hooks:
       - id: clevercsv-standardize
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.3.2
+    hooks:
+      - id: prettier
+        files: \.(js|jsx|md)$
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v7.31.0
+    hooks:
+      - id: eslint
+        entry: eslint --fix --ext js,jsx .
+        files: \.(js|jsx|md)$
+        additional_dependencies:
+          - eslint-plugin-sort-requires@latest
+          - eslint@v7.31.0
+          - eslint-plugin-react@latest
+          - eslint-plugin-react-hooks@next
