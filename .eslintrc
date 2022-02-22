@@ -1,0 +1,25 @@
+{
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
+  "env": {
+    "es6": true
+  },
+  "plugins": ["sort-requires"],
+  "rules": {
+    "sort-requires/sort-requires": 2,
+    "arrow-body-style": "error",
+    "no-return-await": "error",
+    "no-unused-vars": "error",
+    "no-useless-rename": "error",
+    "no-var": "error",
+    "object-shorthand": "error",
+    "prefer-arrow-callback": "error",
+    "prefer-const": "error",
+    "prefer-destructuring": "error",
+    "require-await": "error",
+    "sort-imports": "error",
+    "spaced-comment": "error",
+    "yoda": "error"
+  }
+}
