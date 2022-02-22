@@ -1,13 +1,14 @@
-import {useEffect, useReducer, useRef, useState} from "react";
-import useWebSocket, {ReadyState} from "react-use-websocket";
+import { useEffect, useReducer, useRef, useState } from "react";
+import useWebSocket, { ReadyState } from "react-use-websocket";
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
 
-const ServerError = ({message, trace}) =>
-  (<div>
-  <div>{message}</div>
-    {trace && <div style={{whiteSpace: "break-spaces"}}>{trace}</div>}
-  </div>)
+const ServerError = ({ message, trace }) => (
+  <div>
+    <div>{message}</div>
+    {trace && <div style={{ whiteSpace: "break-spaces" }}>{trace}</div>}
+  </div>
+);
 const DebugState = ([key, value], i) => (
   <div key={i}>
     <span>{key}: </span>
@@ -17,10 +18,10 @@ const DebugState = ([key, value], i) => (
   </div>
 );
 
-const DebugStates = (state) =>(
+const DebugStates = (state) =>
   Object.keys(state).length !== 0 && (
     <div>{Object.entries(state).map(DebugState)}</div>
-  ))
+  );
 
 const BotUtterance = ({ utterance, state }) => (
   <div
@@ -42,27 +43,28 @@ const UserUtterance = ({ utterance }) => (
 const Event = (event, i) => (
   <span key={i}>
     <>
-    {event.type === "botUtterance" ? BotUtterance(event):null}
-    {event.type === "botError" ? ServerError(event):null}
-    {event.type === "userUtterance" ? UserUtterance(event):null}
-  </>
+      {event.type === "botUtterance" ? BotUtterance(event) : null}
+      {event.type === "botError" ? ServerError(event) : null}
+      {event.type === "userUtterance" ? UserUtterance(event) : null}
+    </>
   </span>
 );
 
-const userUtteranceEvent = (textInput) => ({type: "userUtterance", utterance: textInput})
+const userUtteranceEvent = (textInput) => ({
+  type: "userUtterance",
+  utterance: textInput,
+});
 
-
-function event(textInput) {
-  return ["reset", "reload"].includes(textInput) ? {"type": textInput} : userUtteranceEvent(textInput);
-}
+const event = (textInput) =>
+  ["reset", "reload"].includes(textInput)
+    ? { type: textInput }
+    : userUtteranceEvent(textInput);
 
 const App = () => {
   const didUnmount = useRef(false);
   const [events, addEvent] = useReducer(
     (state, current) =>
-      ["reset", "reload"].includes(current.type)
-        ? []
-        : [...state, current],
+      ["reset", "reload"].includes(current.type) ? [] : [...state, current],
     []
   );
   const [textInput, setTextInput] = useState("");
@@ -92,8 +94,7 @@ const App = () => {
         [ReadyState.UNINSTANTIATED]: "Uninstantiated",
       }[readyState]
     );
-    if (readyState === ReadyState.CONNECTING)
-      addEvent({ type: "reset" });
+    if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
 
   const connectionStatus = {
