@@ -442,7 +442,10 @@ def _amount_of(amount_of: str, ask: str):
             gamla.pipe(_listen_to_amount_of(amount_of), agenda.mark_state),
             agenda.slot(
                 gamla.pipe(
-                    _listen_to_type("amount"), agenda.mark_state, agenda.remember
+                    _listen_to_type("amount"),
+                    agenda.consumes_external_event,
+                    agenda.mark_state,
+                    agenda.remember,
                 ),
                 agenda.ask(ask),
                 agenda.ack(agenda.GENERIC_ACK),
