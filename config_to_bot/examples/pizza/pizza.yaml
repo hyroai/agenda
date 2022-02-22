@@ -1,57 +1,46 @@
 definitions:
   - &name
     ask: What is your name?
-    listen:
-      type: name
+    type: name
   - &address
     ask: What is your address?
-    listen:
-      type: address
+    type: address
   - &phone
     ask: What is your phone number?
-    listen:
-      type: phone
+    type: phone
   - &email
     ask: What is your email?
-    listen:
-      type: email
+    type: email
   - &amount_of_pizzas
     ask: How many pies would you like?
     amount-of: pie
   - &wants-pizza-question
     ask: Would you like to order pizza?
-    listen:
-      type: bool
+    type: boolean
   - &wants-pizza-intent
-    listen:
-      type: intent
-      examples:
-        - I want to order pizza
-        - I want pizza
+    intent:
+      - I want to order pizza
+      - I want pizza
   - &wants-pizza
     any:
       - *wants-pizza-question
       - *wants-pizza-intent
   - &is-vegan
     ask: Are you vegan?
-    listen:
-      type: bool
+    type: boolean
   - &toppings
     ask: What kind of toppings would you like?
-    listen:
-      type: multiple-choice
-      options:
-        - mushrooms
-        - olives
-        - tomatoes
+    multiple-choice:
+      - mushrooms
+      - olives
+      - tomatoes
+      - onions
   - &size
     ask: What pizza size would you like?
-    listen:
-      type: single-choice
-      options:
-        - small
-        - medium
-        - large
+    choice:
+      - small
+      - medium
+      - large
 goals:
   - say: I'm transferring you to an agent.
     when:
@@ -83,7 +72,13 @@ goals:
         - *wants-pizza
         - not: *is-vegan
 debug:
-  - key: wants-pizza-question
-    value: *wants-pizza-question
+  - key: toppings
+    value: *toppings
+  - key: amount_of_pizzas
+    value: *amount_of_pizzas
+  - key: size
+    value: *size
+  - key: wants-pizza
+    value: *wants-pizza
   - key: wants-pizza-intent
     value: *wants-pizza-intent
