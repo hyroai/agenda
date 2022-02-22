@@ -13,7 +13,7 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         "gamla>=121",
-        "computation-graph>=32",
+        "computation-graph>=33",
         "immutables",
         "Jpype1==0.6.3",
         "dataclasses",

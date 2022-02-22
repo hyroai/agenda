@@ -5,13 +5,14 @@ import traceback
 
 import fastapi
 import gamla
+import immutables
 import uvicorn
 from computation_graph import graph
 from starlette import websockets
 from uvicorn.main import Server
 
-import config_to_bot
 from agenda import composers
+from config_to_bot import resolvers, yaml_to_bot
 
 
 def _bot_utterance(utterance, state):
@@ -29,7 +30,7 @@ def _error_message(error):
 def _create_socket_handler(path: str):
     async def message_handler(websocket: fastapi.WebSocket):
         state: dict = {}
-        bot = config_to_bot.yaml_to_slot_bot(path)()
+        bot = yaml_to_bot.yaml_to_slot_bot(path)()
 
         @gamla.excepts(
             Exception,
@@ -41,7 +42,7 @@ def _create_socket_handler(path: str):
 
             if request["type"] == "reload":
                 state = {}
-                bot = config_to_bot.yaml_to_slot_bot(path)()
+                bot = yaml_to_bot.yaml_to_slot_bot(path)()
                 return _bot_utterance("Reloading bot", None)
             if request["type"] == "reset":
                 state = {}
@@ -51,10 +52,20 @@ def _create_socket_handler(path: str):
             return _bot_utterance(
                 state[graph.make_computation_node(composers.utter)],
                 gamla.pipe(
-                    graph.make_computation_node(composers.debug_states),
+                    graph.make_computation_node(resolvers.debug_states),
                     gamla.dict_to_getter_with_default({}, state),
                     gamla.valmap(
-                        gamla.when(gamla.equals(composers.UNKNOWN), gamla.just(None))
+                        gamla.valmap(
+                            gamla.case_dict(
+                                {
+                                    gamla.equals(composers.UNKNOWN): gamla.just(None),
+                                    gamla.is_instance(
+                                        immutables.Map
+                                    ): yaml_to_bot.sentence_to_str,
+                                    gamla.just(True): gamla.identity,
+                                }
+                            )
+                        )
                     ),
                 ),
             )
