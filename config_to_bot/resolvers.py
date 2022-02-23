@@ -149,6 +149,14 @@ def _listen_to_multiple_choices(
         gamla.filter(gamla.contains([*options, "none"])),
         tuple,
         gamla.when(gamla.empty, gamla.just(agenda.UNKNOWN)),
+        gamla.when(
+            gamla.alljuxt(
+                gamla.is_instance(tuple),
+                gamla.len_equals(1),
+                gamla.compose_left(gamla.head, gamla.equals("none")),
+            ),
+            gamla.just(()),
+        ),
     )
 
 
@@ -195,7 +203,7 @@ _INFORMATION_TYPES = frozenset(
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean"})
 
 
-def _listen_to_type(type: str):
+def _listen_to_type(type: str) -> Callable:
     def listen_to_type(user_utterance: str):
         return _FUNCTION_MAP.get(type)(user_utterance)  # type: ignore
 
@@ -315,7 +323,9 @@ def _listen_to_amount_of(amount_of: str):
 
 def _listen_to_intent(intent: Tuple[str, ...]):
     return gamla.pipe(
-        agenda.consumes_external_event(_listen_to_type("intent")(intent)),
+        intent,
+        _listen_to_type("intent"),
+        agenda.consumes_external_event,
         gamla.unless(agenda.state_sink_or_none, agenda.mark_state),
         agenda.ever,
         duplication.duplicate_graph,
@@ -325,7 +335,9 @@ def _listen_to_intent(intent: Tuple[str, ...]):
 def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
     return _slot(
         agenda.GENERIC_ACK,
-        agenda.consumes_external_event(_listen_to_type("single-choice")(choice)),
+        gamla.pipe(
+            choice, _listen_to_type("single-choice"), agenda.consumes_external_event
+        ),
         ask,
     )
 
@@ -335,8 +347,10 @@ def _ask_about_multiple_choice(
 ):
     return _slot(
         agenda.GENERIC_ACK,
-        agenda.consumes_external_event(
-            _listen_to_type("multiple-choice")(multiple_choice)
+        gamla.pipe(
+            multiple_choice,
+            _listen_to_type("multiple-choice"),
+            agenda.consumes_external_event,
         ),
         ask,
     )
@@ -346,8 +360,10 @@ def _ask_about(type: str, ask: str) -> base_types.GraphType:
     if type in _TYPES_TO_LISTEN_AFTER_ASKING:
         return _slot(
             agenda.GENERIC_ACK,
-            agenda.if_participated(
-                agenda.consumes_external_event(_listen_to_type(type))
+            gamla.pipe(
+                _listen_to_type(type),
+                agenda.consumes_external_event,
+                agenda.if_participated,
             ),
             ask,
         )
@@ -444,6 +460,7 @@ def _amount_of(amount_of: str, ask: str):
                 gamla.pipe(
                     _listen_to_type("amount"),
                     agenda.consumes_external_event,
+                    agenda.if_participated,
                     agenda.mark_state,
                     agenda.remember,
                 ),

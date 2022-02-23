@@ -1,8 +1,13 @@
 const express = require("express");
 const app = express();
 const renderToppings = (toppings) => {
-  if (toppings != `none`) {
+  if (toppings.length == 1) {
     return `with ${toppings}`;
+  }
+  if (toppings.length > 1) {
+    return `with ${toppings.slice(0, -1).join(", ")}, and ${
+      toppings[toppings.length - 1]
+    }`;
   } else {
     return ``;
   }
