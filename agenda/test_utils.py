@@ -7,13 +7,17 @@ from agenda import composers
 
 @gamla.curry
 def expect_convos(convos, f):
-    def inner():
-        cg = composers.wrap_up(agenda.sentence_renderer(lambda: "Got it."))(f())
+    async def inner():
+        bot = gamla.pipe(
+            f(),
+            composers.wrap_up(agenda.sentence_renderer(lambda: "Got it.")),
+            gamla.after(gamla.to_awaitable),
+        )
         for convo in convos:
-            prev = {}
+            state = {}
             for input_event, expected in convo:
-                prev = cg(prev, {composers.event: input_event})
-                result = prev[graph.make_computation_node(composers.utter)]
+                state = await bot(state, {composers.event: input_event})
+                result = state[graph.make_computation_node(composers.utter)]
                 assert result == expected, f"expected: {expected} actual: {result}"
 
     return inner

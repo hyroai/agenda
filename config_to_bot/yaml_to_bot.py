@@ -7,7 +7,7 @@ import yaml  # type: ignore
 from computation_graph import base_types
 
 import agenda
-from config_to_bot import dag_reducer
+from config_to_bot import dag_reducer, resolvers
 
 _Triplet = Tuple[str, str, Union[str, Tuple[str]]]
 
@@ -129,11 +129,16 @@ def _yaml_dict_to_triplets(yaml_dict: Dict) -> FrozenSet[_Triplet]:
     )
 
 
-def _build_cg(triplets: FrozenSet[_Triplet]) -> base_types.GraphType:
+@gamla.curry
+def _build_cg(
+    remote_function: Callable, triplets: FrozenSet[_Triplet]
+) -> base_types.GraphType:
     dependencies = _subject_to_object(triplets)
     return gamla.pipe(
         dag_reducer.reduce_graph(
-            dependencies, _subject_to_relation_object_map(triplets), dag_reducer.reducer
+            dependencies,
+            _subject_to_relation_object_map(triplets),
+            dag_reducer.reducer(remote_function),
         ),
         gamla.itemgetter(_infer_sink(dependencies)),
     )
@@ -148,10 +153,15 @@ def _ack_generator() -> str:
 
 sentence_to_str = agenda.sentence_renderer(_ack_generator)
 
+
+def yaml_to_cg(remote_function: Callable) -> Callable[[str], base_types.GraphType]:
+    return gamla.compose_left(
+        _parse_yaml_file, _yaml_dict_to_triplets, _build_cg(remote_function)
+    )
+
+
 yaml_to_slot_bot: Callable[[str], Callable[[], Awaitable]] = gamla.compose_left(
-    _parse_yaml_file,
-    _yaml_dict_to_triplets,
-    _build_cg,
+    yaml_to_cg(resolvers.post_request_with_url_and_params),
     agenda.wrap_up(agenda.sentence_renderer(_ack_generator)),
     gamla.after(gamla.to_awaitable),
     gamla.just,

@@ -1,6 +1,9 @@
 import gamla
+import pytest
 
 import agenda
+
+pytestmark = pytest.mark.asyncio
 
 _listen_with_memory_when_participated = gamla.compose_left(
     agenda.consumes_external_event,
