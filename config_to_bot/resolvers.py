@@ -116,7 +116,7 @@ _text_to_lower_case_words: Callable[[str], Iterable[str]] = gamla.compose_left(
 )
 
 
-def _listen_to_intent(
+def _parse_intent(
     examples: Tuple[str, ...]
 ) -> Callable[[str], Union[bool, agenda.Unknown]]:
     def parse_bool(user_utterance: str):
@@ -150,6 +150,14 @@ def _listen_to_multiple_choices(
         gamla.filter(gamla.contains([*options, "none"])),
         tuple,
         gamla.when(gamla.empty, gamla.just(agenda.UNKNOWN)),
+        gamla.when(
+            gamla.alljuxt(
+                gamla.is_instance(tuple),
+                gamla.len_equals(1),
+                gamla.compose_left(gamla.head, gamla.equals("none")),
+            ),
+            gamla.just(()),
+        ),
     )
 
 
@@ -169,8 +177,8 @@ _FUNCTION_MAP = {
     "email": gamla.compose_left(_d.parse_email, _duckling_wrapper),
     "phone": gamla.compose_left(_d.parse_phone_number, _duckling_wrapper),
     "amount": gamla.compose_left(_d.parse_number, _duckling_wrapper),
-    "bool": _listen_to_bool,
-    "intent": _listen_to_intent,
+    "boolean": _listen_to_bool,
+    "intent": _parse_intent,
     "name": gamla.compose_left(
         _name_detector, gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN))
     ),
@@ -193,68 +201,14 @@ _INFORMATION_TYPES = frozenset(
     }
 )
 
-_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "bool"})
+_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean"})
 
 
-def _listen_to_amount_of(type: str, of: str):
-    assert type == "amount", f"We currently do not support {type} type"
-    noun = _nlp(of)
-
-    @agenda.consumes_external_event
-    def listen_to_amount_of(user_utterance):
-        return gamla.pipe(
-            user_utterance,
-            _nlp,
-            gamla.filter(lambda t: t.similarity(noun) > 0.5),
-            gamla.mapcat(gamla.attrgetter("children")),
-            gamla.filter(
-                gamla.compose_left(gamla.attrgetter("dep_"), gamla.equals("nummod"))
-            ),
-            gamla.map(gamla.attrgetter("text")),
-            tuple,
-            gamla.ternary(
-                gamla.len_greater(0),
-                gamla.compose_left(gamla.head, _FUNCTION_MAP.get("amount")),
-                gamla.just(agenda.UNKNOWN),
-            ),
-        )
-
-    return listen_to_amount_of
-
-
-def _listen_to_type(type: str) -> base_types.GraphType:
-
-    assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
-
+def _listen_to_type(type: str) -> Callable:
     def listen_to_type(user_utterance: str):
         return _FUNCTION_MAP.get(type)(user_utterance)  # type: ignore
 
-    if type in _TYPES_TO_LISTEN_AFTER_ASKING:
-        return agenda.if_participated(agenda.consumes_external_event(listen_to_type))
-    return agenda.consumes_external_event(listen_to_type)
-
-
-def _listen_to_type_with_examples(
-    type: str, examples: Tuple[str, ...]
-) -> base_types.GraphType:
-
-    assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
-
-    def listen_to_type_or_intent(user_utterance):
-        return _FUNCTION_MAP.get(type)(examples)(user_utterance)
-
-    return agenda.consumes_external_event(listen_to_type_or_intent)
-
-
-def _listen_to_type_with_options(
-    type: str, options: Tuple[str, ...]
-) -> base_types.GraphType:
-    assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
-
-    def listen_to_type_with_options(user_utterance):
-        return _FUNCTION_MAP.get(type)(options)(user_utterance)
-
-    return agenda.consumes_external_event(listen_to_type_with_options)
+    return listen_to_type
 
 
 def _complement(not_: base_types.GraphType) -> base_types.GraphType:
@@ -343,17 +297,82 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
     )
 
 
-def _listen(listen: base_types.GraphType):
+def _listen_to_amount_of(amount_of: str):
+    noun = _nlp(amount_of)
+
+    @agenda.consumes_external_event
+    def listen_to_amount_of(user_utterance):
+        return gamla.pipe(
+            user_utterance,
+            _nlp,
+            gamla.filter(lambda t: t.similarity(noun) > 0.5),
+            gamla.mapcat(gamla.attrgetter("children")),
+            gamla.filter(
+                gamla.compose_left(gamla.attrgetter("dep_"), gamla.equals("nummod"))
+            ),
+            gamla.map(gamla.attrgetter("text")),
+            tuple,
+            gamla.ternary(
+                gamla.len_greater(0),
+                gamla.compose_left(gamla.head, _listen_to_type("amount")),
+                gamla.just(agenda.UNKNOWN),
+            ),
+        )
+
+    return listen_to_amount_of
+
+
+def _listen_to_intent(intent: Tuple[str, ...]):
     return gamla.pipe(
-        listen,
+        intent,
+        _listen_to_type("intent"),
+        agenda.consumes_external_event,
         gamla.unless(agenda.state_sink_or_none, agenda.mark_state),
         agenda.ever,
         duplication.duplicate_graph,
     )
 
 
-def _ask_about(listen: base_types.GraphType, ask: str) -> base_types.GraphType:
-    return _slot(agenda.GENERIC_ACK, listen, ask)
+def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
+    return _slot(
+        agenda.GENERIC_ACK,
+        gamla.pipe(
+            choice, _listen_to_type("single-choice"), agenda.consumes_external_event
+        ),
+        ask,
+    )
+
+
+def _ask_about_multiple_choice(
+    multiple_choice: Tuple[str, ...], ask: base_types.GraphType
+):
+    return _slot(
+        agenda.GENERIC_ACK,
+        gamla.pipe(
+            multiple_choice,
+            _listen_to_type("multiple-choice"),
+            agenda.consumes_external_event,
+        ),
+        ask,
+    )
+
+
+def _ask_about(type: str, ask: str) -> base_types.GraphType:
+    if type in _TYPES_TO_LISTEN_AFTER_ASKING:
+        return _slot(
+            agenda.GENERIC_ACK,
+            gamla.pipe(
+                _listen_to_type(type),
+                agenda.consumes_external_event,
+                agenda.if_participated,
+            ),
+            ask,
+        )
+    assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
+
+    return _slot(
+        agenda.GENERIC_ACK, agenda.consumes_external_event(_listen_to_type(type)), ask
+    )
 
 
 def _slot(ack, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
@@ -437,10 +456,14 @@ def _amount_of(amount_of: str, ask: str):
         agenda.first_known,
         agenda.ack(agenda.GENERIC_ACK),
         [
-            gamla.pipe(_listen_to_amount_of("amount", amount_of), agenda.mark_state),
+            gamla.pipe(_listen_to_amount_of(amount_of), agenda.mark_state),
             agenda.slot(
                 gamla.pipe(
-                    "amount", _listen_to_type, agenda.mark_state, agenda.remember
+                    _listen_to_type("amount"),
+                    agenda.consumes_external_event,
+                    agenda.if_participated,
+                    agenda.mark_state,
+                    agenda.remember,
                 ),
                 agenda.ask(ask),
                 agenda.ack(agenda.GENERIC_ACK),
@@ -453,15 +476,14 @@ COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
     {
         _amount_of,
         _first_known,
-        _listen_to_type,
-        _listen_to_type_with_examples,
-        _listen_to_type_with_options,
-        _listen,
         _complement,
         _all,
         _any,
         _kv,
         _remote,
+        _listen_to_intent,
+        _ask_about_choice,
+        _ask_about_multiple_choice,
         _say_with_needs,
         _when,
         _when_with_needs,
