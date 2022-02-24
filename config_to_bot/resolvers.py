@@ -240,7 +240,7 @@ def _kv(
 
 
 async def post_request_with_url_and_params(url, params):
-    return gamla.compose_left(
+    return gamla.pipe(
         await gamla.post_json_with_extra_headers_and_params_async(
             {}, {"Content-Type": "application/json"}, 30, url, params
         ),
@@ -464,7 +464,9 @@ def _amount_of(amount_of: str, ask: str):
         agenda.first_known,
         agenda.ack(agenda.GENERIC_ACK),
         [
-            gamla.pipe(_listen_to_amount_of(amount_of), agenda.mark_state),
+            gamla.pipe(
+                _listen_to_amount_of(amount_of), agenda.mark_state, agenda.remember
+            ),
             agenda.slot(
                 gamla.pipe(
                     _listen_to_type("amount"),
