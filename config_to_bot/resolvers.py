@@ -251,7 +251,6 @@ async def post_request_with_url_and_params(url, params):
 def _build_remote_resolver(request: Callable):
     def remote(url: str):
         async def post_request(params: Dict[str, Any]):
-
             return gamla.pipe(
                 await request(
                     url,

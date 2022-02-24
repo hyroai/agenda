@@ -9,7 +9,7 @@ from agenda import composers
 def expect_convos(convos, f):
     async def inner():
         bot = gamla.pipe(
-            f(),
+            await f(),
             composers.wrap_up(agenda.sentence_renderer(lambda: "Got it.")),
             gamla.after(gamla.to_awaitable),
         )

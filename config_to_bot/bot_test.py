@@ -1,11 +1,7 @@
 from typing import Dict, Tuple
 
-import pytest
-
 import agenda
 from config_to_bot import yaml_to_bot
-
-pytestmark = pytest.mark.asyncio
 
 
 async def _remote_function(url: str, params: Dict):
@@ -37,7 +33,7 @@ pizza_bot = yaml_to_bot.yaml_to_cg(_remote_function)("examples/pizza/pizza.yaml"
 
 
 @agenda.expect_convos([[["I want pizza", "Got it. Are you vegan?"]]])
-def test_intent_detection():
+async def test_intent_detection():
     return pizza_bot
 
 
@@ -52,7 +48,7 @@ def test_intent_detection():
         ]
     ]
 )
-def test_skip_toppings_question():
+async def test_skip_toppings_question():
     return pizza_bot
 
 
@@ -75,5 +71,5 @@ def test_skip_toppings_question():
         ]
     ]
 )
-def test_happy_flow():
+async def test_happy_flow():
     return pizza_bot

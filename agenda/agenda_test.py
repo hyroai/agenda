@@ -1,9 +1,6 @@
 import gamla
-import pytest
 
 import agenda
-
-pytestmark = pytest.mark.asyncio
 
 _listen_with_memory_when_participated = gamla.compose_left(
     agenda.consumes_external_event,
@@ -19,7 +16,7 @@ _either = gamla.compose_left(
 
 
 @agenda.expect_convos([[["Hi", "say hello"], ["hello", "you said it"], ["Hello", ""]]])
-def test_slot():
+async def test_slot():
     what_needs_to_be_said = "hello"
     return agenda.slot(
         agenda.listener_with_memory(
@@ -31,7 +28,7 @@ def test_slot():
 
 
 @agenda.expect_convos([[["Hi", "say dog or cat"], ["cat", "Got it. You have a cat."]]])
-def test_needs():
+async def test_needs():
     options = ["dog", "cat"]
     return agenda.optionally_needs(
         agenda.say(
@@ -68,7 +65,7 @@ def test_needs():
         ],
     ]
 )
-def test_when1():
+async def test_when1():
     topping = agenda.listener_with_memory(
         lambda incoming: next(
             filter(gamla.contains(incoming), ["mushroom", "olives"]), agenda.UNKNOWN
@@ -109,7 +106,7 @@ def test_when1():
         ]
     ]
 )
-def test_when2():
+async def test_when2():
     return agenda.when(
         agenda.slot(
             agenda.listener_with_memory(
@@ -161,7 +158,7 @@ def _good_or_bad(text):
         [["Hi", "how are you?"], ["Hi", "how are you?"]],
     ]
 )
-def test_complement():
+async def test_complement():
     good_or_bad = agenda.slot(
         agenda.listener_with_memory(_good_or_bad),
         agenda.ask("how are you?"),
@@ -176,7 +173,7 @@ def test_complement():
 @agenda.expect_convos(
     [[["Hi", "x?"], ["yes", "okay. true"]], [["Hi", "x?"], ["no", "okay. false"]]]
 )
-def test_listen_if_participated1():
+async def test_listen_if_participated1():
     return agenda.optionally_needs(
         agenda.say(
             gamla.double_star(
@@ -201,7 +198,7 @@ def test_listen_if_participated1():
         [["Hi", "x?"], ["no", "okay. y?"], ["yes", "okay. false"]],
     ]
 )
-def test_listen_if_participated2():
+async def test_listen_if_participated2():
     return agenda.optionally_needs(
         agenda.say(
             gamla.double_star(
@@ -228,7 +225,7 @@ def test_listen_if_participated2():
 @agenda.expect_convos(
     [[["Hi", "Would you like A?"], ["yes", "I acknowledge your answer"]]]
 )
-def test_minimal_any_true():
+async def test_minimal_any_true():
     return agenda.any(
         agenda.slot(
             _listen_with_memory_when_participated(gamla.inside("yes")),
@@ -253,7 +250,7 @@ def test_minimal_any_true():
         ],
     ]
 )
-def test_any_true():
+async def test_any_true():
     any_true = agenda.combine_slots(
         agenda.any,
         agenda.ack("You are all set."),
@@ -295,7 +292,7 @@ def test_any_true():
         ],
     ]
 )
-def test_all_true():
+async def test_all_true():
     all_true = agenda.combine_slots(
         agenda.all,
         agenda.ack("You are all set."),
