@@ -34,7 +34,9 @@ _functions_to_case_dict: Callable[
 )
 
 
+@gamla.curry
 def reducer(
+    remote_function: Callable,
     state: Dict[str, base_types.GraphType],
     current: str,
     node_to_neighbors: Callable[[str], Dict[str, str]],
@@ -51,9 +53,11 @@ def reducer(
                 )
             ),
         )
+        return _functions_to_case_dict(
+            resolvers.composers_for_dag_reducer(remote_function)
+        )(cg_dict)
     except KeyError:
         return current
-    return _functions_to_case_dict(resolvers.COMPOSERS_FOR_DAG_REDUCER)(cg_dict)
 
 
 def reduce_graph(

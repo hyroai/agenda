@@ -14,6 +14,7 @@ setuptools.setup(
     install_requires=[
         "gamla>=121",
         "computation-graph>=33",
+        "pytest-asyncio>=0.17",
         "immutables",
         "Jpype1==0.6.3",
         "dataclasses",

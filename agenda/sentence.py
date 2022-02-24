@@ -3,7 +3,7 @@ from typing import Dict, Union
 import gamla
 import immutables
 
-SentenceOrPart = Dict
+SentenceOrPart = Union[Dict, immutables.Map]
 
 _TEXT = "text"
 _QUESTION = "question"

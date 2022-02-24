@@ -239,28 +239,35 @@ def _kv(
     return (key, value)
 
 
-def _remote(url: str):
-    async def post_request(params: Dict[str, Any]):
+async def post_request_with_url_and_params(url, params):
+    return gamla.pipe(
+        await gamla.post_json_with_extra_headers_and_params_async(
+            {}, {"Content-Type": "application/json"}, 30, url, params
+        ),
+        httpx.Response.json,
+    )
 
-        return gamla.pipe(
-            await gamla.post_json_with_extra_headers_and_params_async(
-                {},
-                {"Content-Type": "application/json"},
-                30,
-                url,
-                gamla.pipe(
-                    params,
-                    gamla.valmap(
-                        gamla.when(gamla.equals(agenda.UNKNOWN), gamla.just(None))
+
+def _build_remote_resolver(request: Callable):
+    def remote(url: str):
+        async def post_request(params: Dict[str, Any]):
+            return gamla.pipe(
+                await request(
+                    url,
+                    gamla.pipe(
+                        params,
+                        gamla.valmap(
+                            gamla.when(gamla.equals(agenda.UNKNOWN), gamla.just(None))
+                        ),
                     ),
                 ),
-            ),
-            httpx.Response.json,
-            gamla.freeze_deep,
-            gamla.when(gamla.equals(None), gamla.just("")),
-        )
+                gamla.freeze_deep,
+                gamla.when(gamla.equals(None), gamla.just("")),
+            )
 
-    return post_request
+        return post_request
+
+    return remote
 
 
 def _say_with_needs(
@@ -456,7 +463,9 @@ def _amount_of(amount_of: str, ask: str):
         agenda.first_known,
         agenda.ack(agenda.GENERIC_ACK),
         [
-            gamla.pipe(_listen_to_amount_of(amount_of), agenda.mark_state),
+            gamla.pipe(
+                _listen_to_amount_of(amount_of), agenda.mark_state, agenda.remember
+            ),
             agenda.slot(
                 gamla.pipe(
                     _listen_to_type("amount"),
@@ -472,27 +481,28 @@ def _amount_of(amount_of: str, ask: str):
     )
 
 
-COMPOSERS_FOR_DAG_REDUCER: FrozenSet[Callable] = frozenset(
-    {
-        _amount_of,
-        _first_known,
-        _complement,
-        _all,
-        _any,
-        _kv,
-        _remote,
-        _listen_to_intent,
-        _ask_about_choice,
-        _ask_about_multiple_choice,
-        _say_with_needs,
-        _when,
-        _when_with_needs,
-        _remote_with_needs,
-        _ask_about,
-        _slot,
-        _goals,
-        _goals_with_debug,
-        _equals,
-        _greater_equals,
-    }
-)
+def composers_for_dag_reducer(remote_function: Callable) -> FrozenSet[Callable]:
+    return frozenset(
+        {
+            _amount_of,
+            _first_known,
+            _complement,
+            _all,
+            _any,
+            _kv,
+            _build_remote_resolver(remote_function),
+            _listen_to_intent,
+            _ask_about_choice,
+            _ask_about_multiple_choice,
+            _say_with_needs,
+            _when,
+            _when_with_needs,
+            _remote_with_needs,
+            _ask_about,
+            _slot,
+            _goals,
+            _goals_with_debug,
+            _equals,
+            _greater_equals,
+        }
+    )
