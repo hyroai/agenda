@@ -1,5 +1,7 @@
 from typing import Dict, Tuple
 
+import gamla
+
 import agenda
 from config_to_bot import yaml_to_bot
 
@@ -37,15 +39,18 @@ async def _remote_function(url: str, params: Dict):
     return None
 
 
-pizza_bot = yaml_to_bot.yaml_to_cg(_remote_function)("examples/pizza/pizza.yaml")
+def _make_test(path: str, convos):
+    return agenda.expect_convos(
+        convos, gamla.just(yaml_to_bot.yaml_to_cg(_remote_function)(path))
+    )
 
 
-@agenda.expect_convos([[["I want pizza", "Got it. Are you vegan?"]]])
-async def test_intent_detection():
-    return pizza_bot
+test_pizza_intent_detection = _make_test(
+    "examples/pizza/pizza.yaml", [[["I want pizza", "Got it. Are you vegan?"]]]
+)
 
-
-@agenda.expect_convos(
+test_skip_toppings_question = _make_test(
+    "examples/pizza/pizza.yaml",
     [
         [
             ["hi", "Would you like to order pizza?"],
@@ -54,13 +59,11 @@ async def test_intent_detection():
             ["Yoni", "Got it. How many pies would you like?"],
             ["4", "Got it. What pizza size would you like?"],
         ]
-    ]
+    ],
 )
-async def test_skip_toppings_question():
-    return pizza_bot
 
-
-@agenda.expect_convos(
+test_happy_flow = _make_test(
+    "examples/pizza/pizza.yaml",
     [
         [
             ["hi", "Would you like to order pizza?"],
@@ -77,13 +80,11 @@ async def test_skip_toppings_question():
                 "Got it. Thank you Yoni! I got your phone: 999888777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas with mushrooms, and olives to 881 Mill Street Greenville SC.",
             ],
         ]
-    ]
+    ],
 )
-async def test_happy_flow():
-    return pizza_bot
 
-
-@agenda.expect_convos(
+test_happy_flow_without_toppings = _make_test(
+    "examples/pizza/pizza.yaml",
     [
         [
             ["hi", "Would you like to order pizza?"],
@@ -100,13 +101,12 @@ async def test_happy_flow():
                 "Got it. Thank you Yoni! I got your phone: 999888777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas to 881 Mill Street Greenville SC.",
             ],
         ]
-    ]
+    ],
 )
-async def test_happy_flow_without_toppings():
-    return pizza_bot
 
 
-@agenda.expect_convos(
+test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
+    "examples/pizza/pizza.yaml",
     [
         [
             ["hi", "Would you like to order pizza?"],
@@ -120,7 +120,5 @@ async def test_happy_flow_without_toppings():
                 "Got it. Thank you Yoni! I got your phone: 999888777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.",
             ],
         ]
-    ]
+    ],
 )
-async def test_happy_flow_wihtout_asking_for_amount_and_size():
-    return pizza_bot
