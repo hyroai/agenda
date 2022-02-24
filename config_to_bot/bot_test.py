@@ -1,9 +1,14 @@
+import os
 from typing import Dict, Tuple
 
 import gamla
 
 import agenda
 from config_to_bot import yaml_to_bot
+
+_PIZZA_YAML = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)), "examples/pizza/pizza.yaml"
+)
 
 
 async def _remote_function(url: str, params: Dict):
@@ -46,11 +51,11 @@ def _make_test(path: str, convos):
 
 
 test_pizza_intent_detection = _make_test(
-    "examples/pizza/pizza.yaml", [[["I want pizza", "Got it. Are you vegan?"]]]
+    _PIZZA_YAML, [[["I want pizza", "Got it. Are you vegan?"]]]
 )
 
 test_skip_toppings_question = _make_test(
-    "examples/pizza/pizza.yaml",
+    _PIZZA_YAML,
     [
         [
             ["hi", "Would you like to order pizza?"],
@@ -63,7 +68,7 @@ test_skip_toppings_question = _make_test(
 )
 
 test_happy_flow = _make_test(
-    "examples/pizza/pizza.yaml",
+    _PIZZA_YAML,
     [
         [
             ["hi", "Would you like to order pizza?"],
@@ -84,7 +89,7 @@ test_happy_flow = _make_test(
 )
 
 test_happy_flow_without_toppings = _make_test(
-    "examples/pizza/pizza.yaml",
+    _PIZZA_YAML,
     [
         [
             ["hi", "Would you like to order pizza?"],
@@ -106,7 +111,7 @@ test_happy_flow_without_toppings = _make_test(
 
 
 test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
-    "examples/pizza/pizza.yaml",
+    _PIZZA_YAML,
     [
         [
             ["hi", "Would you like to order pizza?"],
