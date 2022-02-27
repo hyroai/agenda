@@ -173,7 +173,7 @@ def _listen_to_single_choice(
     )
 
 
-_FUNCTION_MAP = {
+_TYPE_TO_LISTENER = {
     "email": gamla.compose_left(_d.parse_email, _duckling_wrapper),
     "phone": gamla.compose_left(_d.parse_phone_number, _duckling_wrapper),
     "amount": gamla.compose_left(_d.parse_number, _duckling_wrapper),
@@ -187,28 +187,15 @@ _FUNCTION_MAP = {
     "single-choice": _listen_to_single_choice,
 }
 
-_INFORMATION_TYPES = frozenset(
-    {
-        "phone",
-        "email",
-        "intent",
-        "bool",
-        "amount",
-        "name",
-        "address",
-        "multiple-choice",
-        "single-choice",
-    }
-)
 
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean"})
 
 
-def _listen_to_type(type: str) -> Callable:
-    def listen_to_type(user_utterance: str):
-        return _FUNCTION_MAP.get(type)(user_utterance)  # type: ignore
+def _parse_type(type: str) -> Callable:
+    def parse_type(user_utterance: str):
+        return _TYPE_TO_LISTENER.get(type)(user_utterance)  # type: ignore
 
-    return listen_to_type
+    return parse_type
 
 
 def _complement(not_: base_types.GraphType) -> base_types.GraphType:
@@ -304,11 +291,10 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
     )
 
 
-def _listen_to_amount_of(amount_of: str):
+def _parse_amount_of(amount_of: str):
     noun = _nlp(amount_of)
 
-    @agenda.consumes_external_event
-    def listen_to_amount_of(user_utterance):
+    def parse_amount_of(user_utterance):
         return gamla.pipe(
             user_utterance,
             _nlp,
@@ -321,77 +307,79 @@ def _listen_to_amount_of(amount_of: str):
             tuple,
             gamla.ternary(
                 gamla.len_greater(0),
-                gamla.compose_left(gamla.head, _listen_to_type("amount")),
+                gamla.compose_left(gamla.head, _parse_type("amount")),
                 gamla.just(agenda.UNKNOWN),
             ),
         )
 
-    return listen_to_amount_of
+    return parse_amount_of
 
 
 def _listen_to_intent(intent: Tuple[str, ...]):
     return gamla.pipe(
-        intent,
-        _listen_to_type("intent"),
-        agenda.consumes_external_event,
-        gamla.unless(agenda.state_sink_or_none, agenda.mark_state),
+        _parse_type("intent")(intent),
+        agenda.listener_with_memory,
         agenda.ever,
         duplication.duplicate_graph,
     )
 
 
 def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
-    return _slot(
-        agenda.GENERIC_ACK,
+    return agenda.slot(
         gamla.pipe(
-            choice, _listen_to_type("single-choice"), agenda.consumes_external_event
+            _parse_type("single-choice")(choice),
+            agenda.listener_with_memory,
+            duplication.duplicate_graph,
         ),
-        ask,
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
     )
 
 
 def _ask_about_multiple_choice(
     multiple_choice: Tuple[str, ...], ask: base_types.GraphType
 ):
-    return _slot(
-        agenda.GENERIC_ACK,
+    return agenda.slot(
         gamla.pipe(
-            multiple_choice,
-            _listen_to_type("multiple-choice"),
-            agenda.consumes_external_event,
+            _parse_type("multiple-choice")(multiple_choice),
+            agenda.listener_with_memory,
+            duplication.duplicate_graph,
         ),
-        ask,
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
     )
 
 
 def _ask_about(type: str, ask: str) -> base_types.GraphType:
-    if type in _TYPES_TO_LISTEN_AFTER_ASKING:
-        return _slot(
-            agenda.GENERIC_ACK,
-            gamla.pipe(
-                _listen_to_type(type),
-                agenda.consumes_external_event,
-                agenda.if_participated,
-            ),
-            ask,
-        )
-    assert type in _INFORMATION_TYPES, f"We currently do not support {type} type"
-
-    return _slot(
-        agenda.GENERIC_ACK, agenda.consumes_external_event(_listen_to_type(type)), ask
+    return agenda.slot(
+        _typed_state(type), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
     )
 
 
-def _slot(ack, listen: base_types.GraphType, ask: str) -> base_types.GraphType:
+def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
+    typed_state = _typed_state(type)
     return agenda.slot(
-        gamla.pipe(
-            listen,
-            gamla.unless(agenda.state_sink_or_none, agenda.mark_state),
-            agenda.remember,
-            duplication.duplicate_graph,
-        ),
+        typed_state,
         agenda.ask(ask),
-        agenda.ack(ack),
+        composers.compose_left(
+            agenda.state_sink(typed_state),
+            agenda.ack(lambda value: ack.format(value=value)),
+            key="value",
+        ),
+    )
+
+
+def _typed_state(type):
+    assert type in _TYPE_TO_LISTENER, f"We currently do not support {type} type"
+    return gamla.pipe(
+        _parse_type(type),
+        agenda.consumes_external_event,
+        agenda.if_participated
+        if type in _TYPES_TO_LISTEN_AFTER_ASKING
+        else gamla.identity,
+        agenda.mark_state,
+        agenda.remember,
+        duplication.duplicate_graph,
     )
 
 
@@ -462,22 +450,12 @@ def _amount_of(amount_of: str, ask: str):
     return agenda.combine_slots(
         agenda.first_known,
         agenda.ack(agenda.GENERIC_ACK),
-        [
-            gamla.pipe(
-                _listen_to_amount_of(amount_of), agenda.mark_state, agenda.remember
-            ),
+        (
+            agenda.listener_with_memory(_parse_amount_of(amount_of)),
             agenda.slot(
-                gamla.pipe(
-                    _listen_to_type("amount"),
-                    agenda.consumes_external_event,
-                    agenda.if_participated,
-                    agenda.mark_state,
-                    agenda.remember,
-                ),
-                agenda.ask(ask),
-                agenda.ack(agenda.GENERIC_ACK),
+                _typed_state("amount"), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
             ),
-        ],
+        ),
     )
 
 
@@ -499,7 +477,7 @@ def composers_for_dag_reducer(remote_function: Callable) -> FrozenSet[Callable]:
             _when_with_needs,
             _remote_with_needs,
             _ask_about,
-            _slot,
+            _ask_about_and_ack,
             _goals,
             _goals_with_debug,
             _equals,
