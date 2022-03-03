@@ -14,9 +14,7 @@ In addition run `yarn install` in each example that you wish to run in `config_t
 
 ### Issues with dependencies
 
-- `spacy` requires to run: `python -m spacy download en_core_web_lg`
-- `duckling` requires Java
-- `duckling` has a compatibility issue with latest `JPype1`. To fix, run: `pip install --force-reinstall JPype1==0.6.3`
+- `spacy` requires to run: `python -m spacy download en_core_web_sm`
 
 ### Running pizza example
 
