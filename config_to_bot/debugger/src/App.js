@@ -123,7 +123,7 @@ const Chat = ({ events, submit }) => {
     <div
       style={{
         display: "flex",
-        flexBasis: "50%",
+        flexGrow: 1,
         ...rowSpacing,
         overflowY: "auto",
         backgroundColor: "#300a24",
@@ -159,15 +159,28 @@ const Chat = ({ events, submit }) => {
   );
 };
 
-const StatusBar = ({ connectionStatus: { color, text } }) => (
+const StatusBar = ({
+  showEditor,
+  toggleEditor,
+  connectionStatus: { color, text },
+}) => (
   <div
     style={{
-      display: "flex",
       backgroundColor: "#202124",
-      color,
+      display: "flex",
+      gap: 10,
+      flexDirection: "row",
     }}
   >
-    {text}
+    <div
+      style={{
+        display: "flex",
+        color,
+      }}
+    >
+      {text}
+    </div>
+    <div onClick={toggleEditor}>{showEditor ? "close" : "open"} editor</div>
   </div>
 );
 
@@ -200,6 +213,8 @@ const App = () => {
     if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
 
+  const [showEditor, setShowEditor] = useState(false);
+
   return (
     <div
       style={{
@@ -216,7 +231,6 @@ const App = () => {
           flexBasis: "100%",
         }}
       >
-        <ConfigEditor text={configurationText} setText={setConfigurationText} />
         <Chat
           submit={(text) => {
             if (readyState !== ReadyState.OPEN) {
@@ -229,8 +243,18 @@ const App = () => {
           }}
           events={events}
         />
+        {showEditor && (
+          <ConfigEditor
+            text={configurationText}
+            setText={setConfigurationText}
+          />
+        )}
       </div>
-      <StatusBar connectionStatus={connectionStatus[readyState]} />
+      <StatusBar
+        showEditor={showEditor}
+        toggleEditor={() => setShowEditor(!showEditor)}
+        connectionStatus={connectionStatus[readyState]}
+      />
     </div>
   );
 };
