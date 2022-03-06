@@ -79,10 +79,10 @@ test_happy_flow = _make_test(
             ["mushrooms and olives", "Got it. What pizza size would you like?"],
             ["small", "Got it. What is your address?"],
             ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
-            ["999888777", "Got it. What is your email?"],
+            ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: 999888777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas with mushrooms, and olives to 881 Mill Street Greenville SC.",
+                "Got it. Thank you Yoni! I got your phone: 9998887777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas with mushrooms, and olives to 881 Mill Street Greenville SC.",
             ],
         ]
     ],
@@ -100,10 +100,10 @@ test_happy_flow_without_toppings = _make_test(
             ["none", "Got it. What pizza size would you like?"],
             ["small", "Got it. What is your address?"],
             ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
-            ["999888777", "Got it. What is your email?"],
+            ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: 999888777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas to 881 Mill Street Greenville SC.",
+                "Got it. Thank you Yoni! I got your phone: 9998887777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas to 881 Mill Street Greenville SC.",
             ],
         ]
     ],
@@ -119,10 +119,10 @@ test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! What is your address?"],
             ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
-            ["999888777", "Got it. What is your email?"],
+            ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: 999888777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.",
+                "Got it. Thank you Yoni! I got your phone: 9998887777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.",
             ],
         ]
     ],
