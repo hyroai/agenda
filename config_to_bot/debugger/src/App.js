@@ -9,20 +9,27 @@ const ServerError = ({ message, trace }) => (
     {trace && <div style={{ whiteSpace: "break-spaces" }}>{trace}</div>}
   </div>
 );
-const debugState = ([key, { state, utter, participated }], i) => (
+const debugSubgraph = ([key, { state, utter, participated }], i) => (
   <div key={i}>
-    <div>
-      <span style={{ color: "yellowgreen" }}>{key}</span>{" "}
-      {state === null ? "🤷" : state}
-      <span style={{ fontSize: "10px" }}>{utter && `(${utter})`}</span>{" "}
-      {participated && "(participated)"}
+    <span style={{ color: "yellowgreen" }}>{key}</span>&nbsp;
+    <span style={{ color: "lightblue" }}>
+      {state === null
+        ? "?"
+        : state === true
+        ? "yes"
+        : state === false
+        ? "no"
+        : state}
+    </span>
+    <div style={{ fontSize: "8px" }}>
+      {utter} {participated && "(participated)"}
     </div>
   </div>
 );
 
-const debugStates = (state) =>
+const subgraphsDebugger = (state) =>
   Object.keys(state).length && (
-    <div>{Object.entries(state).map(debugState)}</div>
+    <div>{Object.entries(state).map(debugSubgraph)}</div>
   );
 
 const BotUtterance = ({ utterance, state }) => (
@@ -34,8 +41,8 @@ const BotUtterance = ({ utterance, state }) => (
       display: "flex",
     }}
   >
-    <div style={{ color: "white" }}>🤖 {utterance}</div>
-    {state && debugStates(state)}
+    <div>🤖 {utterance}</div>
+    {state && subgraphsDebugger(state)}
   </div>
 );
 
@@ -87,7 +94,9 @@ const App = () => {
     }
   );
   useEffect(() => () => (didUnmount.current = true), []);
-
+  useEffect(() => {
+    inputRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [events]);
   useEffect(() => {
     if (lastJsonMessage !== null) {
       addEvent(lastJsonMessage);
@@ -98,6 +107,8 @@ const App = () => {
     if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
 
+  const inputRef = useRef(null);
+
   return (
     <div style={rowSpacing}>
       <div style={{ color: connectionStatus[readyState].color }}>
@@ -106,7 +117,7 @@ const App = () => {
       {readyState === ReadyState.OPEN && (
         <div style={rowSpacing}>
           <div style={rowSpacing}>{events.map(Event)}</div>
-          <div style={{ display: "flex" }}>
+          <div ref={inputRef} style={{ color: "lightblue", display: "flex" }}>
             <div>{">"}&nbsp;</div>
             <input
               style={{
@@ -115,7 +126,7 @@ const App = () => {
                 flex: 1,
                 fontFamily: "monospace",
                 background: "transparent",
-                color: "white",
+                color: "lightblue",
                 border: "none",
               }}
               autoFocus={true}
