@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
+import Editor from "@monaco-editor/react";
 import React from "react";
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
@@ -70,12 +71,15 @@ const userUtteranceEvent = (textInput) => ({
   utterance: textInput,
 });
 
+const configurationType = "configuration";
+const resetType = "reset";
+
 const event = (configurationText, textInput) =>
-  textInput === "reset"
+  textInput === resetType
     ? { type: textInput }
     : textInput === "reload"
     ? {
-        type: "configurationFile",
+        type: configurationType,
         data: configurationText,
       }
     : userUtteranceEvent(textInput);
@@ -89,18 +93,13 @@ const connectionStatus = {
 };
 
 const ConfigEditor = ({ text, setText }) => (
-  <textarea
+  <Editor
     value={text}
-    onChange={(e) => setText(e.target.value)}
-    style={{
-      width: "50vw",
-      color: "white",
-      backgroundColor: "hsl(0,0%,17.5%)",
-      display: "flex",
-      flexGrow: 1,
-      border: "none",
-      resize: "none",
-    }}
+    width="50vw"
+    onChange={setText}
+    theme="vs-dark"
+    language="yaml"
+    automaticLayout={true}
   />
 );
 
@@ -146,15 +145,15 @@ const Chat = ({ ref, events, submit }) => {
   );
 };
 
-const StatusBar = ({ connectionStatus }) => (
+const StatusBar = ({ connectionStatus: { color, text } }) => (
   <div
     style={{
       display: "flex",
       backgroundColor: "#202124",
-      color: connectionStatus.color,
+      color,
     }}
   >
-    {connectionStatus.text}
+    {text}
   </div>
 );
 
@@ -162,7 +161,9 @@ const App = () => {
   const didUnmount = useRef(false);
   const [events, addEvent] = useReducer(
     (state, current) =>
-      ["reset", "reload"].includes(current.type) ? [] : [...state, current],
+      [configurationType, resetType].includes(current.type)
+        ? []
+        : [...state, current],
     []
   );
   const [configurationText, setConfigurationText] = useState("");
