@@ -1,11 +1,7 @@
-import React from "react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
-const configurationFileEvent = (parsedConfigurationFile) => ({
-  type: "configurationFile",
-  data: parsedConfigurationFile,
-});
+import React from "react";
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
 const botTextColor = "white";
@@ -74,9 +70,14 @@ const userUtteranceEvent = (textInput) => ({
   utterance: textInput,
 });
 
-const event = (textInput) =>
-  ["reset", "reload"].includes(textInput)
+const event = (configurationText, textInput) =>
+  textInput === "reset"
     ? { type: textInput }
+    : textInput === "reload"
+    ? {
+        type: "configurationFile",
+        data: configurationText,
+      }
     : userUtteranceEvent(textInput);
 
 const connectionStatus = {
@@ -87,6 +88,76 @@ const connectionStatus = {
   [ReadyState.UNINSTANTIATED]: { text: "Uninstantiated", color: "red" },
 };
 
+const ConfigEditor = ({ text, setText }) => (
+  <textarea
+    value={text}
+    onChange={(e) => setText(e.target.value)}
+    style={{
+      width: "50vw",
+      color: "white",
+      backgroundColor: "hsl(0,0%,17.5%)",
+      display: "flex",
+      flexGrow: 1,
+      border: "none",
+      resize: "none",
+    }}
+  />
+);
+
+const Chat = ({ ref, events, submit }) => {
+  const [textInput, setTextInput] = useState("");
+  return (
+    <div
+      style={{
+        width: "50vw",
+        ...rowSpacing,
+        display: "flex",
+        flexGrow: 1,
+        overflow: "auto",
+        backgroundColor: "#300a24",
+      }}
+    >
+      <div style={rowSpacing}>{events.map(Event)}</div>
+      <div ref={ref} style={{ color: humanTextColor, display: "flex" }}>
+        <div>{">"}&nbsp;</div>
+        <input
+          style={{
+            outline: "none",
+            display: "flex",
+            flex: 1,
+            fontFamily: "monospace",
+            background: "transparent",
+            color: humanTextColor,
+            border: "none",
+          }}
+          autoFocus={true}
+          type="text"
+          value={textInput}
+          onKeyDown={({ key }) => {
+            if (key === "Enter") {
+              submit(textInput);
+              setTextInput("");
+            }
+          }}
+          onChange={(e) => setTextInput(e.target.value)}
+        />
+      </div>
+    </div>
+  );
+};
+
+const StatusBar = ({ connectionStatus }) => (
+  <div
+    style={{
+      display: "flex",
+      backgroundColor: "#202124",
+      color: connectionStatus.color,
+    }}
+  >
+    {connectionStatus.text}
+  </div>
+);
+
 const App = () => {
   const didUnmount = useRef(false);
   const [events, addEvent] = useReducer(
@@ -94,7 +165,6 @@ const App = () => {
       ["reset", "reload"].includes(current.type) ? [] : [...state, current],
     []
   );
-  const [textInput, setTextInput] = useState("");
   const [configurationText, setConfigurationText] = useState("");
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
     "ws://0.0.0.0:9000/converse",
@@ -121,68 +191,36 @@ const App = () => {
   const inputRef = useRef(null);
 
   return (
-    <div style={{ display: "flex", flexDirection: "row", height: "100vh" }}>
-      <div style={rowSpacing}>
-        <div style={{ color: connectionStatus[readyState].color }}>
-          {connectionStatus[readyState].text}
-        </div>
-        {readyState === ReadyState.OPEN && (
-          <div style={rowSpacing}>
-            <div style={rowSpacing}>{events.map(Event)}</div>
-            <div
-              ref={inputRef}
-              style={{ color: humanTextColor, display: "flex" }}
-            >
-              <div>{">"}&nbsp;</div>
-              <input
-                style={{
-                  outline: "none",
-                  display: "flex",
-                  flex: 1,
-                  fontFamily: "monospace",
-                  background: "transparent",
-                  color: humanTextColor,
-                  border: "none",
-                }}
-                autoFocus={true}
-                type="text"
-                value={textInput}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && readyState === ReadyState.OPEN) {
-                    addEvent(event(textInput));
-                    sendJsonMessage(event(textInput));
-                    setTextInput("");
-                  }
-                }}
-                onChange={(e) => setTextInput(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <textarea
-          style={{
-            background: "transparent",
-            color: "white",
-            border: "2px solid greenyellow",
-            flex: 1,
+    <div
+      style={{
+        display: "flex",
+        height: "100vh",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexGrow: 1,
+          flexDirection: "row",
+        }}
+      >
+        <ConfigEditor text={configurationText} setText={setConfigurationText} />
+        <Chat
+          submit={(text) => {
+            if (readyState !== ReadyState.OPEN) {
+              alert("not connected");
+              return;
+            }
+            const e = event(configurationText, text);
+            addEvent(e);
+            sendJsonMessage(e);
           }}
-          defaultValue={configurationText}
-          onChange={(e) => setConfigurationText(e.target.value)}
+          events={events}
+          ref={inputRef}
         />
-        <button
-          disabled={readyState !== ReadyState.OPEN}
-          onClick={() => {
-            const configurationEvent =
-              configurationFileEvent(configurationText);
-            addEvent(configurationEvent);
-            sendJsonMessage(configurationEvent);
-          }}
-        >
-          Submit
-        </button>
       </div>
+      <StatusBar connectionStatus={connectionStatus[readyState]} />
     </div>
   );
 };
