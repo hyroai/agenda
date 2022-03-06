@@ -9,18 +9,20 @@ const ServerError = ({ message, trace }) => (
     {trace && <div style={{ whiteSpace: "break-spaces" }}>{trace}</div>}
   </div>
 );
-const DebugState = ([key, value], i) => (
+const debugState = ([key, { state, utter, participated }], i) => (
   <div key={i}>
-    <span>{key}: </span>
-    <span style={{ color: "red" }}>
-      {JSON.stringify(value).replace("null", "?")}
-    </span>
+    <div>
+      <span style={{ color: "yellowgreen" }}>{key}</span>{" "}
+      {state === null ? "🤷" : state}
+      <span style={{ fontSize: "10px" }}>{utter && `(${utter})`}</span>{" "}
+      {participated && "(participated)"}
+    </div>
   </div>
 );
 
-const DebugStates = (state) =>
-  Object.keys(state).length !== 0 && (
-    <div>{Object.entries(state).map(DebugState)}</div>
+const debugStates = (state) =>
+  Object.keys(state).length && (
+    <div>{Object.entries(state).map(debugState)}</div>
   );
 
 const BotUtterance = ({ utterance, state }) => (
@@ -33,7 +35,7 @@ const BotUtterance = ({ utterance, state }) => (
     }}
   >
     <div style={{ color: "white" }}>🤖 {utterance}</div>
-    {state && DebugStates(state)}
+    {state && debugStates(state)}
   </div>
 );
 
@@ -60,6 +62,14 @@ const event = (textInput) =>
     ? { type: textInput }
     : userUtteranceEvent(textInput);
 
+const connectionStatus = {
+  [ReadyState.CONNECTING]: { text: "Connecting ...", color: "yellow" },
+  [ReadyState.OPEN]: { text: "Connected", color: "yellowgreen" },
+  [ReadyState.CLOSING]: { text: "Disconnecting ...", color: "yellow" },
+  [ReadyState.CLOSED]: { text: "Disconnected", color: "red" },
+  [ReadyState.UNINSTANTIATED]: { text: "Uninstantiated", color: "red" },
+};
+
 const App = () => {
   const didUnmount = useRef(false);
   const [events, addEvent] = useReducer(
@@ -85,28 +95,14 @@ const App = () => {
   }, [lastJsonMessage, addEvent]);
 
   useEffect(() => {
-    console.log(
-      {
-        [ReadyState.CONNECTING]: "Connecting",
-        [ReadyState.OPEN]: "Open",
-        [ReadyState.CLOSING]: "Closing",
-        [ReadyState.CLOSED]: "Closed",
-        [ReadyState.UNINSTANTIATED]: "Uninstantiated",
-      }[readyState]
-    );
     if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
 
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: "Connecting ...",
-    [ReadyState.OPEN]: "Connected",
-    [ReadyState.CLOSING]: "Disconnecting ...",
-    [ReadyState.CLOSED]: "Disconnected",
-    [ReadyState.UNINSTANTIATED]: "Uninstantiated",
-  }[readyState];
   return (
     <div style={rowSpacing}>
-      <div>{connectionStatus}</div>
+      <div style={{ color: connectionStatus[readyState].color }}>
+        {connectionStatus[readyState].text}
+      </div>
       {readyState === ReadyState.OPEN && (
         <div style={rowSpacing}>
           <div style={rowSpacing}>{events.map(Event)}</div>
