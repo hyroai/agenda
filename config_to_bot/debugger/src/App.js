@@ -8,6 +8,9 @@ const yamlFileEvent = (parsedYamlFile) => ({
 });
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
+const botTextColor = "white";
+const humanTextColor = "yellowgreen";
+const yamlFieldColor = "forestgreen";
 
 const ServerError = ({ message, trace }) => (
   <div>
@@ -15,18 +18,27 @@ const ServerError = ({ message, trace }) => (
     {trace && <div style={{ whiteSpace: "break-spaces" }}>{trace}</div>}
   </div>
 );
-const DebugState = ([key, value], i) => (
+const debugSubgraph = ([key, { state, utter, participated }], i) => (
   <div key={i}>
-    <span>{key}: </span>
-    <span style={{ color: "red" }}>
-      {JSON.stringify(value).replace("null", "?")}
+    <span style={{ color: yamlFieldColor }}>{key}</span>&nbsp;
+    <span style={{ color: humanTextColor }}>
+      {state === null
+        ? "?"
+        : state === true
+        ? "yes"
+        : state === false
+        ? "no"
+        : state}
     </span>
+    <div style={{ color: botTextColor, fontSize: "8px" }}>
+      {utter} {participated && "✔"}
+    </div>
   </div>
 );
 
-const DebugStates = (state) =>
-  Object.keys(state).length !== 0 && (
-    <div>{Object.entries(state).map(DebugState)}</div>
+const subgraphsDebugger = (state) =>
+  Object.keys(state).length && (
+    <div>{Object.entries(state).map(debugSubgraph)}</div>
   );
 
 const BotUtterance = ({ utterance, state }) => (
@@ -36,15 +48,16 @@ const BotUtterance = ({ utterance, state }) => (
       justifyContent: "flex-start",
       gap: 20,
       display: "flex",
+      color: botTextColor,
     }}
   >
-    <div style={{ color: "white" }}>🤖 {utterance}</div>
-    {state && DebugStates(state)}
+    <div>🤖 {utterance}</div>
+    {state && subgraphsDebugger(state)}
   </div>
 );
 
 const UserUtterance = ({ utterance }) => (
-  <span style={{ color: "lightblue" }}>👩 {utterance}</span>
+  <span style={{ color: humanTextColor }}>👩 {utterance}</span>
 );
 const Event = (event, i) => (
   <span key={i}>
@@ -66,6 +79,14 @@ const event = (textInput) =>
     ? { type: textInput }
     : userUtteranceEvent(textInput);
 
+const connectionStatus = {
+  [ReadyState.CONNECTING]: { text: "Connecting ...", color: "yellow" },
+  [ReadyState.OPEN]: { text: "Connected", color: "yellowgreen" },
+  [ReadyState.CLOSING]: { text: "Disconnecting ...", color: "yellow" },
+  [ReadyState.CLOSED]: { text: "Disconnected", color: "red" },
+  [ReadyState.UNINSTANTIATED]: { text: "Uninstantiated", color: "red" },
+};
+
 const App = () => {
   const didUnmount = useRef(false);
   const [events, addEvent] = useReducer(
@@ -84,7 +105,9 @@ const App = () => {
     }
   );
   useEffect(() => () => (didUnmount.current = true), []);
-
+  useEffect(() => {
+    inputRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [events]);
   useEffect(() => {
     if (lastJsonMessage !== null) {
       addEvent(lastJsonMessage);
@@ -92,33 +115,24 @@ const App = () => {
   }, [lastJsonMessage, addEvent]);
 
   useEffect(() => {
-    console.log(
-      {
-        [ReadyState.CONNECTING]: "Connecting",
-        [ReadyState.OPEN]: "Open",
-        [ReadyState.CLOSING]: "Closing",
-        [ReadyState.CLOSED]: "Closed",
-        [ReadyState.UNINSTANTIATED]: "Uninstantiated",
-      }[readyState]
-    );
     if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
 
-  const connectionStatus = {
-    [ReadyState.CONNECTING]: "Connecting ...",
-    [ReadyState.OPEN]: "Connected",
-    [ReadyState.CLOSING]: "Disconnecting ...",
-    [ReadyState.CLOSED]: "Disconnected",
-    [ReadyState.UNINSTANTIATED]: "Uninstantiated",
-  }[readyState];
+  const inputRef = useRef(null);
+
   return (
     <div style={{ display: "flex", flexDirection: "row", height: "100vh" }}>
       <div style={rowSpacing}>
-        <div>{connectionStatus}</div>
+        <div style={{ color: connectionStatus[readyState].color }}>
+          {connectionStatus[readyState].text}
+        </div>
         {readyState === ReadyState.OPEN && (
           <div style={rowSpacing}>
             <div style={rowSpacing}>{events.map(Event)}</div>
-            <div style={{ display: "flex" }}>
+            <div
+              ref={inputRef}
+              style={{ color: humanTextColor, display: "flex" }}
+            >
               <div>{">"}&nbsp;</div>
               <input
                 style={{
@@ -127,7 +141,7 @@ const App = () => {
                   flex: 1,
                   fontFamily: "monospace",
                   background: "transparent",
-                  color: "white",
+                  color: humanTextColor,
                   border: "none",
                 }}
                 autoFocus={true}
