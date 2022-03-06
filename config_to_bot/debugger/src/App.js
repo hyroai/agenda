@@ -1,10 +1,16 @@
+import React from "react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
+
+const configurationFileEvent = (parsedConfigurationFile) => ({
+  type: "configurationFile",
+  data: parsedConfigurationFile,
+});
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
 const botTextColor = "white";
 const humanTextColor = "yellowgreen";
-const yamlFieldColor = "forestgreen";
+const configurationFieldColor = "forestgreen";
 
 const ServerError = ({ message, trace }) => (
   <div>
@@ -14,7 +20,7 @@ const ServerError = ({ message, trace }) => (
 );
 const debugSubgraph = ([key, { state, utter, participated }], i) => (
   <div key={i}>
-    <span style={{ color: yamlFieldColor }}>{key}</span>&nbsp;
+    <span style={{ color: configurationFieldColor }}>{key}</span>&nbsp;
     <span style={{ color: humanTextColor }}>
       {state === null
         ? "?"
@@ -89,6 +95,7 @@ const App = () => {
     []
   );
   const [textInput, setTextInput] = useState("");
+  const [configurationText, setConfigurationText] = useState("");
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
     "ws://0.0.0.0:9000/converse",
     {
@@ -114,43 +121,68 @@ const App = () => {
   const inputRef = useRef(null);
 
   return (
-    <div style={rowSpacing}>
-      <div style={{ color: connectionStatus[readyState].color }}>
-        {connectionStatus[readyState].text}
-      </div>
-      {readyState === ReadyState.OPEN && (
-        <div style={rowSpacing}>
-          <div style={rowSpacing}>{events.map(Event)}</div>
-          <div
-            ref={inputRef}
-            style={{ color: humanTextColor, display: "flex" }}
-          >
-            <div>{">"}&nbsp;</div>
-            <input
-              style={{
-                outline: "none",
-                display: "flex",
-                flex: 1,
-                fontFamily: "monospace",
-                background: "transparent",
-                color: humanTextColor,
-                border: "none",
-              }}
-              autoFocus={true}
-              type="text"
-              value={textInput}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && readyState === ReadyState.OPEN) {
-                  addEvent(event(textInput));
-                  sendJsonMessage(event(textInput));
-                  setTextInput("");
-                }
-              }}
-              onChange={(e) => setTextInput(e.target.value)}
-            />
-          </div>
+    <div style={{ display: "flex", flexDirection: "row", height: "100vh" }}>
+      <div style={rowSpacing}>
+        <div style={{ color: connectionStatus[readyState].color }}>
+          {connectionStatus[readyState].text}
         </div>
-      )}
+        {readyState === ReadyState.OPEN && (
+          <div style={rowSpacing}>
+            <div style={rowSpacing}>{events.map(Event)}</div>
+            <div
+              ref={inputRef}
+              style={{ color: humanTextColor, display: "flex" }}
+            >
+              <div>{">"}&nbsp;</div>
+              <input
+                style={{
+                  outline: "none",
+                  display: "flex",
+                  flex: 1,
+                  fontFamily: "monospace",
+                  background: "transparent",
+                  color: humanTextColor,
+                  border: "none",
+                }}
+                autoFocus={true}
+                type="text"
+                value={textInput}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && readyState === ReadyState.OPEN) {
+                    addEvent(event(textInput));
+                    sendJsonMessage(event(textInput));
+                    setTextInput("");
+                  }
+                }}
+                onChange={(e) => setTextInput(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <textarea
+          style={{
+            background: "transparent",
+            color: "white",
+            border: "2px solid greenyellow",
+            flex: 1,
+          }}
+          defaultValue={configurationText}
+          onChange={(e) => setConfigurationText(e.target.value)}
+        />
+        <button
+          disabled={readyState !== ReadyState.OPEN}
+          onClick={() => {
+            const configurationEvent =
+              configurationFileEvent(configurationText);
+            addEvent(configurationEvent);
+            sendJsonMessage(configurationEvent);
+          }}
+        >
+          Submit
+        </button>
+      </div>
     </div>
   );
 };
