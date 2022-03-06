@@ -2,15 +2,15 @@ import React from "react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
-const yamlFileEvent = (parsedYamlFile) => ({
-  type: "yamlFile",
-  data: parsedYamlFile,
+const configurationFileEvent = (parsedConfigurationFile) => ({
+  type: "configurationFile",
+  data: parsedConfigurationFile,
 });
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
 const botTextColor = "white";
 const humanTextColor = "yellowgreen";
-const yamlFieldColor = "forestgreen";
+const configurationFieldColor = "forestgreen";
 
 const ServerError = ({ message, trace }) => (
   <div>
@@ -20,7 +20,7 @@ const ServerError = ({ message, trace }) => (
 );
 const debugSubgraph = ([key, { state, utter, participated }], i) => (
   <div key={i}>
-    <span style={{ color: yamlFieldColor }}>{key}</span>&nbsp;
+    <span style={{ color: configurationFieldColor }}>{key}</span>&nbsp;
     <span style={{ color: humanTextColor }}>
       {state === null
         ? "?"
@@ -95,7 +95,7 @@ const App = () => {
     []
   );
   const [textInput, setTextInput] = useState("");
-  const [yamlText, setYamlText] = useState("");
+  const [configurationText, setConfigurationText] = useState("");
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
     "ws://0.0.0.0:9000/converse",
     {
@@ -168,15 +168,16 @@ const App = () => {
             border: "2px solid greenyellow",
             flex: 1,
           }}
-          defaultValue={yamlText}
-          onChange={(e) => setYamlText(e.target.value)}
+          defaultValue={configurationText}
+          onChange={(e) => setConfigurationText(e.target.value)}
         />
         <button
           disabled={readyState !== ReadyState.OPEN}
           onClick={() => {
-            const yamlEvent = yamlFileEvent(yamlText);
-            addEvent(yamlEvent);
-            sendJsonMessage(yamlEvent);
+            const configurationEvent =
+              configurationFileEvent(configurationText);
+            addEvent(configurationEvent);
+            sendJsonMessage(configurationEvent);
           }}
         >
           Submit

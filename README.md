@@ -25,13 +25,15 @@ cd examples/pizza
 yarn start
 ```
 
-- Running bot's server: `python config_to_bot/main.py config_to_bot/examples/pizza/pizza.yaml`
+- Running bot's server: `python config_to_bot/main.py`
 - Running client:
 
 ```
 cd debugger
 yarn start
 ```
+
+Then in the text box insert yaml text and press submit.
 
 ## Example
 

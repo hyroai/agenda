@@ -38,7 +38,7 @@ def _create_socket_handler():
         async def responder_with_state(request):
             nonlocal state
             nonlocal bot
-            if request["type"] == "yamlFile":
+            if request["type"] == "configurationFile":
                 state = {}
                 bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
             if request["type"] == "reset":
@@ -103,11 +103,11 @@ async def _make_app() -> fastapi.FastAPI:
     return app
 
 
-def app():
-    return asyncio.get_event_loop().run_until_complete(_make_app())
-
-
 if __name__ == "__main__":
     uvicorn.run(
-        app(), host="0.0.0.0", port=9000, log_level="debug", timeout_keep_alive=1200
+        asyncio.get_event_loop().run_until_complete(_make_app()),
+        host="0.0.0.0",
+        port=9000,
+        log_level="debug",
+        timeout_keep_alive=1200,
     )
