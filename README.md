@@ -151,58 +151,48 @@ Subsequently we can define how to ask and listen to each one of the needed detai
 ```yaml
 definitions:
   - &name
+    ack: Nice to meet you {value}!
     ask: What is your name?
-    listen:
-      type: name
+    type: name
   - &address
     ask: What is your address?
-    listen:
-      type: address
+    type: address
   - &phone
     ask: What is your phone number?
-    listen:
-      type: phone
+    type: phone
   - &email
     ask: What is your email?
-    listen:
-      type: email
+    type: email
   - &amount_of_pizzas
     ask: How many pies would you like?
     amount-of: pie
   - &wants-pizza-question
     ask: Would you like to order pizza?
-    listen:
-      type: bool
+    type: boolean
   - &wants-pizza-intent
-    listen:
-      type: intent
-      examples:
-        - I want to order pizza
-        - I want pizza
+    intent:
+      - I want to order pizza
+      - I want pizza
   - &wants-pizza
     any:
       - *wants-pizza-question
       - *wants-pizza-intent
   - &is-vegan
     ask: Are you vegan?
-    listen:
-      type: bool
+    type: boolean
   - &toppings
     ask: What kind of toppings would you like?
-    listen:
-      type: multiple-choice
-      options:
-        - mushrooms
-        - olives
-        - tomatoes
+    multiple-choice:
+      - mushrooms
+      - olives
+      - tomatoes
+      - onions
   - &size
     ask: What pizza size would you like?
-    listen:
-      type: single-choice
-      options:
-        - small
-        - medium
-        - large
+    choice:
+      - small
+      - medium
+      - large
 ```
 
 Given this spec, agenda will create a bot that can handle the conversations above, and many other variations. **No custom training or data collection is needed**, and if requirements change, all the conversation designer needs to do is change the configuration.
