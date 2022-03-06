@@ -1,8 +1,6 @@
 import React from "react";
-import { EditTextarea } from "react-edit-text";
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
-import SplitPane from "react-split-pane";
 
 const yamlFileEvent = (parsedYamlFile) => ({
   type: "yamlFile",
@@ -114,7 +112,7 @@ const App = () => {
     [ReadyState.UNINSTANTIATED]: "Uninstantiated",
   }[readyState];
   return (
-    <SplitPane split="vertical" defaultSize={800}>
+    <div style={{ display: "flex", flexDirection: "row", height: "100vh" }}>
       <div style={rowSpacing}>
         <div>{connectionStatus}</div>
         {readyState === ReadyState.OPEN && (
@@ -148,26 +146,29 @@ const App = () => {
           </div>
         )}
       </div>
-      <div>
-        <div>
-          <React.Fragment>
-            <EditTextarea
-              style={{ width: "100%", overflow: "auto" }}
-              rows="20"
-              defaultValue={yamlText}
-              onSave={(e) => {
-                if (readyState === ReadyState.OPEN) {
-                  setYamlText(e.value);
-                  const yamlEvent = yamlFileEvent(e.value);
-                  addEvent(yamlEvent);
-                  sendJsonMessage(yamlEvent);
-                }
-              }}
-            />
-          </React.Fragment>
-        </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <textarea
+          style={{
+            background: "transparent",
+            color: "white",
+            border: "2px solid greenyellow",
+            flex: 1,
+          }}
+          defaultValue={yamlText}
+          onChange={(e) => setYamlText(e.target.value)}
+        />
+        <button
+          disabled={readyState !== ReadyState.OPEN}
+          onClick={() => {
+            const yamlEvent = yamlFileEvent(yamlText);
+            addEvent(yamlEvent);
+            sendJsonMessage(yamlEvent);
+          }}
+        >
+          Submit
+        </button>
       </div>
-    </SplitPane>
+    </div>
   );
 };
 
