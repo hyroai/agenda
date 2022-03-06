@@ -93,14 +93,20 @@ const connectionStatus = {
 };
 
 const ConfigEditor = ({ text, setText }) => (
-  <Editor
-    value={text}
-    width="50vw"
-    onChange={setText}
-    theme="vs-dark"
-    language="yaml"
-    automaticLayout={true}
-  />
+  <div
+    style={{
+      display: "flex",
+      flexBasis: "50%",
+    }}
+  >
+    <Editor
+      value={text}
+      onChange={setText}
+      theme="vs-dark"
+      language="yaml"
+      automaticLayout={true}
+    />
+  </div>
 );
 
 const Chat = ({ ref, events, submit }) => {
@@ -108,10 +114,9 @@ const Chat = ({ ref, events, submit }) => {
   return (
     <div
       style={{
-        width: "50vw",
-        ...rowSpacing,
         display: "flex",
-        flexGrow: 1,
+        flexBasis: "50%",
+        ...rowSpacing,
         overflow: "auto",
         backgroundColor: "#300a24",
       }}
@@ -194,8 +199,8 @@ const App = () => {
   return (
     <div
       style={{
-        display: "flex",
         height: "100vh",
+        display: "flex",
         flexDirection: "column",
       }}
     >
@@ -204,6 +209,7 @@ const App = () => {
           display: "flex",
           flexGrow: 1,
           flexDirection: "row",
+          overflow: "hidden",
         }}
       >
         <ConfigEditor text={configurationText} setText={setConfigurationText} />
