@@ -62,12 +62,6 @@ def _subject_to_relation_object_map(
     )
 
 
-def _parse_yaml_file(file_name: str) -> Dict:
-    with open(file_name) as f:
-        config_dict = yaml.safe_load(f)
-    return config_dict
-
-
 _RelationAndObjectAndTriplets = Tuple[str, _ObjectAndTriplets]
 _ReducerState = Union[_ObjectAndTriplets, _RelationAndObjectAndTriplets]
 
@@ -156,7 +150,7 @@ sentence_to_str = agenda.sentence_renderer(_ack_generator)
 
 def yaml_to_cg(remote_function: Callable) -> Callable[[str], base_types.GraphType]:
     return gamla.compose_left(
-        _parse_yaml_file, _yaml_dict_to_triplets, _build_cg(remote_function)
+        yaml.safe_load, _yaml_dict_to_triplets, _build_cg(remote_function)
     )
 
 

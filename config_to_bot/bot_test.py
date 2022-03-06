@@ -45,8 +45,10 @@ async def _remote_function(url: str, params: Dict):
 
 
 def _make_test(path: str, convos):
+    with open(path) as f:
+        yaml_string = f
     return agenda.expect_convos(
-        convos, gamla.just(yaml_to_bot.yaml_to_cg(_remote_function)(path))
+        convos, gamla.just(yaml_to_bot.yaml_to_cg(_remote_function)(yaml_string))
     )
 
 

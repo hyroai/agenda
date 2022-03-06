@@ -1,5 +1,13 @@
+import React from "react";
+import { EditTextarea } from "react-edit-text";
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
+import SplitPane from "react-split-pane";
+
+const yamlFileEvent = (parsedYamlFile) => ({
+  type: "yamlFile",
+  data: parsedYamlFile,
+});
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
 
@@ -68,6 +76,7 @@ const App = () => {
     []
   );
   const [textInput, setTextInput] = useState("");
+  const [yamlText, setYamlText] = useState("");
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
     "ws://0.0.0.0:9000/converse",
     {
@@ -105,39 +114,60 @@ const App = () => {
     [ReadyState.UNINSTANTIATED]: "Uninstantiated",
   }[readyState];
   return (
-    <div style={rowSpacing}>
-      <div>{connectionStatus}</div>
-      {readyState === ReadyState.OPEN && (
-        <div style={rowSpacing}>
-          <div style={rowSpacing}>{events.map(Event)}</div>
-          <div style={{ display: "flex" }}>
-            <div>{">"}&nbsp;</div>
-            <input
-              style={{
-                outline: "none",
-                display: "flex",
-                flex: 1,
-                fontFamily: "monospace",
-                background: "transparent",
-                color: "white",
-                border: "none",
-              }}
-              autoFocus={true}
-              type="text"
-              value={textInput}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && readyState === ReadyState.OPEN) {
-                  addEvent(event(textInput));
-                  sendJsonMessage(event(textInput));
-                  setTextInput("");
+    <SplitPane split="vertical" defaultSize={800}>
+      <div style={rowSpacing}>
+        <div>{connectionStatus}</div>
+        {readyState === ReadyState.OPEN && (
+          <div style={rowSpacing}>
+            <div style={rowSpacing}>{events.map(Event)}</div>
+            <div style={{ display: "flex" }}>
+              <div>{">"}&nbsp;</div>
+              <input
+                style={{
+                  outline: "none",
+                  display: "flex",
+                  flex: 1,
+                  fontFamily: "monospace",
+                  background: "transparent",
+                  color: "white",
+                  border: "none",
+                }}
+                autoFocus={true}
+                type="text"
+                value={textInput}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && readyState === ReadyState.OPEN) {
+                    addEvent(event(textInput));
+                    sendJsonMessage(event(textInput));
+                    setTextInput("");
+                  }
+                }}
+                onChange={(e) => setTextInput(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      <div>
+        <div>
+          <React.Fragment>
+            <EditTextarea
+              style={{ width: "100%", overflow: "auto" }}
+              rows="20"
+              defaultValue={yamlText}
+              onSave={(e) => {
+                if (readyState === ReadyState.OPEN) {
+                  setYamlText(e.value);
+                  const yamlEvent = yamlFileEvent(e.value);
+                  addEvent(yamlEvent);
+                  sendJsonMessage(yamlEvent);
                 }
               }}
-              onChange={(e) => setTextInput(e.target.value)}
             />
-          </div>
+          </React.Fragment>
         </div>
-      )}
-    </div>
+      </div>
+    </SplitPane>
   );
 };
 
