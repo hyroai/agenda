@@ -2,6 +2,9 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
+const botTextColor = "white";
+const humanTextColor = "yellowgreen";
+const yamlFieldColor = "forestgreen";
 
 const ServerError = ({ message, trace }) => (
   <div>
@@ -11,8 +14,8 @@ const ServerError = ({ message, trace }) => (
 );
 const debugSubgraph = ([key, { state, utter, participated }], i) => (
   <div key={i}>
-    <span style={{ color: "yellowgreen" }}>{key}</span>&nbsp;
-    <span style={{ color: "lightblue" }}>
+    <span style={{ color: yamlFieldColor }}>{key}</span>&nbsp;
+    <span style={{ color: humanTextColor }}>
       {state === null
         ? "?"
         : state === true
@@ -21,8 +24,8 @@ const debugSubgraph = ([key, { state, utter, participated }], i) => (
         ? "no"
         : state}
     </span>
-    <div style={{ fontSize: "8px" }}>
-      {utter} {participated && "(participated)"}
+    <div style={{ color: botTextColor, fontSize: "8px" }}>
+      {utter} {participated && "✔"}
     </div>
   </div>
 );
@@ -39,6 +42,7 @@ const BotUtterance = ({ utterance, state }) => (
       justifyContent: "flex-start",
       gap: 20,
       display: "flex",
+      color: botTextColor,
     }}
   >
     <div>🤖 {utterance}</div>
@@ -47,7 +51,7 @@ const BotUtterance = ({ utterance, state }) => (
 );
 
 const UserUtterance = ({ utterance }) => (
-  <span style={{ color: "lightblue" }}>👩 {utterance}</span>
+  <span style={{ color: humanTextColor }}>👩 {utterance}</span>
 );
 const Event = (event, i) => (
   <span key={i}>
@@ -117,7 +121,10 @@ const App = () => {
       {readyState === ReadyState.OPEN && (
         <div style={rowSpacing}>
           <div style={rowSpacing}>{events.map(Event)}</div>
-          <div ref={inputRef} style={{ color: "lightblue", display: "flex" }}>
+          <div
+            ref={inputRef}
+            style={{ color: humanTextColor, display: "flex" }}
+          >
             <div>{">"}&nbsp;</div>
             <input
               style={{
@@ -126,7 +133,7 @@ const App = () => {
                 flex: 1,
                 fontFamily: "monospace",
                 background: "transparent",
-                color: "lightblue",
+                color: humanTextColor,
                 border: "none",
               }}
               autoFocus={true}
