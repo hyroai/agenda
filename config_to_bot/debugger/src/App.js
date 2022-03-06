@@ -109,22 +109,31 @@ const ConfigEditor = ({ text, setText }) => (
   </div>
 );
 
-const Chat = ({ ref, events, submit }) => {
+const Chat = ({ events, submit }) => {
   const [textInput, setTextInput] = useState("");
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "start",
+    });
+  }, [events]);
   return (
     <div
       style={{
         display: "flex",
         flexBasis: "50%",
         ...rowSpacing,
-        overflow: "auto",
+        overflowY: "auto",
         backgroundColor: "#300a24",
       }}
     >
       <div style={rowSpacing}>{events.map(Event)}</div>
-      <div ref={ref} style={{ color: humanTextColor, display: "flex" }}>
+      <div style={{ color: humanTextColor, display: "flex" }}>
         <div>{">"}&nbsp;</div>
         <input
+          ref={ref}
           style={{
             outline: "none",
             display: "flex",
@@ -182,9 +191,6 @@ const App = () => {
   );
   useEffect(() => () => (didUnmount.current = true), []);
   useEffect(() => {
-    inputRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [events]);
-  useEffect(() => {
     if (lastJsonMessage !== null) {
       addEvent(lastJsonMessage);
     }
@@ -193,8 +199,6 @@ const App = () => {
   useEffect(() => {
     if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
-
-  const inputRef = useRef(null);
 
   return (
     <div
@@ -207,9 +211,9 @@ const App = () => {
       <div
         style={{
           display: "flex",
-          flexGrow: 1,
           flexDirection: "row",
           overflow: "hidden",
+          flexBasis: "100%",
         }}
       >
         <ConfigEditor text={configurationText} setText={setConfigurationText} />
@@ -224,7 +228,6 @@ const App = () => {
             sendJsonMessage(e);
           }}
           events={events}
-          ref={inputRef}
         />
       </div>
       <StatusBar connectionStatus={connectionStatus[readyState]} />
