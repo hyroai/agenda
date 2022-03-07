@@ -43,6 +43,9 @@ definitions:
       - medium
       - large
 goals:
+  - faq:
+      - question: What is your opening hours?
+        answer: 2pm to 10pm every day.
   - say: I'm transferring you to an agent.
     when:
       not: *wants-pizza
