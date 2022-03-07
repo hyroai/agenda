@@ -203,7 +203,19 @@ def _goals(
 
 @graph.make_terminal("debug_states")
 def debug_states(args):
-    return args
+    return gamla.pipe(
+        args,
+        gamla.map_dict(
+            gamla.identity,
+            gamla.case_dict(
+                {
+                    gamla.equals(agenda.UNKNOWN): gamla.just(None),
+                    gamla.just(True): gamla.identity,
+                }
+            ),
+        ),
+        gamla.freeze_deep,
+    )
 
 
 def _debug_dict(cg: base_types.GraphType):
@@ -214,7 +226,7 @@ def _debug_dict(cg: base_types.GraphType):
         )(cg),
         "participated": gamla.excepts(
             StopIteration,
-            gamla.just(lambda: agenda.UNKNOWN),
+            gamla.just(lambda: None),
             gamla.compose_left(
                 gamla.filter(missing_cg_utils.edge_source_equals(agenda.participated)),
                 gamla.map(base_types.edge_destination),
