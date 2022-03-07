@@ -1,6 +1,16 @@
 import dataclasses
 import random
-from typing import Awaitable, Callable, Dict, FrozenSet, Iterable, List, Tuple, Union
+from typing import (
+    IO,
+    Awaitable,
+    Callable,
+    Dict,
+    FrozenSet,
+    Iterable,
+    List,
+    Tuple,
+    Union,
+)
 
 import gamla
 import yaml  # type: ignore
@@ -147,14 +157,20 @@ def _ack_generator() -> str:
 
 sentence_to_str = agenda.sentence_renderer(_ack_generator)
 
+_YAML_STREAM = Union[str, bytes, IO[str], IO[bytes]]
 
-def yaml_to_cg(remote_function: Callable) -> Callable[[str], base_types.GraphType]:
+
+def yaml_to_cg(
+    remote_function: Callable,
+) -> Callable[[_YAML_STREAM], base_types.GraphType]:
     return gamla.compose_left(
         yaml.safe_load, _yaml_dict_to_triplets, _build_cg(remote_function)
     )
 
 
-yaml_to_slot_bot: Callable[[str], Callable[[], Awaitable]] = gamla.compose_left(
+yaml_to_slot_bot: Callable[
+    [_YAML_STREAM], Callable[[], Awaitable]
+] = gamla.compose_left(
     yaml_to_cg(resolvers.post_request_with_url_and_params),
     agenda.wrap_up(agenda.sentence_renderer(_ack_generator)),
     gamla.after(gamla.to_awaitable),

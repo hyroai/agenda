@@ -15,7 +15,6 @@ setuptools.setup(
         "gamla>=121",
         "computation-graph>=33",
         "pytest-asyncio>=0.17",
-        "immutables",
         "dataclasses",
         "httpx",
         "pyap",

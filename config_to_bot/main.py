@@ -4,13 +4,12 @@ import traceback
 
 import fastapi
 import gamla
-import immutables
 import uvicorn
 from computation_graph import graph
 from starlette import websockets
 from uvicorn.main import Server
 
-from agenda import composers
+from agenda import composers, sentence
 from config_to_bot import resolvers, yaml_to_bot
 
 
@@ -57,16 +56,9 @@ def _create_socket_handler():
                         gamla.dict_to_getter_with_default({}, state),
                         gamla.valmap(
                             gamla.valmap(
-                                gamla.case_dict(
-                                    {
-                                        gamla.equals(composers.UNKNOWN): gamla.just(
-                                            None
-                                        ),
-                                        gamla.is_instance(
-                                            immutables.Map
-                                        ): yaml_to_bot.sentence_to_str,
-                                        gamla.just(True): gamla.identity,
-                                    }
+                                gamla.when(
+                                    sentence.is_sentence_or_part,
+                                    yaml_to_bot.sentence_to_str,
                                 )
                             )
                         ),

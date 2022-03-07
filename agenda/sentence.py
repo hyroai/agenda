@@ -1,9 +1,8 @@
 from typing import Dict, Union
 
 import gamla
-import immutables
 
-SentenceOrPart = Union[Dict, immutables.Map]
+SentenceOrPart = Union[Dict, gamla.frozendict]
 
 _TEXT = "text"
 _QUESTION = "question"
@@ -19,7 +18,7 @@ class _GenericAck:
 
 
 GENERIC_ACK = _GenericAck()
-EMPTY_SENTENCE = immutables.Map({_TYPE: _SENTENCE, _CONSTITUENTS: frozenset()})
+EMPTY_SENTENCE = gamla.frozendict({_TYPE: _SENTENCE, _CONSTITUENTS: frozenset()})
 
 constituents = gamla.itemgetter(_CONSTITUENTS)
 
@@ -30,6 +29,12 @@ _is_statement = gamla.compose(gamla.equals(_STATEMENT), gamla.itemgetter(_TYPE))
 
 _has_question = gamla.inside(_QUESTION)
 _has_ack = gamla.inside(_ACK)
+
+is_sentence_or_part = gamla.alljuxt(
+    gamla.is_instance(gamla.frozendict),
+    gamla.inside(_TYPE),
+    gamla.anyjuxt(_is_question, _is_sentence, _is_statement, _is_ack),
+)
 
 
 def sentence_to_str(generic_ack_renderer, sentence: SentenceOrPart) -> str:
@@ -56,47 +61,51 @@ def str_to_statement(text):
     assert isinstance(text, str), text
     if not text:
         return EMPTY_SENTENCE
-    return immutables.Map({_TYPE: _STATEMENT, _TEXT: text})
+    return gamla.frozendict({_TYPE: _STATEMENT, _TEXT: text})
 
 
 def str_to_question(text):
     assert isinstance(text, str)
     if not text:
         return EMPTY_SENTENCE
-    return immutables.Map({_TYPE: _QUESTION, _TEXT: text})
+    return gamla.frozendict({_TYPE: _QUESTION, _TEXT: text})
 
 
 def str_to_ack(ack_represntation: Union[str, _GenericAck]) -> SentenceOrPart:
     if not ack_represntation:
         return EMPTY_SENTENCE
-    return immutables.Map({_TYPE: _ACK, _TEXT: ack_represntation})
+    return gamla.frozendict({_TYPE: _ACK, _TEXT: ack_represntation})
 
 
 def _set_question(sentence, element):
     assert element != EMPTY_SENTENCE
-    return sentence.set(_QUESTION, element)
+    return gamla.freeze_deep(gamla.assoc_in(sentence, [_QUESTION], element))
 
 
 def _add_statement(sentence, element):
     assert element != EMPTY_SENTENCE
-    return sentence.set(_STATEMENT, sentence.get(_STATEMENT, frozenset()) | {element})
+    return gamla.freeze_deep(
+        gamla.update_in(sentence, [_STATEMENT], {element}.union, frozenset())
+    )
 
 
 def _add_constituent(sentence, element):
-    return sentence.set(_CONSTITUENTS, sentence[_CONSTITUENTS] | {element})
+    return gamla.freeze_deep(
+        gamla.update_in(sentence, [_CONSTITUENTS], {element}.union, frozenset())
+    )
 
 
 def _add_ack(sentence, element):
     assert element != EMPTY_SENTENCE
     if _has_ack(sentence):
-        return sentence.set(_ACK, str_to_ack(GENERIC_ACK))
-    return sentence.set(_ACK, element)
+        return gamla.freeze_deep(
+            gamla.assoc_in(sentence, [_ACK], str_to_ack(GENERIC_ACK))
+        )
+    return gamla.freeze_deep(gamla.assoc_in(sentence, [_ACK], element))
 
 
 def _merge_sentences(sentence1, sentence2):
-    new_sentence = sentence1.set(
-        _CONSTITUENTS, frozenset([*constituents(sentence1), sentence2])
-    )
+    new_sentence = _add_constituent(sentence1, sentence2)
     if _has_ack(sentence2):
         new_sentence = _add_ack(new_sentence, sentence2.get(_ACK))
         assert _has_ack(new_sentence)
