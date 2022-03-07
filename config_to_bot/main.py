@@ -38,7 +38,7 @@ def _create_socket_handler():
         async def responder_with_state(request):
             nonlocal state
             nonlocal bot
-            if request["type"] == "configurationFile":
+            if request["type"] == "configuration":
                 state = {}
                 bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
             if request["type"] == "reset":

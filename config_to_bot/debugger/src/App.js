@@ -1,11 +1,8 @@
-import React from "react";
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
-const configurationFileEvent = (parsedConfigurationFile) => ({
-  type: "configurationFile",
-  data: parsedConfigurationFile,
-});
+import Editor from "@monaco-editor/react";
+import React from "react";
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
 const botTextColor = "white";
@@ -74,9 +71,17 @@ const userUtteranceEvent = (textInput) => ({
   utterance: textInput,
 });
 
-const event = (textInput) =>
-  ["reset", "reload"].includes(textInput)
+const configurationType = "configuration";
+const resetType = "reset";
+
+const event = (configurationText, textInput) =>
+  textInput === resetType
     ? { type: textInput }
+    : textInput === "reload"
+    ? {
+        type: configurationType,
+        data: configurationText,
+      }
     : userUtteranceEvent(textInput);
 
 const connectionStatus = {
@@ -87,14 +92,107 @@ const connectionStatus = {
   [ReadyState.UNINSTANTIATED]: { text: "Uninstantiated", color: "red" },
 };
 
+const ConfigEditor = ({ text, setText }) => (
+  <div
+    style={{
+      display: "flex",
+      flexBasis: "50%",
+    }}
+  >
+    <Editor
+      value={text}
+      onChange={setText}
+      theme="vs-dark"
+      language="yaml"
+      automaticLayout={true}
+    />
+  </div>
+);
+
+const Chat = ({ events, submit }) => {
+  const [textInput, setTextInput] = useState("");
+  const ref = useRef(null);
+  useEffect(() => {
+    ref.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "start",
+    });
+  }, [events]);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexGrow: 1,
+        ...rowSpacing,
+        overflowY: "auto",
+        backgroundColor: "#300a24",
+      }}
+    >
+      <div style={rowSpacing}>{events.map(Event)}</div>
+      <div style={{ color: humanTextColor, display: "flex" }}>
+        <div>{">"}&nbsp;</div>
+        <input
+          ref={ref}
+          style={{
+            outline: "none",
+            display: "flex",
+            flex: 1,
+            fontFamily: "monospace",
+            background: "transparent",
+            color: humanTextColor,
+            border: "none",
+          }}
+          autoFocus={true}
+          type="text"
+          value={textInput}
+          onKeyDown={({ key }) => {
+            if (key === "Enter") {
+              submit(textInput);
+              setTextInput("");
+            }
+          }}
+          onChange={(e) => setTextInput(e.target.value)}
+        />
+      </div>
+    </div>
+  );
+};
+
+const StatusBar = ({
+  showEditor,
+  toggleEditor,
+  connectionStatus: { color, text },
+}) => (
+  <div
+    style={{
+      backgroundColor: "#202124",
+      display: "flex",
+      gap: 10,
+      flexDirection: "row",
+    }}
+  >
+    <div
+      style={{
+        display: "flex",
+        color,
+      }}
+    >
+      {text}
+    </div>
+    <div onClick={toggleEditor}>{showEditor ? "close" : "open"} editor</div>
+  </div>
+);
+
 const App = () => {
   const didUnmount = useRef(false);
   const [events, addEvent] = useReducer(
     (state, current) =>
-      ["reset", "reload"].includes(current.type) ? [] : [...state, current],
+      [configurationType, resetType].includes(current.type)
+        ? []
+        : [...state, current],
     []
   );
-  const [textInput, setTextInput] = useState("");
   const [configurationText, setConfigurationText] = useState("");
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
     "ws://0.0.0.0:9000/converse",
@@ -106,9 +204,6 @@ const App = () => {
   );
   useEffect(() => () => (didUnmount.current = true), []);
   useEffect(() => {
-    inputRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [events]);
-  useEffect(() => {
     if (lastJsonMessage !== null) {
       addEvent(lastJsonMessage);
     }
@@ -118,71 +213,48 @@ const App = () => {
     if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
 
-  const inputRef = useRef(null);
+  const [showEditor, setShowEditor] = useState(false);
 
   return (
-    <div style={{ display: "flex", flexDirection: "row", height: "100vh" }}>
-      <div style={rowSpacing}>
-        <div style={{ color: connectionStatus[readyState].color }}>
-          {connectionStatus[readyState].text}
-        </div>
-        {readyState === ReadyState.OPEN && (
-          <div style={rowSpacing}>
-            <div style={rowSpacing}>{events.map(Event)}</div>
-            <div
-              ref={inputRef}
-              style={{ color: humanTextColor, display: "flex" }}
-            >
-              <div>{">"}&nbsp;</div>
-              <input
-                style={{
-                  outline: "none",
-                  display: "flex",
-                  flex: 1,
-                  fontFamily: "monospace",
-                  background: "transparent",
-                  color: humanTextColor,
-                  border: "none",
-                }}
-                autoFocus={true}
-                type="text"
-                value={textInput}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && readyState === ReadyState.OPEN) {
-                    addEvent(event(textInput));
-                    sendJsonMessage(event(textInput));
-                    setTextInput("");
-                  }
-                }}
-                onChange={(e) => setTextInput(e.target.value)}
-              />
-            </div>
-          </div>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          overflow: "hidden",
+          flexBasis: "100%",
+        }}
+      >
+        <Chat
+          submit={(text) => {
+            if (readyState !== ReadyState.OPEN) {
+              alert("not connected");
+              return;
+            }
+            const e = event(configurationText, text);
+            addEvent(e);
+            sendJsonMessage(e);
+          }}
+          events={events}
+        />
+        {showEditor && (
+          <ConfigEditor
+            text={configurationText}
+            setText={setConfigurationText}
+          />
         )}
       </div>
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <textarea
-          style={{
-            background: "transparent",
-            color: "white",
-            border: "2px solid greenyellow",
-            flex: 1,
-          }}
-          defaultValue={configurationText}
-          onChange={(e) => setConfigurationText(e.target.value)}
-        />
-        <button
-          disabled={readyState !== ReadyState.OPEN}
-          onClick={() => {
-            const configurationEvent =
-              configurationFileEvent(configurationText);
-            addEvent(configurationEvent);
-            sendJsonMessage(configurationEvent);
-          }}
-        >
-          Submit
-        </button>
-      </div>
+      <StatusBar
+        showEditor={showEditor}
+        toggleEditor={() => setShowEditor(!showEditor)}
+        connectionStatus={connectionStatus[readyState]}
+      />
     </div>
   );
 };
