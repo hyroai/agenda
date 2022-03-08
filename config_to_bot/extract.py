@@ -77,7 +77,9 @@ def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> flo
 
 def faq_score(question: str, user_utternace: str) -> float:
     return gamla.pipe(
-        user_utternace, _analyze, lambda sentence: sentence.similarity(question)
+        user_utternace,
+        _analyze,
+        lambda sentence: sentence.similarity(_analyze(question)),
     )
 
 
