@@ -137,38 +137,29 @@ def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
     return (question, answer)
 
 
-@gamla.curry
-def _faq_score(user_utterance: str, question_and_answer: Tuple[str, str]):
-    return (
-        question_and_answer[0],
-        question_and_answer[1],
-        extract.faq_score(question_and_answer[0], user_utterance),
-    )
-
-
-def _faq_intent(faq: Tuple[Tuple[str, str], ...]):
+def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> Callable[[str], str]:
     def highest_ranked_faq_with_score(user_utterance: str):
         return gamla.pipe(
             faq,
-            gamla.map(_faq_score(user_utterance)),
+            gamla.map(
+                gamla.pair_right(
+                    lambda question_and_answer: extract.faq_score(
+                        question_and_answer[0], user_utterance
+                    )
+                )
+            ),
+            gamla.filter(gamla.compose_left(gamla.second, gamla.greater_equals(0.9))),
             tuple,
-            gamla.sort_by(gamla.nth(2)),
-            gamla.last,
-            gamla.packstack(gamla.identity, gamla.identity, lambda score: score >= 0.9),
+            gamla.ternary(
+                gamla.nonempty,
+                gamla.compose_left(
+                    gamla.sort_by(gamla.second), gamla.last, gamla.head, gamla.second
+                ),
+                gamla.just(""),
+            ),
         )
 
-    return agenda.when(
-        agenda.mark_state(
-            agenda.consumes_external_event(
-                gamla.compose_left(highest_ranked_faq_with_score, gamla.nth(2))
-            )
-        ),
-        agenda.say(
-            agenda.consumes_external_event(
-                gamla.compose_left(highest_ranked_faq_with_score, gamla.second)
-            )
-        ),
-    )
+    return agenda.say(agenda.consumes_external_event(highest_ranked_faq_with_score))
 
 
 def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
