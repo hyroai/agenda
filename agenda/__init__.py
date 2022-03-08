@@ -1,4 +1,7 @@
 import gamla
+from computation_graph import base_types
+from computation_graph import composers as cg_composers
+from computation_graph.composers import duplication
 
 from agenda import composers, sentence, state_aggregators, test_utils
 
@@ -38,16 +41,19 @@ state_sink_or_none = composers.state_sink_or_none
 utter_sink = composers.utter_sink
 
 
-def _value_to_function_if_needed(value_or_function):
-    if callable(value_or_function):
-        return value_or_function
-    return lambda: value_or_function
+def _generic(transformation):
+    def inner(x):
+        if base_types.is_computation_graph(x):
+            return composers.mark_utter(
+                cg_composers.compose_left_unary(
+                    x, duplication.duplicate_function(transformation)
+                )
+            )
+        if callable(x):
+            return composers.mark_utter(gamla.compose(transformation, x))
+        return inner(lambda: x)
 
-
-def _generic(inner):
-    return gamla.compose(
-        composers.mark_utter, gamla.after(inner), _value_to_function_if_needed
-    )
+    return inner
 
 
 ask = _generic(sentence.str_to_question)

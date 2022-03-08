@@ -133,6 +133,35 @@ def _listen_to_intent(intent: Tuple[str, ...]):
     )
 
 
+def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
+    return (question, answer)
+
+
+def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> Callable[[str], str]:
+    def highest_ranked_faq_with_score(user_utterance: str):
+        return gamla.pipe(
+            faq,
+            gamla.map(
+                gamla.pair_right(
+                    lambda question_and_answer: extract.faq_score(
+                        question_and_answer[0], user_utterance
+                    )
+                )
+            ),
+            gamla.filter(gamla.compose_left(gamla.second, gamla.greater_equals(0.9))),
+            tuple,
+            gamla.ternary(
+                gamla.nonempty,
+                gamla.compose_left(
+                    gamla.sort_by(gamla.second), gamla.last, gamla.head, gamla.second
+                ),
+                gamla.just(""),
+            ),
+        )
+
+    return agenda.say(agenda.consumes_external_event(highest_ranked_faq_with_score))
+
+
 def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
     return agenda.slot(
         gamla.pipe(
@@ -304,5 +333,7 @@ def composers_for_dag_reducer(remote_function: Callable) -> FrozenSet[Callable]:
             _goals_with_debug,
             _equals,
             _greater_equals,
+            _question_and_answer_dict,
+            _faq_intent,
         }
     )

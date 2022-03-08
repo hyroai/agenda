@@ -128,3 +128,15 @@ test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
         ]
     ],
 )
+
+test_faq = _make_test(
+    _PIZZA_YAML,
+    [
+        [
+            [
+                "What are your opening times?",
+                "2pm to 10pm every day. Would you like to order pizza?",
+            ]
+        ]
+    ],
+)
