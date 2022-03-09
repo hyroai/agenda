@@ -13,7 +13,7 @@ def reducer(
     node_to_neighbors: Callable[[str], Dict[str, str]],
 ) -> Any:
     try:
-        cg_dict = gamla.pipe(
+        return gamla.pipe(
             current,
             node_to_neighbors,
             gamla.valmap(
@@ -23,8 +23,8 @@ def reducer(
                     state.__getitem__,
                 )
             ),
+            process_children_dict,
         )
-        return process_children_dict(cg_dict)
     except KeyError:
         return current
 
