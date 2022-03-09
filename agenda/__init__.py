@@ -1,3 +1,5 @@
+from typing import Callable
+
 import gamla
 from computation_graph import base_types
 from computation_graph import composers as cg_composers
@@ -20,7 +22,6 @@ mark_state = composers.mark_state
 participated = composers.participated
 
 wrap_up = composers.wrap_up
-
 complement = composers.complement
 equals = composers.equals
 less_than = composers.less_than
@@ -33,7 +34,7 @@ any = state_aggregators.any_true
 all = state_aggregators.all_true
 first_known = state_aggregators.first_known
 str_to_statement = sentence.str_to_statement
-expect_convos = test_utils.expect_convos
+expect_convos: Callable = test_utils.expect_convos
 ever = composers.ever
 combine_slots = composers.combine_slots
 state_sink = composers.state_sink
