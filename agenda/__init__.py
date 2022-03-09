@@ -32,7 +32,8 @@ any = state_aggregators.any_true
 all = state_aggregators.all_true
 first_known = state_aggregators.first_known
 str_to_statement = sentence.str_to_statement
-expect_convos = test_utils.expect_convos
+# TODO(uri): I'm not sure why mypy doesn't like this.
+expect_convos = test_utils.expect_convos  # type: ignore
 ever = composers.ever
 combine_slots = composers.combine_slots
 state_sink = composers.state_sink
