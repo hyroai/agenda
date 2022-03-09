@@ -150,7 +150,7 @@ def _build_cg(
 
 def _ack_generator() -> str:
     x = random.choice(["Okay.", "Alright.", "Got it.", "Cool."])
-    # TODO(uri): For a reason I don't full understand, unless we have a `print` or `breakpoint` here, it always selects the same option.
+    # TODO(uri): For a reason I don't fully understand, unless we have a `print` or `breakpoint` here, it always selects the same option.
     print(x)  # noqa: T001
     return x
 
