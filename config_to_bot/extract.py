@@ -153,8 +153,7 @@ def multiple_choices(
     options: Tuple[str, ...]
 ) -> Callable[[str], Tuple[str, agenda.Unknown]]:
     return gamla.compose_left(
-        lambda user_utterance: user_utterance.split(),
-        gamla.map(str.lower),
+        _text_to_lower_case_words,
         gamla.filter(gamla.contains([*options, "none"])),
         tuple,
         gamla.when(gamla.empty, gamla.just(agenda.UNKNOWN)),
@@ -171,8 +170,7 @@ def multiple_choices(
 
 def single_choice(options: Tuple[str, ...]) -> Callable[[str], str]:
     return gamla.compose_left(
-        lambda user_utterance: user_utterance.split(),
-        gamla.map(str.lower),
+        _text_to_lower_case_words,
         gamla.filter(gamla.contains(options)),
         tuple,
         gamla.ternary(gamla.len_equals(1), gamla.head, gamla.just(agenda.UNKNOWN)),

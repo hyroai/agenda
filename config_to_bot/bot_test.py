@@ -140,3 +140,27 @@ test_faq = _make_test(
         ]
     ],
 )
+
+test_multiple_choice_robustness = _make_test(
+    _PIZZA_YAML,
+    [
+        [
+            ["hi", "Would you like to order pizza?"],
+            ["yes", "Got it. Are you vegan?"],
+            ["no", "Got it. What is your name?"],
+            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["2", "Got it. What kind of toppings would you like?"],
+            [
+                "mushrooms, olives and tomatoes",
+                "Got it. What pizza size would you like?",
+            ],
+            ["large", "Got it. What is your address?"],
+            ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
+            ["9998887777", "Got it. What is your email?"],
+            [
+                "abcd1234@gmail.com",
+                "Got it. Thank you Yoni! I got your phone: 9998887777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms, olives, and tomatoes to 881 Mill Street Greenville SC.",
+            ],
+        ]
+    ],
+)
