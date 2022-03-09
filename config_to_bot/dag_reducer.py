@@ -1,42 +1,13 @@
-import inspect
-import keyword
-from types import MappingProxyType
-from typing import Any, Callable, Dict, FrozenSet, Iterable
+from typing import Any, Callable, Dict, FrozenSet
 
 import gamla
 import toposort
 from computation_graph import base_types
 
-from config_to_bot import resolvers
-
-_resolver_signature = gamla.compose_left(
-    inspect.signature,
-    gamla.attrgetter("parameters"),
-    MappingProxyType.values,
-    gamla.map(gamla.attrgetter("name")),
-    frozenset,
-)
-_preprocess_key = gamla.compose_left(
-    gamla.when(keyword.iskeyword, gamla.wrap_str("{}_")),
-    gamla.replace_in_text("-", "_"),
-)
-_functions_to_case_dict: Callable[
-    [Iterable[Callable]], Callable[[Dict], Any]
-] = gamla.compose_left(
-    gamla.map(
-        gamla.juxt(gamla.compose(gamla.equals, _resolver_signature), gamla.double_star)
-    ),
-    gamla.suffix((gamla.equals(None), gamla.identity)),
-    dict,
-    gamla.keymap(gamla.before(gamla.compose_left(dict.keys, frozenset))),
-    gamla.case_dict,
-    gamla.before(gamla.keymap(_preprocess_key)),
-)
-
 
 @gamla.curry
 def reducer(
-    remote_function: Callable,
+    process_children_dict: Callable,
     state: Dict[str, base_types.GraphType],
     current: str,
     node_to_neighbors: Callable[[str], Dict[str, str]],
@@ -53,9 +24,7 @@ def reducer(
                 )
             ),
         )
-        return _functions_to_case_dict(
-            resolvers.composers_for_dag_reducer(remote_function)
-        )(cg_dict)
+        return process_children_dict(cg_dict)
     except KeyError:
         return current
 

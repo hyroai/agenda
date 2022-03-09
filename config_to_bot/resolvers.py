@@ -1,4 +1,7 @@
-from typing import Any, Callable, Dict, FrozenSet, Iterable, Tuple, Union
+import inspect
+import keyword
+from types import MappingProxyType
+from typing import Any, Callable, Dict, Iterable, Set, Tuple, Union
 
 import gamla
 import httpx
@@ -310,30 +313,56 @@ def _amount_of(amount_of: str, ask: str):
     )
 
 
-def composers_for_dag_reducer(remote_function: Callable) -> FrozenSet[Callable]:
-    return frozenset(
-        {
-            _amount_of,
-            _first_known,
-            _complement,
-            _all,
-            _any,
-            _kv,
-            _build_remote_resolver(remote_function),
-            _listen_to_intent,
-            _ask_about_choice,
-            _ask_about_multiple_choice,
-            _say_with_needs,
-            _when,
-            _when_with_needs,
-            _remote_with_needs,
-            _ask_about,
-            _ask_about_and_ack,
-            _goals,
-            _goals_with_debug,
-            _equals,
-            _greater_equals,
-            _question_and_answer_dict,
-            _faq_intent,
-        }
-    )
+def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
+    return {
+        _amount_of,
+        _first_known,
+        _complement,
+        _all,
+        _any,
+        _kv,
+        _build_remote_resolver(remote_function),
+        _listen_to_intent,
+        _ask_about_choice,
+        _ask_about_multiple_choice,
+        _say_with_needs,
+        _when,
+        _when_with_needs,
+        _remote_with_needs,
+        _ask_about,
+        _ask_about_and_ack,
+        _goals,
+        _goals_with_debug,
+        _equals,
+        _greater_equals,
+        _question_and_answer_dict,
+        _faq_intent,
+    }
+
+
+_resolver_signature = gamla.compose_left(
+    inspect.signature,
+    gamla.attrgetter("parameters"),
+    MappingProxyType.values,
+    gamla.map(gamla.attrgetter("name")),
+    frozenset,
+)
+_preprocess_key = gamla.compose_left(
+    gamla.when(keyword.iskeyword, gamla.wrap_str("{}_")),
+    gamla.replace_in_text("-", "_"),
+)
+_functions_to_case_dict: Callable[
+    [Iterable[Callable]], Callable[[Dict], Any]
+] = gamla.compose_left(
+    gamla.map(
+        gamla.juxt(gamla.compose(gamla.equals, _resolver_signature), gamla.double_star)
+    ),
+    gamla.suffix((gamla.equals(None), gamla.identity)),
+    dict,
+    gamla.keymap(gamla.before(gamla.compose_left(dict.keys, frozenset))),
+    gamla.case_dict,
+    gamla.before(gamla.keymap(_preprocess_key)),
+)
+
+
+build_cg = gamla.compose(_functions_to_case_dict, _composers_for_dag_reducer)
