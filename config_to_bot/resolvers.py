@@ -260,7 +260,7 @@ def _debug_dict(cg: base_types.GraphType):
             StopIteration,
             gamla.just(lambda: None),
             gamla.compose_left(
-                gamla.filter(missing_cg_utils.edge_source_equals(agenda.participated)),
+                gamla.filter(graph.edge_source_equals(agenda.participated)),
                 gamla.map(base_types.edge_destination),
                 gamla.head,
             ),

@@ -77,11 +77,11 @@ def _utter_sink_or_empty_sentence(g: base_types.GraphType) -> base_types.Callabl
         return lambda: sentence.EMPTY_SENTENCE
 
 
-def _replace_participated(replacement, graph):
+def _replace_participated(replacement, graph_instance):
     return gamla.pipe(
-        graph,
-        gamla.filter(missing_cg_utils.edge_source_equals(participated)),
-        gamla.map(missing_cg_utils.replace_edge_source(replacement)),
+        graph_instance,
+        gamla.filter(graph.edge_source_equals(participated)),
+        gamla.map(graph.replace_edge_source(replacement)),
         tuple,
     )
 
@@ -348,14 +348,8 @@ def when(condition, do):
     )
 
 
-def _replace_source(x, y):
-    return missing_cg_utils.transform_edges(
-        missing_cg_utils.edge_source_equals(x), missing_cg_utils.replace_edge_source(y)
-    )
-
-
 def _replace_destination(x, y):
-    return missing_cg_utils.transform_edges(
+    return graph.transform_edges(
         missing_cg_utils.edge_destination_equals(x),
         missing_cg_utils.replace_edge_destination(y),
     )
@@ -374,8 +368,8 @@ def wrap_up(sentence_renderer: Callable[[sentence.SentenceOrPart], str]):
             base_types.ambiguity_groups,
             gamla.compose(gamla.empty, base_types.ambiguity_groups),
         ),
-        _replace_source(participated, lambda: True),
-        _replace_source(forget, lambda: False),
+        graph.replace_source(participated, lambda: True),
+        graph.replace_source(forget, lambda: False),
         _interject(utter, sentence_renderer),
         lambda g: run.to_callable(g, frozenset()),
     )
