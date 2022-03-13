@@ -226,10 +226,19 @@ def _typed_state(type):
 
 
 def _actions(
-    actions: Tuple[base_types.GraphType, ...], slots: Tuple[base_types.GraphType, ...]
+    slots: Tuple[base_types.GraphType, ...], actions: Tuple[base_types.GraphType, ...]
 ) -> base_types.GraphType:
     del slots
     return agenda.combine_utter_sinks(*actions)
+
+
+def _actions_with_knowledge(
+    slots: Tuple[base_types.GraphType, ...],
+    actions: Tuple[base_types.GraphType, ...],
+    knowledge: Tuple[base_types.GraphType, ...],
+) -> base_types.GraphType:
+    del slots
+    return agenda.combine_utter_sinks(*(actions + knowledge))
 
 
 @graph.make_terminal("debug_states")
@@ -295,6 +304,35 @@ def _actions_with_debug(
     )
 
 
+def _actions_with_debug_and_knowledge(
+    actions: Tuple[base_types.GraphType, ...],
+    slots: Tuple[base_types.GraphType, ...],
+    knowledge: Tuple[base_types.GraphType, ...],
+    debug: Union[
+        Tuple[Tuple[str, base_types.GraphType], ...], Tuple[base_types.GraphType, ...]
+    ],
+) -> base_types.GraphType:
+    del slots
+    return base_types.merge_graphs(
+        agenda.combine_utter_sinks(*(actions + knowledge)),
+        composers.compose_unary(
+            debug_states,
+            gamla.pipe(
+                debug,
+                dict,
+                gamla.valmap(
+                    gamla.compose_left(_debug_dict, missing_cg_utils.package_into_dict)
+                ),
+                missing_cg_utils.package_into_dict,
+            ),
+        )
+        if isinstance(gamla.head(debug), tuple)
+        else composers.compose_many_to_one(
+            debug_states, gamla.pipe(debug, gamla.map(_debug_dict), tuple)
+        ),
+    )
+
+
 def _first_known(first_known: Tuple):
     return agenda.first_known(*first_known)
 
@@ -331,7 +369,9 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _ask_about,
         _ask_about_and_ack,
         _actions,
+        _actions_with_knowledge,
         _actions_with_debug,
+        _actions_with_debug_and_knowledge,
         _equals,
         _greater_equals,
         _question_and_answer_dict,
