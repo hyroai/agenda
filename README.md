@@ -19,9 +19,9 @@ knowledge:
 abilities:
   - url: http://order.com/pizza
     when:
-	intent:
-    	  - I want to order pizza
- 	  - I want pizza
+      intent:
+        - I want to order pizza
+        - I want pizza
     needs:
       - key: phone
         value:
