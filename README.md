@@ -1,41 +1,61 @@
-`Agenda` is a declarative specification language for conversations, focused on specifying knowledge and abilties, rather than sequential flows or conversation trees.
+`Agenda` is a declarative specification language for conversations, focused on specifying knowledge and abilities, rather than sequential flows or conversation trees.
 
 We attempt to answer the question - what would a conversation AI framework look like if it were strapped down to the minimum possible requirements - the things you'd have to tell your agent even if it were human.
 
 These requirements would be the bot's abilities and knowledge.
 
-- Abilities - what can the bot actually achieve in the world on behalf of the user. This is usually done via foreign APIs which the bot can call. Eample: "The bot can order a pizza by calling http://order.com/pizza and has to give `phone`, `address` and `pizza_size`".
+- Abilities - what can the bot actually achieve in the world on behalf of the user. This is usually done via foreign APIs which the bot can call. Example: "The bot can order a pizza by calling http://order.com/pizza and has to give a phone, address and pizza_size".
 - Knowledge - what does the bot know and will be able to let the users interacting with it know. Example: "The bot should know that our opening hours are 2pm to 10pm.".
 
-Given a specification of knowledge and abilties, `Agenda` will transform them into a bot that can interact with users, helping them access its abilities and knowledge.
+Given a specification of knowledge and abilities, Agenda will transform them into a bot that can interact with users, helping them access its abilities and knowledge.
 
 This is how a specification looks like:
 
-
-```
-knowlege:
+```yaml
+knowledge:
   - question: what are your opening hours?
     answer: 2pm to 10pm.
   ...
 abilities:
   - url: http://order.com/pizza
-    when: 
+    when:
+	intent:
+    	  - I want to order pizza
+ 	  - I want pizza
     needs:
       - key: phone
         value:
           type: phone
           ask: At what number can we reach you?
       ...
-
 ```
 
-As much as possible we will try to avoid having the user need to give different formulations and phrasings as we believe NLP has reached a point where this is no longer required.
+As much as possible, we try to avoid having the user need to give different formulations and phrasings as we believe NLP has reached a point where this is no longer required.
 
-We optimize on composability (abilities and knowledge can be disabled or enabled and don't interfere with each other), reuse (bots can share a part of their configuration) and focus on business logic rather than NLP (no training examples).
+We optimize on:
+- composability; abilities and knowledge can be disabled or enabled and don't interfere with each other
+- reuse; bots can share a part of their configuration
+- focus on business logic rather than NLP; no training examples.
+
 
 ## Target audience
 
-General purpose developers who want to set up a conversational interface and are not looking to start an NLP research project, or train their own models. The bots produced will communicate by text via a socket run by a python server, so can be embedded in any service in short time.
+`Agenda` is ideal for general purpose developers who want to set up a conversational interface and are not looking to start an NLP research project, or train their own models. The bots produced will communicate by text via a socket run by a python server, so can be embedded in any service in a short time.
+
+That said those who want to leverage existing NLP services (e.g. an intent recognition service) can embed them within the configuration. This would look like this:
+
+```
+...
+
+&my-custom-intent-recognizer
+  url: http://localhost:8000/listen-hello
+  needs:
+    - key: incoming_utterance
+      value: incoming_utterance
+...
+
+```
+
 
 ## Setup
 
