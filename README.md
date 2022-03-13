@@ -33,10 +33,10 @@ abilities:
 As much as possible, we try to avoid having the user need to give different formulations and phrasings as we believe NLP has reached a point where this is no longer required.
 
 We optimize on:
+
 - composability; abilities and knowledge can be disabled or enabled and don't interfere with each other
 - reuse; bots can share a part of their configuration
 - focus on business logic rather than NLP; no training examples.
-
 
 ## Target audience
 
@@ -55,7 +55,6 @@ That said those who want to leverage existing NLP services (e.g. an intent recog
 ...
 
 ```
-
 
 ## Setup
 
@@ -255,4 +254,3 @@ definitions:
 Given this spec, agenda will create a bot that can handle the conversations above, and many other variations. **No custom training or data collection is needed**, and if requirements change, all the conversation designer needs to do is change the configuration.
 
 For Joe's pizza place, the actual API that orders the pizza is not a part of the bot code, so it is convenient to do this in an external server for the user to define. This allows combining agenda with any backend coding language, or use multiple backends within the same bot.
-
