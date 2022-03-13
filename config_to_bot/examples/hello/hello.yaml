@@ -1,4 +1,4 @@
-definitions:
+slots:
   - &hello-flow
     ack: you said it
     ask: say hello
@@ -7,5 +7,5 @@ definitions:
       needs:
         - key: incoming_utterance
           value: incoming_utterance
-goals:
+actions:
   - *hello-flow
