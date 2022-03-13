@@ -256,8 +256,3 @@ Given this spec, agenda will create a bot that can handle the conversations abov
 
 For Joe's pizza place, the actual API that orders the pizza is not a part of the bot code, so it is convenient to do this in an external server for the user to define. This allows combining agenda with any backend coding language, or use multiple backends within the same bot.
 
-## Features summary
-
-- Use remote servers for some of the bot parts (e.g. fulfill some request or recognize an intent).
-- Automatic acking when new information is received.
-- Built-in support to listening to emails, dates, times, names, amounts and booleans.
