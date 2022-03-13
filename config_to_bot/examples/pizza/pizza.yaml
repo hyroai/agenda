@@ -1,4 +1,4 @@
-definitions:
+slots:
   - &name
     ack: Nice to meet you {value}!
     ask: What is your name?
@@ -42,7 +42,7 @@ definitions:
       - small
       - medium
       - large
-goals:
+actions:
   - faq:
       - question: What is your opening hours?
         answer: 2pm to 10pm every day.

@@ -225,12 +225,11 @@ def _typed_state(type):
     )
 
 
-def _goals(
-    goals: Tuple[base_types.GraphType, ...],
-    definitions: Tuple[base_types.GraphType, ...],
+def _actions(
+    actions: Tuple[base_types.GraphType, ...], slots: Tuple[base_types.GraphType, ...]
 ) -> base_types.GraphType:
-    del definitions
-    return agenda.combine_utter_sinks(*goals)
+    del slots
+    return agenda.combine_utter_sinks(*actions)
 
 
 @graph.make_terminal("debug_states")
@@ -268,16 +267,16 @@ def _debug_dict(cg: base_types.GraphType):
     }
 
 
-def _goals_with_debug(
-    goals: Tuple[base_types.GraphType, ...],
-    definitions: Tuple[base_types.GraphType, ...],
+def _actions_with_debug(
+    actions: Tuple[base_types.GraphType, ...],
+    slots: Tuple[base_types.GraphType, ...],
     debug: Union[
         Tuple[Tuple[str, base_types.GraphType], ...], Tuple[base_types.GraphType, ...]
     ],
 ) -> base_types.GraphType:
-    del definitions
+    del slots
     return base_types.merge_graphs(
-        agenda.combine_utter_sinks(*goals),
+        agenda.combine_utter_sinks(*actions),
         composers.compose_unary(
             debug_states,
             gamla.pipe(
@@ -331,8 +330,8 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _remote_with_needs,
         _ask_about,
         _ask_about_and_ack,
-        _goals,
-        _goals_with_debug,
+        _actions,
+        _actions_with_debug,
         _equals,
         _greater_equals,
         _question_and_answer_dict,
