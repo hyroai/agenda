@@ -177,12 +177,7 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
             "listener_utter": _utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
             "anti_acker_utter": utter_sink(anti_acker),
-            "listener_output_changed_to_known": missing_cg_utils.conjunction(
-                memory.changed(state_sink(asker_listener)),
-                logic.complement(
-                    missing_cg_utils.equals_literal(state_sink(asker_listener), UNKNOWN)
-                ),
-            ),
+            "listener_participated_last_turen": if_participated(asker_listener),
         }
     )
     def final_utter(
@@ -190,9 +185,9 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
         listener_utter,
         acker_utter,
         anti_acker_utter,
-        listener_output_changed_to_known,
+        listener_participated_last_turen,
     ):
-        if who_should_speak == asker_listener and not listener_output_changed_to_known:
+        if who_should_speak == asker_listener and not listener_participated_last_turen:
             return anti_acker_utter
         if who_should_speak == asker_listener:
             return listener_utter
