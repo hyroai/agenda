@@ -191,6 +191,18 @@ def _ask_about_multiple_choice(
     )
 
 
+def _slot_with_remote_and_ack(
+    remote: base_types.GraphType, ask: base_types.GraphType, ack: base_types.GraphType
+):
+    return agenda.slot(agenda.mark_state(remote), agenda.ask(ask), agenda.ack(ack))
+
+
+def _slot_with_remote(remote: base_types.GraphType, ask: base_types.GraphType):
+    return agenda.slot(
+        agenda.mark_state(remote), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
+    )
+
+
 def _ask_about(type: str, ask: str) -> base_types.GraphType:
     return agenda.slot(
         _typed_state(type), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
@@ -376,6 +388,8 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _greater_equals,
         _question_and_answer_dict,
         _faq_intent,
+        _slot_with_remote_and_ack,
+        _slot_with_remote,
     }
 
 

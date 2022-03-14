@@ -2,7 +2,7 @@ slots:
   - &hello-flow
     ack: you said it
     ask: say hello
-    listen:
+    remote:
       url: http://localhost:8000/listen-hello
       needs:
         - key: incoming_utterance
