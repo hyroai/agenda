@@ -93,23 +93,22 @@ const connectionStatus = {
   [ReadyState.UNINSTANTIATED]: { text: "Uninstantiated", color: "red" },
 };
 
-const registerCommand = (toggleKbar, monaco, editor) =>
-  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K, () => {
-    // toggleKbar();
-    alert("hi");
-  });
-
 const ConfigEditor = ({ text, setText }) => {
   useRegisterActions([]);
   const monaco = useMonaco();
   const editorRef = useRef(null);
-  const { toggle } = useKBar();
-
+  const { query } = useKBar();
+  const [dirty, setDirty] = useState(0);
   useEffect(() => {
-    if (editorRef.current && monaco && toggle) {
-      registerCommand(toggle, monaco, editorRef.current);
+    if (editorRef.current && monaco && query) {
+      editorRef.current.addCommand(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K,
+        () => {
+          query.toggle();
+        }
+      );
     }
-  }, [editorRef, monaco, toggle]);
+  }, [editorRef, monaco, query, dirty]);
 
   return (
     <div
@@ -124,7 +123,11 @@ const ConfigEditor = ({ text, setText }) => {
         theme="vs-dark"
         language="yaml"
         automaticLayout={true}
-        onMount={(editor) => (editorRef.current = editor)}
+        onMount={(editor) => {
+          console.log("mounted");
+          setDirty(dirty + 1);
+          editorRef.current = editor;
+        }}
       />
     </div>
   );
@@ -341,6 +344,11 @@ const RenderResults = () => {
       }
     />
   );
+};
+
+const debug = (x) => {
+  console.log(x);
+  return x;
 };
 
 const AppWithKbar = () => {
