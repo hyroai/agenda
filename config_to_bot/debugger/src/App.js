@@ -346,25 +346,18 @@ const RenderResults = () => {
   );
 };
 
-const debug = (x) => {
-  console.log(x);
-  return x;
-};
-
-const AppWithKbar = () => {
-  return (
-    <KBarProvider actions={[]}>
-      <KBarPortal>
-        <KBarPositioner>
-          <KBarAnimator>
-            <KBarSearch />
-            <RenderResults />
-          </KBarAnimator>
-        </KBarPositioner>
-      </KBarPortal>
-      <App />
-    </KBarProvider>
-  );
-};
+const AppWithKbar = () => (
+  <KBarProvider actions={[]}>
+    <KBarPortal>
+      <KBarPositioner>
+        <KBarAnimator>
+          <KBarSearch />
+          <RenderResults />
+        </KBarAnimator>
+      </KBarPositioner>
+    </KBarPortal>
+    <App />
+  </KBarProvider>
+);
 
 export default AppWithKbar;
