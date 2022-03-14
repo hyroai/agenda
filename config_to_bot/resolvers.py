@@ -194,12 +194,22 @@ def _ask_about_multiple_choice(
 def _slot_with_remote_and_ack(
     remote: base_types.GraphType, ask: base_types.GraphType, ack: base_types.GraphType
 ):
-    return agenda.slot(agenda.mark_state(remote), agenda.ask(ask), agenda.ack(ack))
+    return agenda.slot(
+        gamla.pipe(
+            remote, agenda.mark_state, agenda.remember, duplication.duplicate_graph
+        ),
+        agenda.ask(ask),
+        agenda.ack(ack),
+    )
 
 
 def _slot_with_remote(remote: base_types.GraphType, ask: base_types.GraphType):
     return agenda.slot(
-        agenda.mark_state(remote), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
+        gamla.pipe(
+            remote, agenda.mark_state, agenda.remember, duplication.duplicate_graph
+        ),
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
     )
 
 
