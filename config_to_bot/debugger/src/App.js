@@ -1,3 +1,4 @@
+import Editor, { useMonaco } from "@monaco-editor/react";
 import {
   KBarAnimator,
   KBarPortal,
@@ -5,12 +6,13 @@ import {
   KBarProvider,
   KBarResults,
   KBarSearch,
+  useKBar,
   useMatches,
+  useRegisterActions,
 } from "kbar";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
-import Editor from "@monaco-editor/react";
 import React from "react";
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
@@ -75,9 +77,9 @@ const Event = (event, i) => (
   </span>
 );
 
-const userUtteranceEvent = (textInput) => ({
+const userUtteranceEvent = (utterance) => ({
   type: "userUtterance",
-  utterance: textInput,
+  utterance,
 });
 
 const configurationType = "configuration";
@@ -91,22 +93,42 @@ const connectionStatus = {
   [ReadyState.UNINSTANTIATED]: { text: "Uninstantiated", color: "red" },
 };
 
-const ConfigEditor = ({ text, setText }) => (
-  <div
-    style={{
-      display: "flex",
-      flexBasis: "50%",
-    }}
-  >
-    <Editor
-      value={text}
-      onChange={setText}
-      theme="vs-dark"
-      language="yaml"
-      automaticLayout={true}
-    />
-  </div>
-);
+const registerCommand = (toggleKbar, monaco, editor) =>
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K, () => {
+    // toggleKbar();
+    alert("hi");
+  });
+
+const ConfigEditor = ({ text, setText }) => {
+  useRegisterActions([]);
+  const monaco = useMonaco();
+  const editorRef = useRef(null);
+  const { toggle } = useKBar();
+
+  useEffect(() => {
+    if (editorRef.current && monaco && toggle) {
+      registerCommand(toggle, monaco, editorRef.current);
+    }
+  }, [editorRef, monaco, toggle]);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexBasis: "50%",
+      }}
+    >
+      <Editor
+        value={text}
+        onChange={setText}
+        theme="vs-dark"
+        language="yaml"
+        automaticLayout={true}
+        onMount={(editor) => (editorRef.current = editor)}
+      />
+    </div>
+  );
+};
 
 const Chat = ({ events, submit }) => {
   const [textInput, setTextInput] = useState("");
@@ -158,11 +180,7 @@ const Chat = ({ events, submit }) => {
   );
 };
 
-const StatusBar = ({
-  showEditor,
-  toggleEditor,
-  connectionStatus: { color, text },
-}) => (
+const StatusBar = ({ connectionStatus: { color, text } }) => (
   <div
     style={{
       backgroundColor: "#202124",
@@ -179,19 +197,92 @@ const StatusBar = ({
     >
       {text}
     </div>
-    <div onClick={toggleEditor}>{showEditor ? "close" : "open"} editor</div>
+    <div>Hit ctrl+k for commands</div>
   </div>
 );
 
-const App = ({
-  readyState,
-  events,
-  addEvent,
-  configurationText,
-  setConfigurationText,
-}) => {
-  const [showEditor, setShowEditor] = useState(false);
+const App = () => {
+  const [events, addEvent] = useReducer(
+    (state, current) =>
+      [configurationType, resetType].includes(current.type)
+        ? []
+        : [...state, current],
+    []
+  );
+  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
+    "ws://0.0.0.0:9000/converse",
+    {
+      shouldReconnect: () => didUnmount.current === false,
+      reconnectAttempts: 100,
+      reconnectInterval: 3000,
+    }
+  );
 
+  const addEventSendingMessage = useCallback(
+    (e) => {
+      addEvent(e);
+      sendJsonMessage(e);
+    },
+    [addEvent, sendJsonMessage]
+  );
+
+  const didUnmount = useRef(false);
+  useEffect(() => () => (didUnmount.current = true), []);
+  useEffect(() => {
+    if (lastJsonMessage !== null) {
+      addEvent(lastJsonMessage);
+    }
+  }, [lastJsonMessage, addEvent]);
+
+  useEffect(() => {
+    if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
+  }, [readyState, addEvent]);
+
+  const [configurationText, setConfigurationText] = useState("");
+
+  const [showEditor, setShowEditor] = useReducer(
+    (_, current) => current,
+    false
+  );
+  useRegisterActions(
+    [
+      {
+        id: "editor",
+        name: "show/hide editor",
+        shortcut: ["e"],
+        keywords: "editor",
+        perform: () => setShowEditor(!showEditor),
+      },
+      {
+        id: "reload",
+        name: "reload configuration",
+        shortcut: ["r", "l"],
+        keywords: "reload",
+        perform: () =>
+          addEventSendingMessage({
+            type: configurationType,
+            data: configurationText,
+          }),
+      },
+      {
+        id: "reset",
+        name: "reset bot",
+        shortcut: ["r", "s"],
+        keywords: "reset",
+        perform: () =>
+          addEventSendingMessage({
+            type: "reset",
+          }),
+      },
+    ],
+    [
+      showEditor,
+      setShowEditor,
+      addEventSendingMessage,
+      configurationText,
+      configurationType,
+    ]
+  );
   return (
     <div
       style={{
@@ -214,7 +305,7 @@ const App = ({
               alert("not connected");
               return;
             }
-            addEvent(userUtteranceEvent(configurationText, text));
+            addEventSendingMessage(userUtteranceEvent(text));
           }}
           events={events}
         />
@@ -225,11 +316,7 @@ const App = ({
           />
         )}
       </div>
-      <StatusBar
-        showEditor={showEditor}
-        toggleEditor={() => setShowEditor(!showEditor)}
-        connectionStatus={connectionStatus[readyState]}
-      />
+      <StatusBar connectionStatus={connectionStatus[readyState]} />
     </div>
   );
 };
@@ -245,7 +332,7 @@ const RenderResults = () => {
         ) : (
           <div
             style={{
-              background: active ? "#eee" : "transparent",
+              background: active ? "black" : "transparent",
             }}
           >
             {item.name}
@@ -257,68 +344,8 @@ const RenderResults = () => {
 };
 
 const AppWithKbar = () => {
-  const [events, addEvent] = useReducer(
-    (state, current) =>
-      [configurationType, resetType].includes(current.type)
-        ? []
-        : [...state, current],
-    []
-  );
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    "ws://0.0.0.0:9000/converse",
-    {
-      shouldReconnect: () => didUnmount.current === false,
-      reconnectAttempts: 100,
-      reconnectInterval: 3000,
-    }
-  );
-  const didUnmount = useRef(false);
-  useEffect(() => () => (didUnmount.current = true), []);
-  useEffect(() => {
-    if (lastJsonMessage !== null) {
-      addEvent(lastJsonMessage);
-    }
-  }, [lastJsonMessage, addEvent]);
-
-  useEffect(() => {
-    if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
-  }, [readyState, addEvent]);
-
-  const [configurationText, setConfigurationText] = useState("");
-  const addEventWithJsonMessage = (e) => {
-    addEvent(e);
-    sendJsonMessage(e);
-  };
   return (
-    <KBarProvider
-      actions={[
-        {
-          id: "reload",
-          name: "reload configuration",
-          shortcut: ["r"],
-          keywords: "reload",
-          perform: () => {
-            console.log("reload", "l");
-            addEventWithJsonMessage({
-              type: configurationType,
-              data: configurationText,
-            });
-          },
-        },
-        {
-          id: "reset",
-          name: "reset bot",
-          shortcut: ["r", "s"],
-          keywords: "reset",
-          perform: () => {
-            console.log("reset");
-            addEventWithJsonMessage({
-              type: "reset",
-            });
-          },
-        },
-      ]}
-    >
+    <KBarProvider actions={[]}>
       <KBarPortal>
         <KBarPositioner>
           <KBarAnimator>
@@ -327,13 +354,7 @@ const AppWithKbar = () => {
           </KBarAnimator>
         </KBarPositioner>
       </KBarPortal>
-      <App
-        readyState={readyState}
-        events={events}
-        addEvent={addEventWithJsonMessage}
-        configurationText={configurationText}
-        setConfigurationText={setConfigurationText}
-      />
+      <App />
     </KBarProvider>
   );
 };
