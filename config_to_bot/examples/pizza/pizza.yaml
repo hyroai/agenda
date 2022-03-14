@@ -1,4 +1,4 @@
-definitions:
+slots:
   - &name
     ack: Nice to meet you {value}!
     ask: What is your name?
@@ -42,10 +42,7 @@ definitions:
       - small
       - medium
       - large
-goals:
-  - faq:
-      - question: What is your opening hours?
-        answer: 2pm to 10pm every day.
+actions:
   - say: I'm transferring you to an agent.
     when:
       not: *wants-pizza
@@ -75,6 +72,10 @@ goals:
       all:
         - *wants-pizza
         - not: *is-vegan
+knowledge:
+  - faq:
+      - question: What is your opening hours?
+        answer: 2pm to 10pm every day.
 debug:
   - key: toppings
     value: *toppings
