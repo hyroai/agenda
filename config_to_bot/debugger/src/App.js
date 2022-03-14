@@ -335,7 +335,7 @@ const RenderResults = () => {
         ) : (
           <div
             style={{
-              background: active ? "black" : "transparent",
+              background: active ? "black" : "gray",
             }}
           >
             {item.name}
