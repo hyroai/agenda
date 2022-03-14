@@ -114,19 +114,23 @@ def _remove_sinks_and_sources_and_resolve_ambiguity(markers, f):
     return _remove_sinks_and_sources_and_resolve_ambiguity
 
 
-def slot(listener, asker, acker):
+def slot(listener, asker, acker, anti_acker):
     # If the listener has an utter sink then we need to combine it with asker. Otherwise, we just merge the graphs.
     try:
         utter_sink(listener)
-        return _utter_unless_known_and_ack(combine_utter_sinks(listener, asker), acker)
+        return _utter_unless_known_and_ack(
+            combine_utter_sinks(listener, asker), acker, anti_acker
+        )
     except AssertionError:
         return _utter_unless_known_and_ack(
-            base_types.merge_graphs(listener, asker), acker
+            base_types.merge_graphs(listener, asker), acker, anti_acker
         )
 
 
-def combine_slots(aggregator: Callable, acker, graphs: base_types.GraphType):
-    return _utter_unless_known_and_ack(aggregator(*graphs), acker)
+def combine_slots(
+    aggregator: Callable, acker, anti_acker, graphs: base_types.GraphType
+):
+    return _utter_unless_known_and_ack(aggregator(*graphs), acker, anti_acker)
 
 
 def combine_state(aggregator: Callable):
@@ -145,7 +149,7 @@ def combine_state(aggregator: Callable):
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
-def _utter_unless_known_and_ack(asker_listener, acker):
+def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     @composers.compose_left_dict(
         {
             "listener_state": state_sink(asker_listener),
@@ -172,9 +176,24 @@ def _utter_unless_known_and_ack(asker_listener, acker):
             "who_should_speak": who_should_speak,
             "listener_utter": _utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
+            "anti_acker_utter": utter_sink(anti_acker),
+            "listener_output_changed_to_known": missing_cg_utils.conjunction(
+                memory.changed(state_sink(asker_listener)),
+                logic.complement(
+                    missing_cg_utils.equals_literal(state_sink(asker_listener), UNKNOWN)
+                ),
+            ),
         }
     )
-    def final_utter(who_should_speak, listener_utter, acker_utter):
+    def final_utter(
+        who_should_speak,
+        listener_utter,
+        acker_utter,
+        anti_acker_utter,
+        listener_output_changed_to_known,
+    ):
+        if who_should_speak == asker_listener and not listener_output_changed_to_known:
+            return anti_acker_utter
         if who_should_speak == asker_listener:
             return listener_utter
         if who_should_speak == acker:

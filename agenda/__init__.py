@@ -9,6 +9,7 @@ UNKNOWN = composers.UNKNOWN
 Unknown = composers.Unknown
 
 GENERIC_ACK = sentence.GENERIC_ACK
+GENERIC_ANTI_ACK = sentence.GENERIC_ANTI_ACK
 combine_utter_sinks = composers.combine_utter_sinks
 listener_with_memory = composers.listener_with_memory
 if_participated = composers.if_participated
@@ -59,9 +60,10 @@ def _generic(transformation):
 ask = _generic(sentence.str_to_question)
 say = _generic(sentence.str_to_statement)
 ack = _generic(sentence.str_to_ack)
+anti_ack = _generic(sentence.str_to_anti_ack)
 
 consumes_external_event = composers.consumes_external_event
 
 
-def sentence_renderer(ack_renderer):
-    return lambda x: sentence.sentence_to_str(ack_renderer, x)
+def sentence_renderer(ack_renderer, anti_ack_renderer):
+    return lambda x: sentence.sentence_to_str(ack_renderer, anti_ack_renderer, x)

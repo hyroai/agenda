@@ -16,7 +16,20 @@ def _ack_generator() -> str:
     return x
 
 
-sentence_to_str = agenda.sentence_renderer(_ack_generator)
+def _anti_ack_generator() -> str:
+    x = random.choice(
+        [
+            "I am sorry I did not get that.",
+            "I could not understand you.",
+            "Please rephrase.",
+        ]
+    )
+    # TODO(uri): For a reason I don't fully understand, unless we have a `print` or `breakpoint` here, it always selects the same option.
+    print(x)  # noqa: T001
+    return x
+
+
+sentence_to_str = agenda.sentence_renderer(_ack_generator, _anti_ack_generator)
 
 _YAML_STREAM = Union[str, bytes, IO[str], IO[bytes]]
 
@@ -35,7 +48,7 @@ yaml_to_slot_bot: Callable[
     [_YAML_STREAM], Callable[[], Awaitable]
 ] = gamla.compose_left(
     yaml_to_cg(resolvers.post_request_with_url_and_params),
-    agenda.wrap_up(agenda.sentence_renderer(_ack_generator)),
+    agenda.wrap_up(agenda.sentence_renderer(_ack_generator, _anti_ack_generator)),
     gamla.after(gamla.to_awaitable),
     gamla.just,
 )

@@ -47,11 +47,21 @@ def _greater_equals(is_: base_types.GraphType, greater_equals: int):
 
 
 def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
-    return agenda.combine_slots(agenda.all, agenda.ack(agenda.GENERIC_ACK), all)
+    return agenda.combine_slots(
+        agenda.all,
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+        all,
+    )
 
 
 def _any(any: Iterable[base_types.GraphType]) -> base_types.GraphType:
-    return agenda.combine_slots(agenda.any, agenda.ack(agenda.GENERIC_ACK), any)
+    return agenda.combine_slots(
+        agenda.any,
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+        any,
+    )
 
 
 def _kv(
@@ -174,6 +184,7 @@ def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
         ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -188,12 +199,16 @@ def _ask_about_multiple_choice(
         ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
 def _ask_about(type: str, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        _typed_state(type), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
+        _typed_state(type),
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -207,6 +222,7 @@ def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
             agenda.ack(lambda value: ack.format(value=value)),
             key="value",
         ),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -341,10 +357,14 @@ def _amount_of(amount_of: str, ask: str):
     return agenda.combine_slots(
         agenda.first_known,
         agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         (
             agenda.listener_with_memory(extract.amount_of(amount_of)),
             agenda.slot(
-                _typed_state("amount"), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
+                _typed_state("amount"),
+                agenda.ask(ask),
+                agenda.ack(agenda.GENERIC_ACK),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
         ),
     )

@@ -24,6 +24,7 @@ def test_slot():
         ),
         agenda.ask(f"say {what_needs_to_be_said}"),
         agenda.ack("you said it"),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -42,7 +43,8 @@ def test_needs():
                     lambda x: x in options and x or agenda.UNKNOWN
                 ),
                 agenda.ask(f"say {' or '.join(options)}"),
-                agenda.ack(agenda.GENERIC_ACK),
+                agenda.ack(agenda.GENERIC_ANTI_ACK),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             )
         },
     )
@@ -78,6 +80,7 @@ def test_when1():
             ),
             agenda.ask("what can i do for you today?"),
             agenda.ack("okay."),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         ),
         agenda.slot(
             topping,
@@ -90,6 +93,7 @@ def test_when1():
                         else f"got it, {topping} pizza."
                     )
                 ),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
                 {"topping": topping},
             ),
         ),
@@ -114,6 +118,7 @@ def test_when2():
             ),
             agenda.ask("what can i do for you today?"),
             agenda.ack("okay."),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         ),
         agenda.optionally_needs(
             agenda.say(
@@ -130,6 +135,7 @@ def test_when2():
                     ),
                     agenda.ask("what's your phone?"),
                     agenda.ack("okay."),
+                    agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
                 ),
                 "email": agenda.slot(
                     agenda.listener_with_memory(
@@ -137,6 +143,7 @@ def test_when2():
                     ),
                     agenda.ask("what's your email?"),
                     agenda.ack("okay."),
+                    agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
                 ),
             },
         ),
@@ -163,6 +170,7 @@ def test_complement():
         agenda.listener_with_memory(_good_or_bad),
         agenda.ask("how are you?"),
         agenda.ack("okay."),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
     return agenda.combine_utter_sinks(
         agenda.when(good_or_bad, agenda.say("happy to hear.")),
@@ -185,6 +193,7 @@ def test_listen_if_participated1():
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("x?"),
                 agenda.ack("okay."),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             )
         },
     )
@@ -212,11 +221,13 @@ def test_listen_if_participated2():
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("x?"),
                 agenda.ack("okay."),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
             "y": agenda.slot(
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("y?"),
                 agenda.ack("okay."),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
         },
     )
@@ -231,6 +242,7 @@ def test_minimal_any_true():
             _listen_with_memory_when_participated(gamla.inside("yes")),
             agenda.ask("Would you like A?"),
             agenda.ack("I acknowledge your answer"),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         )
     )
 
@@ -254,16 +266,18 @@ def test_any_true():
     any_true = agenda.combine_slots(
         agenda.any,
         agenda.ack("You are all set."),
-        [
+        agenda.anti_ack("Sorry I couldn't understand you. Please rephrase.")[
             agenda.slot(
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like A?"),
                 agenda.ack("I got your answer for A."),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
             agenda.slot(
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like B?"),
                 agenda.ack("I got your answer for B."),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
         ],
     )
@@ -296,16 +310,19 @@ def test_all_true():
     all_true = agenda.combine_slots(
         agenda.all,
         agenda.ack("You are all set."),
+        agenda.anti_ack("Sorry I couldn't understand you. Please rephrase."),
         [
             agenda.slot(
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like A?"),
                 agenda.ack("Got it that you want A."),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
             agenda.slot(
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like B?"),
                 agenda.ack("Got it that you want B."),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
         ],
     )
