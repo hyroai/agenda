@@ -1,13 +1,13 @@
-`Agenda` is a declarative specification language for conversations, focused on specifying knowledge and abilities, rather than sequential flows or conversation trees.
+`Agenda` is a declarative specification language for conversations, focused on specifying knowledge and actions, rather than sequential flows or conversation trees.
 
 We attempt to answer the question - what would a conversation AI framework look like if it were strapped down to the minimum possible requirements - the things you'd have to tell your agent even if it were human.
 
-These requirements would be the bot's abilities and knowledge.
+These requirements would be the bot's actions and knowledge.
 
-- Abilities - what can the bot actually achieve in the world on behalf of the user. This is usually done via foreign APIs which the bot can call. Example: "The bot can order a pizza by calling http://order.com/pizza and has to give a phone, address and pizza_size".
+- Actions - what can the bot actually achieve in the world on behalf of the user. This is usually done via foreign APIs which the bot can call. Example: "The bot can order a pizza by calling http://order.com/pizza and has to give a phone, address and pizza_size".
 - Knowledge - what does the bot know and will be able to let the users interacting with it know. Example: "The bot should know that our opening hours are 2pm to 10pm.".
 
-Given a specification of knowledge and abilities, Agenda will transform them into a bot that can interact with users, helping them access its abilities and knowledge.
+Given a specification of knowledge and actions, Agenda will transform them into a bot that can interact with users, helping them access its actions and knowledge.
 
 This is how a specification looks like:
 
@@ -16,7 +16,7 @@ knowledge:
   - question: what are your opening hours?
     answer: 2pm to 10pm.
   ...
-abilities:
+actions:
   - url: http://order.com/pizza
     when:
       intent:
@@ -34,7 +34,7 @@ As much as possible, we try to avoid having the user need to give different form
 
 We optimize on:
 
-- composability; abilities and knowledge can be disabled or enabled and don't interfere with each other
+- composability; actions and knowledge can be disabled or enabled and don't interfere with each other
 - reuse; bots can share a part of their configuration
 - focus on business logic rather than NLP; no training examples.
 
@@ -170,7 +170,7 @@ Collecting data or making up transcriptions to cover all the options, even with 
 Instead one would prefer to say what **is needed** to order pizza, alongside the other goals of the conversation.
 
 ```yaml
-goals:
+actions:
   - say: I'm transferring you to an agent.
     when:
       not: *wants-pizza
@@ -205,7 +205,7 @@ goals:
 Subsequently we can define how to ask and listen to each one of the needed details.
 
 ```yaml
-definitions:
+slots:
   - &name
     ack: Nice to meet you {value}!
     ask: What is your name?
