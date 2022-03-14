@@ -1,3 +1,12 @@
+import {
+  KBarAnimator,
+  KBarPortal,
+  KBarPositioner,
+  KBarProvider,
+  KBarResults,
+  KBarSearch,
+  useMatches,
+} from "kbar";
 import { useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
@@ -73,16 +82,6 @@ const userUtteranceEvent = (textInput) => ({
 
 const configurationType = "configuration";
 const resetType = "reset";
-
-const event = (configurationText, textInput) =>
-  textInput === resetType
-    ? { type: textInput }
-    : textInput === "reload"
-    ? {
-        type: configurationType,
-        data: configurationText,
-      }
-    : userUtteranceEvent(textInput);
 
 const connectionStatus = {
   [ReadyState.CONNECTING]: { text: "Connecting ...", color: "yellow" },
@@ -184,35 +183,13 @@ const StatusBar = ({
   </div>
 );
 
-const App = () => {
-  const didUnmount = useRef(false);
-  const [events, addEvent] = useReducer(
-    (state, current) =>
-      [configurationType, resetType].includes(current.type)
-        ? []
-        : [...state, current],
-    []
-  );
-  const [configurationText, setConfigurationText] = useState("");
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    "ws://0.0.0.0:9000/converse",
-    {
-      shouldReconnect: () => didUnmount.current === false,
-      reconnectAttempts: 100,
-      reconnectInterval: 3000,
-    }
-  );
-  useEffect(() => () => (didUnmount.current = true), []);
-  useEffect(() => {
-    if (lastJsonMessage !== null) {
-      addEvent(lastJsonMessage);
-    }
-  }, [lastJsonMessage, addEvent]);
-
-  useEffect(() => {
-    if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
-  }, [readyState, addEvent]);
-
+const App = ({
+  readyState,
+  events,
+  addEvent,
+  configurationText,
+  setConfigurationText,
+}) => {
   const [showEditor, setShowEditor] = useState(false);
 
   return (
@@ -237,9 +214,7 @@ const App = () => {
               alert("not connected");
               return;
             }
-            const e = event(configurationText, text);
-            addEvent(e);
-            sendJsonMessage(e);
+            addEvent(userUtteranceEvent(configurationText, text));
           }}
           events={events}
         />
@@ -259,4 +234,108 @@ const App = () => {
   );
 };
 
-export default App;
+const RenderResults = () => {
+  const { results } = useMatches();
+  return (
+    <KBarResults
+      items={results}
+      onRender={({ item, active }) =>
+        typeof item === "string" ? (
+          <div>{item}</div>
+        ) : (
+          <div
+            style={{
+              background: active ? "#eee" : "transparent",
+            }}
+          >
+            {item.name}
+          </div>
+        )
+      }
+    />
+  );
+};
+
+const AppWithKbar = () => {
+  const [events, addEvent] = useReducer(
+    (state, current) =>
+      [configurationType, resetType].includes(current.type)
+        ? []
+        : [...state, current],
+    []
+  );
+  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
+    "ws://0.0.0.0:9000/converse",
+    {
+      shouldReconnect: () => didUnmount.current === false,
+      reconnectAttempts: 100,
+      reconnectInterval: 3000,
+    }
+  );
+  const didUnmount = useRef(false);
+  useEffect(() => () => (didUnmount.current = true), []);
+  useEffect(() => {
+    if (lastJsonMessage !== null) {
+      addEvent(lastJsonMessage);
+    }
+  }, [lastJsonMessage, addEvent]);
+
+  useEffect(() => {
+    if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
+  }, [readyState, addEvent]);
+
+  const [configurationText, setConfigurationText] = useState("");
+  const addEventWithJsonMessage = (e) => {
+    addEvent(e);
+    sendJsonMessage(e);
+  };
+  return (
+    <KBarProvider
+      actions={[
+        {
+          id: "reload",
+          name: "reload configuration",
+          shortcut: ["r"],
+          keywords: "reload",
+          perform: () => {
+            console.log("reload", "l");
+            addEventWithJsonMessage({
+              type: configurationType,
+              data: configurationText,
+            });
+          },
+        },
+        {
+          id: "reset",
+          name: "reset bot",
+          shortcut: ["r", "s"],
+          keywords: "reset",
+          perform: () => {
+            console.log("reset");
+            addEventWithJsonMessage({
+              type: "reset",
+            });
+          },
+        },
+      ]}
+    >
+      <KBarPortal>
+        <KBarPositioner>
+          <KBarAnimator>
+            <KBarSearch />
+            <RenderResults />
+          </KBarAnimator>
+        </KBarPositioner>
+      </KBarPortal>
+      <App
+        readyState={readyState}
+        events={events}
+        addEvent={addEventWithJsonMessage}
+        configurationText={configurationText}
+        setConfigurationText={setConfigurationText}
+      />
+    </KBarProvider>
+  );
+};
+
+export default AppWithKbar;
