@@ -238,7 +238,7 @@ def _actions_with_knowledge(
     knowledge: Tuple[base_types.GraphType, ...],
 ) -> base_types.GraphType:
     del slots
-    return agenda.combine_utter_sinks(*(actions + knowledge))
+    return agenda.combine_utter_sinks(*actions, *knowledge)
 
 
 @graph.make_terminal("debug_states")
@@ -314,7 +314,7 @@ def _actions_with_debug_and_knowledge(
 ) -> base_types.GraphType:
     del slots
     return base_types.merge_graphs(
-        agenda.combine_utter_sinks(*(actions + knowledge)),
+        agenda.combine_utter_sinks(*actions, *knowledge),
         composers.compose_unary(
             debug_states,
             gamla.pipe(
