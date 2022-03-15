@@ -82,15 +82,13 @@ yarn start
 ```
 
 - Running bot's server: `python config_to_bot/main.py`
-- Running client:
+- Running bot designer:
 
 ```
 cd ./bot-ide
 yarn install
 yarn start
 ```
-
-Then in the text box insert yaml text and press submit.
 
 ## Example
 
