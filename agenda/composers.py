@@ -177,7 +177,6 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
             "listener_utter": _utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
             "anti_acker_utter": utter_sink(anti_acker),
-            "listener_participated_last_turen": if_participated(asker_listener),
         }
     )
     def final_utter(
@@ -185,9 +184,9 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
         listener_utter,
         acker_utter,
         anti_acker_utter,
-        listener_participated_last_turen,
+        listener_participated_last_turn,
     ):
-        if who_should_speak == asker_listener and not listener_participated_last_turen:
+        if who_should_speak == asker_listener and listener_participated_last_turn:
             return anti_acker_utter
         if who_should_speak == asker_listener:
             return listener_utter
@@ -200,7 +199,9 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
             _handle_participation(missing_cg_utils.equals_literal(who_should_speak)),
             [asker_listener, acker],
         ),
-        final_utter,
+        composers.make_compose_future(
+            final_utter, participated, "listener_participated_last_turn", False
+        ),
     )
 
 
