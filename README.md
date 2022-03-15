@@ -76,7 +76,7 @@ In addition run `yarn install` in each example that you wish to run in `config_t
 - Running remote functions server:
 
 ```
-cd agenda/config-to-bot/examples/pizza
+cd ./agenda/config-to-bot/examples/pizza
 yarn install
 yarn start
 ```
@@ -86,6 +86,7 @@ yarn start
 
 ```
 cd ./bot-ide
+yarn install
 yarn start
 ```
 
