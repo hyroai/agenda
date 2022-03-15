@@ -26,6 +26,10 @@ _TYPE_TO_LISTENER = {
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean"})
 is_supported_type = gamla.contains(_TYPE_TO_LISTENER)
 
+_mark_as_state_and_remember = gamla.compose_left(
+    agenda.mark_state, agenda.remember, duplication.duplicate_graph
+)
+
 
 def parse_type(type: str) -> Callable:
     def parse_type(user_utterance: str):
@@ -191,6 +195,22 @@ def _ask_about_multiple_choice(
     )
 
 
+def _slot_with_remote_and_ack(
+    remote: base_types.GraphType, ask: base_types.GraphType, ack: base_types.GraphType
+):
+    return agenda.slot(
+        _mark_as_state_and_remember(remote), agenda.ask(ask), agenda.ack(ack)
+    )
+
+
+def _slot_with_remote(remote: base_types.GraphType, ask: base_types.GraphType):
+    return agenda.slot(
+        _mark_as_state_and_remember(remote),
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
+    )
+
+
 def _ask_about(type: str, ask: str) -> base_types.GraphType:
     return agenda.slot(
         _typed_state(type), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
@@ -219,9 +239,7 @@ def _typed_state(type):
         agenda.if_participated
         if type in _TYPES_TO_LISTEN_AFTER_ASKING
         else gamla.identity,
-        agenda.mark_state,
-        agenda.remember,
-        duplication.duplicate_graph,
+        _mark_as_state_and_remember,
     )
 
 
@@ -376,6 +394,8 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _greater_equals,
         _question_and_answer_dict,
         _faq_intent,
+        _slot_with_remote_and_ack,
+        _slot_with_remote,
     }
 
 
