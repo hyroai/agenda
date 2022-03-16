@@ -38,6 +38,12 @@ We optimize on:
 - reuse; bots can share a part of their configuration
 - focus on business logic rather than NLP; no training examples.
 
+
+## Video introduction
+
+[![Here](https://img.youtube.com/vi/67BXS5A6WLY/default.jpg)](https://www.youtube.com/watch?v=67BXS5A6WLY)
+
+
 ## Target audience
 
 `Agenda` is ideal for general purpose developers who want to set up a conversational interface and are not looking to start an NLP research project, or train their own models. The bots produced will communicate by text via a socket run by a python server, so can be embedded in any service in a short time.
