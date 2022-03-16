@@ -43,7 +43,7 @@ slots:
       - medium
       - large
 actions:
-  - say: I'm transferring you to an agent.
+  - say: I can only help with pizza reservations.
     when:
       not: *wants-pizza
   - say: We currently do not sell vegan pizzas.
