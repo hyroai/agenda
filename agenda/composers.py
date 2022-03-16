@@ -150,43 +150,57 @@ def combine_state(aggregator: Callable):
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
 def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
-    @composers.compose_left_dict(
-        {
-            "listener_state": state_sink(asker_listener),
-            "listener_output_changed_to_known": missing_cg_utils.conjunction(
-                memory.changed(state_sink(asker_listener)),
-                logic.complement(
-                    missing_cg_utils.equals_literal(state_sink(asker_listener), UNKNOWN)
-                ),
-            ),
-        }
-    )
     def who_should_speak(
-        listener_state, listener_output_changed_to_known
+        listener_state,
+        listener_output_changed_to_known,
+        listener_participated_last_turn,
     ) -> Optional[base_types.GraphType]:
         if listener_output_changed_to_known:
             return acker
         if listener_state is not UNKNOWN:
             return None
+        if listener_participated_last_turn:
+            return anti_acker
         return asker_listener
+
+    is_participated_last_turn = missing_cg_utils.conjunction(
+        participated, missing_cg_utils.equals_literal(who_should_speak, asker_listener)
+    )
+
+    who_should_speak_with_participated = base_types.merge_graphs(
+        composers.make_compose_future(
+            who_should_speak,
+            is_participated_last_turn,
+            "listener_participated_last_turn",
+            False,
+        ),
+        composers.compose_left_dict(
+            {
+                "listener_state": state_sink(asker_listener),
+                "listener_output_changed_to_known": missing_cg_utils.conjunction(
+                    memory.changed(state_sink(asker_listener)),
+                    logic.complement(
+                        missing_cg_utils.equals_literal(
+                            state_sink(asker_listener), UNKNOWN
+                        )
+                    ),
+                ),
+            },
+            who_should_speak,
+        ),
+    )
 
     @mark_utter
     @composers.compose_left_dict(
         {
-            "who_should_speak": who_should_speak,
+            "who_should_speak": who_should_speak_with_participated,
             "listener_utter": _utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
             "anti_acker_utter": utter_sink(anti_acker),
         }
     )
-    def final_utter(
-        who_should_speak,
-        listener_utter,
-        acker_utter,
-        anti_acker_utter,
-        listener_participated_last_turn,
-    ):
-        if who_should_speak == asker_listener and listener_participated_last_turn:
+    def final_utter(who_should_speak, listener_utter, acker_utter, anti_acker_utter):
+        if who_should_speak == anti_acker:
             return anti_acker_utter
         if who_should_speak == asker_listener:
             return listener_utter
@@ -197,11 +211,9 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     return base_types.merge_graphs(
         *map(
             _handle_participation(missing_cg_utils.equals_literal(who_should_speak)),
-            [asker_listener, acker],
+            [asker_listener, acker, anti_acker],
         ),
-        composers.make_compose_future(
-            final_utter, participated, "listener_participated_last_turn", False
-        ),
+        final_utter,
     )
 
 
