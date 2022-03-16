@@ -81,7 +81,27 @@ def _replace_participated(replacement, graph):
     return gamla.pipe(
         graph,
         gamla.filter(missing_cg_utils.edge_source_equals(participated)),
-        gamla.map(missing_cg_utils.replace_edge_source(replacement)),
+        gamla.mapcat(
+            gamla.compose_left(
+                missing_cg_utils.replace_edge_source(replacement),
+                gamla.ternary(
+                    gamla.compose_left(
+                        gamla.attrgetter("destination"),
+                        missing_cg_utils.get_node_edges(graph),
+                        gamla.alljuxt(
+                            gamla.anymap(missing_cg_utils.is_future_edge),
+                            gamla.complement(
+                                gamla.allmap(missing_cg_utils.is_future_edge)
+                            ),
+                        ),
+                    ),
+                    lambda edge: composers.make_compose_future(
+                        edge.destination, edge.source, "x", None
+                    ),
+                    gamla.wrap_tuple,
+                ),
+            )
+        ),
         tuple,
     )
 
