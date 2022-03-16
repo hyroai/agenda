@@ -5,6 +5,7 @@
     "os": false
   },
   "name": "debugger",
+  "main": "src/App.js",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

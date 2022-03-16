@@ -1,0 +1,6 @@
+{
+  "name": "workspace-example",
+  "workspaces": [
+    "./config_to_bot/debugger"
+  ]
+}
