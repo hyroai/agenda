@@ -36,7 +36,7 @@ const renderSuccess = ({
   )} to ${address}.`;
 
 app.post("/order-pizza", ({ body }, res) => {
-  res.json(validateRequest(body) ? renderSuccess : null);
+  res.json(validateRequest(body) ? renderSuccess(body) : null);
 });
 
 const port = process.env.PORT || 8000;
