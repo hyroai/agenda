@@ -174,6 +174,7 @@ test_misunderstanding = _make_test(
                 "hi again",
                 "I'm sorry I couldn't get that. Please rephrase. Would you like to order pizza?",
             ],
+            ["yes.", "Got it. Are you vegan?"],
         ]
     ],
 )

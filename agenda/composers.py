@@ -1,5 +1,5 @@
 import operator
-from typing import Callable, Collection, Dict, Optional
+from typing import Callable, Collection, Dict, FrozenSet
 
 import gamla
 from computation_graph import base_types, composers, graph, run
@@ -154,17 +154,17 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
         listener_state,
         listener_output_changed_to_known,
         listener_participated_last_turn,
-    ) -> Optional[base_types.GraphType]:
+    ) -> FrozenSet[base_types.GraphType]:
         if listener_output_changed_to_known:
-            return acker
+            return frozenset({acker})
         if listener_state is not UNKNOWN:
-            return None
+            return frozenset()
         if listener_participated_last_turn:
-            return anti_acker
-        return asker_listener
+            return frozenset({anti_acker, asker_listener})
+        return frozenset({asker_listener})
 
     is_participated_last_turn = missing_cg_utils.conjunction(
-        participated, missing_cg_utils.equals_literal(who_should_speak, asker_listener)
+        participated, missing_cg_utils.in_literal(who_should_speak, asker_listener)
     )
 
     who_should_speak_with_participated = base_types.merge_graphs(
@@ -200,17 +200,17 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
         }
     )
     def final_utter(who_should_speak, listener_utter, acker_utter, anti_acker_utter):
-        if who_should_speak == anti_acker:
+        if anti_acker in who_should_speak:
             return sentence.combine([anti_acker_utter, listener_utter])
-        if who_should_speak == asker_listener:
+        if asker_listener in who_should_speak:
             return listener_utter
-        if who_should_speak == acker:
+        if acker in who_should_speak:
             return acker_utter
         return sentence.EMPTY_SENTENCE
 
     return base_types.merge_graphs(
         *map(
-            _handle_participation(missing_cg_utils.equals_literal(who_should_speak)),
+            _handle_participation(missing_cg_utils.in_literal(who_should_speak)),
             [asker_listener, acker, anti_acker],
         ),
         who_should_speak_with_participated,
