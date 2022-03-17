@@ -51,11 +51,21 @@ def _greater_equals(is_: base_types.GraphType, greater_equals: int):
 
 
 def _all(all: Iterable[base_types.GraphType]) -> base_types.GraphType:
-    return agenda.combine_slots(agenda.all, agenda.ack(agenda.GENERIC_ACK), all)
+    return agenda.combine_slots(
+        agenda.all,
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+        all,
+    )
 
 
 def _any(any: Iterable[base_types.GraphType]) -> base_types.GraphType:
-    return agenda.combine_slots(agenda.any, agenda.ack(agenda.GENERIC_ACK), any)
+    return agenda.combine_slots(
+        agenda.any,
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+        any,
+    )
 
 
 def _kv(
@@ -178,6 +188,7 @@ def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
         ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -192,6 +203,7 @@ def _ask_about_multiple_choice(
         ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -199,7 +211,10 @@ def _slot_with_remote_and_ack(
     remote: base_types.GraphType, ask: base_types.GraphType, ack: base_types.GraphType
 ):
     return agenda.slot(
-        _mark_as_state_and_remember(remote), agenda.ask(ask), agenda.ack(ack)
+        _mark_as_state_and_remember(remote),
+        agenda.ask(ask),
+        agenda.ack(ack),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -208,12 +223,16 @@ def _slot_with_remote(remote: base_types.GraphType, ask: base_types.GraphType):
         _mark_as_state_and_remember(remote),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
 def _ask_about(type: str, ask: str) -> base_types.GraphType:
     return agenda.slot(
-        _typed_state(type), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
+        _typed_state(type),
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -227,6 +246,7 @@ def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
             agenda.ack(lambda value: ack.format(value=value)),
             key="value",
         ),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -276,12 +296,12 @@ def debug_states(args):
     )
 
 
-def _debug_dict(cg: base_types.GraphType):
-    return {
-        "state": agenda.state_sink(cg),
+_debug_dict = gamla.apply_spec(
+    {
+        "state": agenda.state_sink,
         "utter": gamla.excepts(
             AssertionError, gamla.just(lambda: ""), agenda.utter_sink
-        )(cg),
+        ),
         "participated": gamla.excepts(
             StopIteration,
             gamla.just(lambda: None),
@@ -290,8 +310,9 @@ def _debug_dict(cg: base_types.GraphType):
                 gamla.map(base_types.edge_destination),
                 gamla.head,
             ),
-        )(cg),
+        ),
     }
+)
 
 
 def _actions_with_debug(
@@ -359,10 +380,14 @@ def _amount_of(amount_of: str, ask: str):
     return agenda.combine_slots(
         agenda.first_known,
         agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         (
             agenda.listener_with_memory(extract.amount_of(amount_of)),
             agenda.slot(
-                _typed_state("amount"), agenda.ask(ask), agenda.ack(agenda.GENERIC_ACK)
+                _typed_state("amount"),
+                agenda.ask(ask),
+                agenda.ack(agenda.GENERIC_ACK),
+                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             ),
         ),
     )

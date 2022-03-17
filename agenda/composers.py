@@ -1,9 +1,9 @@
 import operator
-from typing import Callable, Collection, Dict, Optional
+from typing import Callable, Collection, Dict, FrozenSet, Iterable
 
 import gamla
 from computation_graph import base_types, composers, graph, run
-from computation_graph.composers import logic, memory
+from computation_graph.composers import lift, logic, memory
 
 from agenda import missing_cg_utils, sentence
 
@@ -114,19 +114,27 @@ def _remove_sinks_and_sources_and_resolve_ambiguity(markers, f):
     return _remove_sinks_and_sources_and_resolve_ambiguity
 
 
-def slot(listener, asker, acker):
+def slot(listener, asker, acker, anti_acker):
     # If the listener has an utter sink then we need to combine it with asker. Otherwise, we just merge the graphs.
     try:
         utter_sink(listener)
-        return _utter_unless_known_and_ack(combine_utter_sinks(listener, asker), acker)
+        return _utter_unless_known_and_ack(
+            combine_utter_sinks(listener, asker), acker, anti_acker
+        )
     except AssertionError:
         return _utter_unless_known_and_ack(
-            base_types.merge_graphs(listener, asker), acker
+            base_types.merge_graphs(listener, asker), acker, anti_acker
         )
 
 
-def combine_slots(aggregator: Callable, acker, graphs: base_types.GraphType):
-    return _utter_unless_known_and_ack(aggregator(*graphs), acker)
+def combine_slots(
+    aggregator: Callable, acker, anti_acker, graphs: Iterable[base_types.GraphType]
+):
+    return _utter_unless_known_and_ack(
+        aggregator(*graphs),
+        acker,
+        mark_utter(lift.any_to_graph(sentence.EMPTY_SENTENCE)),
+    )
 
 
 def combine_state(aggregator: Callable):
@@ -145,26 +153,46 @@ def combine_state(aggregator: Callable):
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
-def _utter_unless_known_and_ack(asker_listener, acker):
-    @composers.compose_left_dict(
-        {
-            "listener_state": state_sink(asker_listener),
-            "listener_output_changed_to_known": missing_cg_utils.conjunction(
-                memory.changed(state_sink(asker_listener)),
-                logic.complement(
-                    missing_cg_utils.equals_literal(state_sink(asker_listener), UNKNOWN)
-                ),
-            ),
-        }
-    )
+def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     def who_should_speak(
-        listener_state, listener_output_changed_to_known
-    ) -> Optional[base_types.GraphType]:
+        listener_state,
+        listener_output_changed_to_known,
+        listener_participated_last_turn,
+    ) -> FrozenSet[base_types.GraphType]:
         if listener_output_changed_to_known:
-            return acker
+            return frozenset({acker})
         if listener_state is not UNKNOWN:
-            return None
-        return asker_listener
+            return frozenset()
+        if listener_participated_last_turn:
+            return frozenset({anti_acker, asker_listener})
+        return frozenset({asker_listener})
+
+    is_participated_last_turn = missing_cg_utils.conjunction(
+        participated, missing_cg_utils.in_literal(who_should_speak, asker_listener)
+    )
+
+    who_should_speak_with_participated = base_types.merge_graphs(
+        composers.make_compose_future(
+            who_should_speak,
+            is_participated_last_turn,
+            "listener_participated_last_turn",
+            False,
+        ),
+        composers.compose_left_dict(
+            {
+                "listener_state": state_sink(asker_listener),
+                "listener_output_changed_to_known": missing_cg_utils.conjunction(
+                    memory.changed(state_sink(asker_listener)),
+                    logic.complement(
+                        missing_cg_utils.equals_literal(
+                            state_sink(asker_listener), UNKNOWN
+                        )
+                    ),
+                ),
+            },
+            who_should_speak,
+        ),
+    )
 
     @mark_utter
     @composers.compose_left_dict(
@@ -172,20 +200,24 @@ def _utter_unless_known_and_ack(asker_listener, acker):
             "who_should_speak": who_should_speak,
             "listener_utter": _utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
+            "anti_acker_utter": utter_sink(anti_acker),
         }
     )
-    def final_utter(who_should_speak, listener_utter, acker_utter):
-        if who_should_speak == asker_listener:
+    def final_utter(who_should_speak, listener_utter, acker_utter, anti_acker_utter):
+        if anti_acker in who_should_speak:
+            return sentence.combine([anti_acker_utter, listener_utter])
+        if asker_listener in who_should_speak:
             return listener_utter
-        if who_should_speak == acker:
+        if acker in who_should_speak:
             return acker_utter
         return sentence.EMPTY_SENTENCE
 
     return base_types.merge_graphs(
         *map(
-            _handle_participation(missing_cg_utils.equals_literal(who_should_speak)),
-            [asker_listener, acker],
+            _handle_participation(missing_cg_utils.in_literal(who_should_speak)),
+            [asker_listener, acker, anti_acker],
         ),
+        who_should_speak_with_participated,
         final_utter,
     )
 
