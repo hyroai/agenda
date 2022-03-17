@@ -1,4 +1,5 @@
 import gamla
+from computation_graph.composers import duplication
 
 import agenda
 
@@ -7,6 +8,7 @@ _listen_with_memory_when_participated = gamla.compose_left(
     agenda.if_participated,
     agenda.mark_state,
     agenda.remember,
+    duplication.duplicate_graph,
 )
 
 
@@ -43,7 +45,7 @@ def test_needs():
                     lambda x: x in options and x or agenda.UNKNOWN
                 ),
                 agenda.ask(f"say {' or '.join(options)}"),
-                agenda.ack(agenda.GENERIC_ANTI_ACK),
+                agenda.ack(agenda.GENERIC_ACK),
                 agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
             )
         },
@@ -63,7 +65,10 @@ def test_needs():
         ],
         [
             ["Hi", "what can i do for you today?"],
-            ["Hi", "what can i do for you today?"],
+            [
+                "Hi",
+                "I'm sorry I couldn't get that. Please rephrase. what can i do for you today?",
+            ],
         ],
     ]
 )
@@ -93,9 +98,9 @@ def test_when1():
                         else f"got it, {topping} pizza."
                     )
                 ),
-                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
                 {"topping": topping},
             ),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         ),
     )
 
@@ -162,7 +167,10 @@ def _good_or_bad(text):
     [
         [["Hi", "how are you?"], ["i am good", "Got it. happy to hear."]],
         [["Hi", "how are you?"], ["bad", "Got it. sorry to hear."]],
-        [["Hi", "how are you?"], ["Hi", "how are you?"]],
+        [
+            ["Hi", "how are you?"],
+            ["Hi", "I'm sorry I couldn't get that. Please rephrase. how are you?"],
+        ],
     ]
 )
 def test_complement():
@@ -266,7 +274,8 @@ def test_any_true():
     any_true = agenda.combine_slots(
         agenda.any,
         agenda.ack("You are all set."),
-        agenda.anti_ack("Sorry I couldn't understand you. Please rephrase.")[
+        agenda.anti_ack("Sorry I couldn't understand you. Please rephrase."),
+        [
             agenda.slot(
                 _listen_with_memory_when_participated(gamla.inside("yes")),
                 agenda.ask("Would you like A?"),

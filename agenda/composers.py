@@ -1,5 +1,5 @@
 import operator
-from typing import Callable, Collection, Dict, FrozenSet
+from typing import Callable, Collection, Dict, FrozenSet, Iterable
 
 import gamla
 from computation_graph import base_types, composers, graph, run
@@ -128,7 +128,7 @@ def slot(listener, asker, acker, anti_acker):
 
 
 def combine_slots(
-    aggregator: Callable, acker, anti_acker, graphs: base_types.GraphType
+    aggregator: Callable, acker, anti_acker, graphs: Iterable[base_types.GraphType]
 ):
     return _utter_unless_known_and_ack(aggregator(*graphs), acker, anti_acker)
 
