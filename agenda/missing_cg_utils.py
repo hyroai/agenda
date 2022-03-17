@@ -68,14 +68,6 @@ def sink(x: base_types.CallableOrNode):
     )
 
 
-@gamla.curry
-def get_node_edges(graph, node):
-    return gamla.pipe(graph, gamla.filter(graph.edge_source_equals(node)), tuple)
-
-
-is_future_edge = gamla.compose_left(gamla.attrgetter("is_future"), gamla.equals(True))
-
-
 def conjunction(x, y):
     @composers.compose_left_dict({"x": x, "y": y})
     def conjunction(x, y):
