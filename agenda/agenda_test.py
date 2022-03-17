@@ -1,5 +1,4 @@
 import gamla
-from computation_graph.composers import duplication
 
 import agenda
 
@@ -8,7 +7,6 @@ _listen_with_memory_when_participated = gamla.compose_left(
     agenda.if_participated,
     agenda.mark_state,
     agenda.remember,
-    duplication.duplicate_graph,
 )
 
 

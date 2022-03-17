@@ -3,7 +3,7 @@ from typing import Callable, Collection, Dict, FrozenSet, Iterable
 
 import gamla
 from computation_graph import base_types, composers, graph, run
-from computation_graph.composers import logic, memory
+from computation_graph.composers import lift, logic, memory
 
 from agenda import missing_cg_utils, sentence
 
@@ -130,7 +130,11 @@ def slot(listener, asker, acker, anti_acker):
 def combine_slots(
     aggregator: Callable, acker, anti_acker, graphs: Iterable[base_types.GraphType]
 ):
-    return _utter_unless_known_and_ack(aggregator(*graphs), acker, anti_acker)
+    return _utter_unless_known_and_ack(
+        aggregator(*graphs),
+        acker,
+        mark_utter(lift.any_to_graph(sentence.EMPTY_SENTENCE)),
+    )
 
 
 def combine_state(aggregator: Callable):
