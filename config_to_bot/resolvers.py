@@ -274,12 +274,12 @@ def debug_states(args):
     )
 
 
-def _debug_dict(cg: base_types.GraphType):
-    return {
-        "state": agenda.state_sink(cg),
+_debug_dict = gamla.apply_spec(
+    {
+        "state": agenda.state_sink,
         "utter": gamla.excepts(
             AssertionError, gamla.just(lambda: ""), agenda.utter_sink
-        )(cg),
+        ),
         "participated": gamla.excepts(
             StopIteration,
             gamla.just(lambda: None),
@@ -288,8 +288,9 @@ def _debug_dict(cg: base_types.GraphType):
                 gamla.map(base_types.edge_destination),
                 gamla.head,
             ),
-        )(cg),
+        ),
     }
+)
 
 
 def _actions_with_debug(

@@ -42,7 +42,7 @@ _has_statement = gamla.inside(_STATEMENT)
 is_sentence_or_part = gamla.alljuxt(
     gamla.is_instance(gamla.frozendict),
     gamla.inside(_TYPE),
-    gamla.anyjuxt(_is_question, _is_sentence, _is_statement, _is_ack),
+    gamla.anyjuxt(_is_question, _is_sentence, _is_statement, _is_ack, _is_anti_ack),
 )
 
 

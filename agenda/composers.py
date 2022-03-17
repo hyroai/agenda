@@ -96,7 +96,7 @@ def _replace_participated(replacement, graph):
                         ),
                     ),
                     lambda edge: composers.make_compose_future(
-                        edge.destination, edge.source, "x", None
+                        edge.destination, edge.source, "x", False
                     ),
                     gamla.wrap_tuple,
                 ),
@@ -213,7 +213,7 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     @mark_utter
     @composers.compose_left_dict(
         {
-            "who_should_speak": who_should_speak_with_participated,
+            "who_should_speak": who_should_speak,
             "listener_utter": _utter_sink_or_empty_sentence(asker_listener),
             "acker_utter": utter_sink(acker),
             "anti_acker_utter": utter_sink(anti_acker),
@@ -221,7 +221,7 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     )
     def final_utter(who_should_speak, listener_utter, acker_utter, anti_acker_utter):
         if who_should_speak == anti_acker:
-            return anti_acker_utter
+            return sentence.combine([anti_acker_utter, listener_utter])
         if who_should_speak == asker_listener:
             return listener_utter
         if who_should_speak == acker:
@@ -233,6 +233,7 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
             _handle_participation(missing_cg_utils.equals_literal(who_should_speak)),
             [asker_listener, acker, anti_acker],
         ),
+        who_should_speak_with_participated,
         final_utter,
     )
 

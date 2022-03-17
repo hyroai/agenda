@@ -164,3 +164,16 @@ test_multiple_choice_robustness = _make_test(
         ]
     ],
 )
+
+test_misunderstanding = _make_test(
+    _PIZZA_YAML,
+    [
+        [
+            ["hello there", "Would you like to order pizza?"],
+            [
+                "hi again",
+                "I'm sorry I couldn't get that. Please rephrase. Would you like to order pizza?",
+            ],
+        ]
+    ],
+)

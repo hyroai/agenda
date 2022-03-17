@@ -118,10 +118,6 @@ is_future_edge = gamla.compose_left(gamla.attrgetter("is_future"), gamla.equals(
 def conjunction(x, y):
     @composers.compose_left_dict({"x": x, "y": y})
     def conjunction(x, y):
-        if not x:
-            return y
-        if not y:
-            return x
         return x and y
 
     return conjunction
