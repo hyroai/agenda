@@ -38,6 +38,10 @@ We optimize on:
 - reuse; bots can share a part of their configuration
 - focus on business logic rather than NLP; no training examples.
 
+## Video introduction
+
+[![Here](https://img.youtube.com/vi/67BXS5A6WLY/default.jpg)](https://www.youtube.com/watch?v=67BXS5A6WLY)
+
 ## Target audience
 
 `Agenda` is ideal for general purpose developers who want to set up a conversational interface and are not looking to start an NLP research project, or train their own models. The bots produced will communicate by text via a socket run by a python server, so can be embedded in any service in a short time.
@@ -59,9 +63,10 @@ That said those who want to leverage existing NLP services (e.g. an intent recog
 ## Setup
 
 ```bash
+git clone https://github.com/hyroai/bot-ide.git
 git clone https://github.com/hyroai/agenda.git
 pip install -e ./agenda
-yarn install --cwd=./agenda/config_to_bot/debugger
+yarn install --cwd=./bot-ide
 ```
 
 In addition run `yarn install` in each example that you wish to run in `config_to_bot/examples`
@@ -75,19 +80,19 @@ In addition run `yarn install` in each example that you wish to run in `config_t
 - Running remote functions server:
 
 ```
-cd examples/pizza
+cd ./agenda/config-to-bot/examples/pizza
+yarn install
 yarn start
 ```
 
 - Running bot's server: `python config_to_bot/main.py`
-- Running client:
+- Running bot designer:
 
 ```
-cd debugger
+cd ./bot-ide
+yarn install
 yarn start
 ```
-
-Then in the text box insert yaml text and press submit.
 
 ## Example
 

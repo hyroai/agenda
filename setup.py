@@ -13,7 +13,7 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         "gamla>=121",
-        "computation-graph>=33",
+        "computation-graph>=34",
         "pytest-asyncio>=0.17",
         "dataclasses",
         "httpx",

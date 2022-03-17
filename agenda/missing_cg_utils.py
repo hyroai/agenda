@@ -19,23 +19,6 @@ def compose_left_curry(x):
     return compose_left_with
 
 
-def _split_by_condition(condition):
-    return gamla.compose_left(
-        gamla.bifurcate(gamla.filter(condition), gamla.remove(condition)),
-        gamla.map(tuple),
-        tuple,
-    )
-
-
-def _operate_on_subgraph(selector, transformation):
-    return gamla.compose(
-        gamla.star(
-            lambda match, rest: base_types.merge_graphs(rest, transformation(match))
-        ),
-        selector,
-    )
-
-
 def edge_destination_equals(x):
     if not isinstance(x, base_types.ComputationNode):
         x = graph.make_computation_node(x)
@@ -43,18 +26,6 @@ def edge_destination_equals(x):
 
 
 edge_source = gamla.attrgetter("source")
-
-
-def edge_source_equals(x):
-    if not isinstance(x, base_types.ComputationNode):
-        x = graph.make_computation_node(x)
-    return lambda edge: edge.source == x
-
-
-def transform_edges(query, edge_mapper):
-    return _operate_on_subgraph(
-        _split_by_condition(query), gamla.compose(tuple, gamla.map(edge_mapper))
-    )
 
 
 @gamla.curry
@@ -77,21 +48,11 @@ def replace_edge_destination(replacement):
     return replace_edge_destination
 
 
-def replace_edge_source(replacement):
-    if not isinstance(replacement, base_types.ComputationNode):
-        replacement = graph.make_computation_node(replacement)
-
-    def replace_edge_source(edge):
-        return dataclasses.replace(edge, source=replacement)
-
-    return replace_edge_source
-
-
 def remove_nodes(nodes):
     return gamla.compose_left(
         *map(
             lambda x: gamla.remove(
-                gamla.anyjuxt(edge_source_equals(x), edge_destination_equals(x))
+                gamla.anyjuxt(graph.edge_source_equals(x), edge_destination_equals(x))
             ),
             nodes,
         ),
@@ -109,7 +70,7 @@ def sink(x: base_types.CallableOrNode):
 
 @gamla.curry
 def get_node_edges(graph, node):
-    return gamla.pipe(graph, gamla.filter(edge_source_equals(node)), tuple)
+    return gamla.pipe(graph, gamla.filter(graph.edge_source_equals(node)), tuple)
 
 
 is_future_edge = gamla.compose_left(gamla.attrgetter("is_future"), gamla.equals(True))
