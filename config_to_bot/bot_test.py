@@ -178,3 +178,30 @@ test_misunderstanding = _make_test(
         ]
     ],
 )
+
+
+test_punctuation_robustness = _make_test(
+    _PIZZA_YAML,
+    [
+        [
+            ["hello there", "Would you like to order pizza?"],
+            ["yes", "Got it. Are you vegan?"],
+            ["no", "Got it. What is your name?"],
+            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["4 pizzas.", "Got it. What kind of toppings would you like?"],
+        ],
+        [
+            ["hello there", "Would you like to order pizza?"],
+            ["yes", "Got it. Are you vegan?"],
+            ["no", "Got it. What is your name?"],
+            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["4.", "Got it. What kind of toppings would you like?"],
+        ],
+        [
+            ["hello there", "Would you like to order pizza?"],
+            ["yes", "Got it. Are you vegan?"],
+            ["no", "Got it. What is your name?"],
+            ["Yoni.", "Nice to meet you Yoni! How many pies would you like?"],
+        ],
+    ],
+)

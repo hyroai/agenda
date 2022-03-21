@@ -11,6 +11,10 @@ import agenda
 _nlp = spacy.load("en_core_web_lg")
 
 
+def _remove_punctuation(text: str) -> str:
+    return re.sub(r"[.,!?;]", "", text)
+
+
 def _analyze(text: str):
     return _nlp(text)
 
@@ -99,6 +103,7 @@ phone: Callable[[str], str] = gamla.compose_left(
 )
 
 person_name: Callable[[str], str] = gamla.compose_left(
+    _remove_punctuation,
     _analyze,
     tuple,
     gamla.filter(
@@ -178,7 +183,9 @@ def single_choice(options: Tuple[str, ...]) -> Callable[[str], str]:
 
 
 amount = gamla.compose_left(
-    number_parser.parse_number, gamla.unless(gamla.identity, gamla.just(agenda.UNKNOWN))
+    _remove_punctuation,
+    number_parser.parse_number,
+    gamla.unless(gamla.identity, gamla.just(agenda.UNKNOWN)),
 )
 
 
@@ -188,6 +195,7 @@ def amount_of(noun: str):
     def amount_of(user_utterance):
         return gamla.pipe(
             user_utterance,
+            _remove_punctuation,
             number_parser.parse,
             _analyze,
             gamla.filter(lambda t: t.similarity(analyzed_noun) > 0.5),
