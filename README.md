@@ -63,7 +63,7 @@ That said those who want to leverage existing NLP services (e.g. an intent recog
 ## Setup
 
 ```bash
-git clone https://github.com/hyroai/bot-ide.git
+git clone https://github.com/hyroai/agenda-ide.git
 git clone https://github.com/hyroai/agenda.git
 pip install -e ./agenda
 yarn install --cwd=./bot-ide
