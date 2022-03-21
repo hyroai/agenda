@@ -167,6 +167,11 @@ def _sentence_part_reducer(
         return _add_constituent(_set_question(sentence_so_far, current), current)
     if _is_ack(current):
         return _add_constituent(_add_ack(sentence_so_far, current), current)
+    if _has_anti_ack(sentence_so_far) and _is_statement(current):
+        sentence = gamla.freeze_deep(
+            gamla.keyfilter(gamla.not_equals(_ANTI_ACK))(sentence_so_far)
+        )
+        return _add_constituent(_add_statement(sentence, current), current)
     if _is_statement(current):
         return _add_constituent(_add_statement(sentence_so_far, current), current)
     if (

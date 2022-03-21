@@ -205,3 +205,17 @@ test_punctuation_robustness = _make_test(
         ],
     ],
 )
+
+
+test_remove_misunderstanding_when_answering_faq = _make_test(
+    _PIZZA_YAML,
+    [
+        [
+            ["hello there", "Would you like to order pizza?"],
+            [
+                "What are your opening times?",
+                "2pm to 10pm every day. Would you like to order pizza?",
+            ],
+        ]
+    ],
+)
