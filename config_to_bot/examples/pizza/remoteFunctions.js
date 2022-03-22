@@ -24,12 +24,13 @@ const validateRequest = ({
 }) => phone && email && amount_of_pizzas && name && address && size && toppings;
 
 const renderSuccess = ({
-  name,
-  phone,
-  email,
   address,
   amount_of_pizzas,
+  email,
+  name,
+  phone,
   size,
+  toppings,
 }) =>
   `Thank you ${name}! I got your phone: ${phone}, and your email: ${email}. We are sending you ${amount_of_pizzas} ${size} pizzas ${renderToppings(
     toppings
