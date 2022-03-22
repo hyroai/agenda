@@ -21,6 +21,10 @@ def _bot_utterance(utterance, state):
     }
 
 
+def _error_message(error_text):
+    return {"type": "error", "message": error_text}
+
+
 def _create_socket_handler():
     async def message_handler(websocket: fastapi.WebSocket):
         state: dict = {}
@@ -35,14 +39,14 @@ def _create_socket_handler():
                     bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
                 except Exception as ex:
                     logging.exception(ex)
-                    return _bot_utterance("The configuration is invalid.", None)
+                    return _error_message("The configuration is invalid.")
 
             if request["type"] == "reset":
                 state = {}
                 return _bot_utterance("Starting Over", None)
             if not bot:
-                return _bot_utterance(
-                    "You must provide a yaml in order to build a bot.", None
+                return _error_message(
+                    "You must provide a yaml in order to build a bot."
                 )
             if request["type"] == "userUtterance":
                 state = await bot(state, {composers.event: request["utterance"]})
