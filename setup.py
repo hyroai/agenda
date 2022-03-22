@@ -29,4 +29,5 @@ setuptools.setup(
     package_data={"": [], "agenda": ["py.typed"]},
     include_package_data=True,
     extras_require={"dev": ["pytest", "pre-commit"]},
+    entry_points={"console_scripts": ["agenda = config_to_bot.main:main"]},
 )

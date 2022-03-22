@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import traceback
 
 import fastapi
@@ -95,11 +96,15 @@ async def _make_app() -> fastapi.FastAPI:
     return app
 
 
-if __name__ == "__main__":
+def main():
     uvicorn.run(
         asyncio.get_event_loop().run_until_complete(_make_app()),
         host="0.0.0.0",
-        port=9000,
+        port=int(os.environ.get("AGENDA_DEBUGGER_BACKEND_PORT", "9000")),
         log_level="debug",
         timeout_keep_alive=1200,
     )
+
+
+if __name__ == "__main__":
+    main()
