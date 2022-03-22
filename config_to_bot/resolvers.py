@@ -107,6 +107,10 @@ def _build_remote_resolver(request: Callable):
     return remote
 
 
+def _say(say: str):
+    return agenda.say(say)
+
+
 def _say_with_needs(
     say, needs: Iterable[Tuple[str, base_types.GraphType]]
 ) -> base_types.GraphType:
@@ -263,7 +267,19 @@ def _typed_state(type):
     )
 
 
-def _actions(
+def _slots(slots: Tuple[base_types.GraphType, ...]):
+    return agenda.combine_utter_sinks(*slots)
+
+
+def _actions(actions: Tuple[base_types.GraphType, ...]):
+    return agenda.combine_utter_sinks(*actions)
+
+
+def _knowledge(knowledge: Tuple[base_types.GraphType, ...]):
+    return agenda.combine_utter_sinks(*knowledge)
+
+
+def _actions_with_slots(
     slots: Tuple[base_types.GraphType, ...], actions: Tuple[base_types.GraphType, ...]
 ) -> base_types.GraphType:
     del slots
@@ -271,6 +287,19 @@ def _actions(
 
 
 def _actions_with_knowledge(
+    actions: Tuple[base_types.GraphType, ...],
+    knowledge: Tuple[base_types.GraphType, ...],
+):
+    return agenda.combine_utter_sinks(*actions, *knowledge)
+
+
+def _slots_with_knowledge(
+    slots: Tuple[base_types.GraphType, ...], knowledge: Tuple[base_types.GraphType, ...]
+):
+    return agenda.combine_utter_sinks(*slots, *knowledge)
+
+
+def _actions_with_slots_and_knowledge(
     slots: Tuple[base_types.GraphType, ...],
     actions: Tuple[base_types.GraphType, ...],
     knowledge: Tuple[base_types.GraphType, ...],
@@ -315,7 +344,7 @@ _debug_dict = gamla.apply_spec(
 )
 
 
-def _actions_with_debug(
+def _actions_with_slots_and_debug(
     actions: Tuple[base_types.GraphType, ...],
     slots: Tuple[base_types.GraphType, ...],
     debug: Union[
@@ -343,7 +372,7 @@ def _actions_with_debug(
     )
 
 
-def _actions_with_debug_and_knowledge(
+def _actions_with_slots_and_debug_and_knowledge(
     actions: Tuple[base_types.GraphType, ...],
     slots: Tuple[base_types.GraphType, ...],
     knowledge: Tuple[base_types.GraphType, ...],
@@ -405,22 +434,28 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _listen_to_intent,
         _ask_about_choice,
         _ask_about_multiple_choice,
+        _say,
         _say_with_needs,
         _when,
         _when_with_needs,
         _remote_with_needs,
         _ask_about,
         _ask_about_and_ack,
-        _actions,
+        _actions_with_slots,
+        _slots_with_knowledge,
         _actions_with_knowledge,
-        _actions_with_debug,
-        _actions_with_debug_and_knowledge,
+        _actions_with_slots_and_knowledge,
+        _actions_with_slots_and_debug,
+        _actions_with_slots_and_debug_and_knowledge,
         _equals,
         _greater_equals,
         _question_and_answer_dict,
         _faq_intent,
         _slot_with_remote_and_ack,
         _slot_with_remote,
+        _slots,
+        _actions,
+        _knowledge,
     }
 
 
