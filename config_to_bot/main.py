@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import traceback
 
 import fastapi
 import gamla
@@ -21,31 +20,28 @@ def _bot_utterance(utterance, state):
     }
 
 
-def _error_message(error):
-    return {"type": "botError", "message": str(error), "trace": traceback.format_exc()}
-
-
 def _create_socket_handler():
     async def message_handler(websocket: fastapi.WebSocket):
         state: dict = {}
         bot = None
 
-        @gamla.excepts(
-            Exception,
-            gamla.compose_left(gamla.side_effect(logging.exception), _error_message),
-        )
         async def responder_with_state(request):
             nonlocal state
             nonlocal bot
             if request["type"] == "configuration":
                 state = {}
-                bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
+                try:
+                    bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
+                except Exception as ex:
+                    logging.exception(ex)
+                    return _bot_utterance("The configuration is invalid.", None)
+
             if request["type"] == "reset":
                 state = {}
                 return _bot_utterance("Starting Over", None)
             if not bot:
-                return _error_message(
-                    "You must provide a yaml in order to build a bot."
+                return _bot_utterance(
+                    "You must provide a yaml in order to build a bot.", None
                 )
             if request["type"] == "userUtterance":
                 state = await bot(state, {composers.event: request["utterance"]})
