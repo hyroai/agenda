@@ -228,6 +228,7 @@ const StatusBar = ({ connectionStatus: { color, text } }) => (
       display: "flex",
       gap: 10,
       flexDirection: "row",
+      backgroundColor: "#1e1e1e",
     }}
   >
     <div
