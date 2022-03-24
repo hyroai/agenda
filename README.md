@@ -63,10 +63,9 @@ That said those who want to leverage existing NLP services (e.g. an intent recog
 ## Setup
 
 ```bash
-git clone https://github.com/hyroai/agenda-ide.git
 git clone https://github.com/hyroai/agenda.git
 pip install -e ./agenda
-yarn install --cwd=./bot-ide
+yarn install --cwd=./config_to_bot/debugger
 ```
 
 In addition run `yarn install` in each example that you wish to run in `config_to_bot/examples`
@@ -89,7 +88,7 @@ yarn start
 - Running bot designer:
 
 ```
-cd ./bot-ide
+cd ./config_to_bot/debugger
 yarn install
 yarn start
 ```
