@@ -14,28 +14,47 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
 import React from "react";
+import tinykeys from "tinykeys";
+
+// const monacoReddish = "#ce9178";
+// const monacoWhiteish = "#d4d4d4";
+const monacoGreenish = "#3dc9b0";
+const monacoBlueish = "#569cd6";
+
+const botTextColor = "white";
+const errorTextColor = "white";
+const humanTextColor = "yellowgreen";
 
 const rowSpacing = { display: "flex", flexDirection: "column", gap: 10 };
-const botTextColor = "white";
-const humanTextColor = "yellowgreen";
-const configurationFieldColor = "forestgreen";
+const fieldNameColor = monacoGreenish;
+const fieldValueColor = monacoBlueish;
 
-const ServerError = ({ message, trace }) => (
-  <div>
-    <div>{message}</div>
-    {trace && <div style={{ whiteSpace: "break-spaces" }}>{trace}</div>}
+const ServerError = ({ message }) => (
+  <div
+    style={{
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      gap: 20,
+      display: "flex",
+      color: errorTextColor,
+    }}
+  >
+    <div>❗ {message}</div>
   </div>
 );
-const debugSubgraph = ([key, { state, utter, participated }], i) => (
+
+const DebugSubgraph = ([key, { state, utter, participated }], i) => (
   <div key={i}>
-    <span style={{ color: configurationFieldColor }}>{key}</span>&nbsp;
-    <span style={{ color: humanTextColor }}>
+    <span style={{ color: fieldNameColor }}>{key}</span>&nbsp;
+    <span style={{ color: fieldValueColor }}>
       {state === null
         ? "?"
         : state === true
         ? "yes"
         : state === false
         ? "no"
+        : Array.isArray(state)
+        ? state.join(", ")
         : state}
     </span>
     <div style={{ color: botTextColor, fontSize: "8px" }}>
@@ -44,9 +63,9 @@ const debugSubgraph = ([key, { state, utter, participated }], i) => (
   </div>
 );
 
-const subgraphsDebugger = (state) =>
+const SubgraphsDebugger = (state) =>
   Object.keys(state).length && (
-    <div>{Object.entries(state).map(debugSubgraph)}</div>
+    <div>{Object.entries(state).map(DebugSubgraph)}</div>
   );
 
 const BotUtterance = ({ utterance, state }) => (
@@ -60,7 +79,7 @@ const BotUtterance = ({ utterance, state }) => (
     }}
   >
     <div>🤖 {utterance}</div>
-    {state && subgraphsDebugger(state)}
+    {state && SubgraphsDebugger(state)}
   </div>
 );
 
@@ -71,7 +90,7 @@ const Event = (event, i) => (
   <span key={i}>
     <>
       {event.type === "botUtterance" ? BotUtterance(event) : null}
-      {event.type === "botError" ? ServerError(event) : null}
+      {event.type === "error" ? ServerError(event) : null}
       {event.type === "userUtterance" ? UserUtterance(event) : null}
     </>
   </span>
@@ -94,9 +113,19 @@ const connectionStatus = {
 };
 
 const ConfigEditor = ({ text, setText }) => {
-  useRegisterActions([]);
-  const monaco = useMonaco();
   const editorRef = useRef(null);
+  useRegisterActions(
+    [
+      {
+        name: "focus editor",
+        shortcut: ["e"],
+        keywords: "editor",
+        perform: () => setTimeout(() => editorRef.current.focus(), 10),
+      },
+    ],
+    [editorRef]
+  );
+  const monaco = useMonaco();
   const { query } = useKBar();
   const [dirty, setDirty] = useState(0);
   useEffect(() => {
@@ -124,7 +153,6 @@ const ConfigEditor = ({ text, setText }) => {
         language="yaml"
         automaticLayout={true}
         onMount={(editor) => {
-          console.log("mounted");
           setDirty(dirty + 1);
           editorRef.current = editor;
         }}
@@ -143,6 +171,18 @@ const Chat = ({ events, submit }) => {
       inline: "start",
     });
   }, [events]);
+  useRegisterActions(
+    [
+      {
+        id: "focus chat",
+        name: "focus chat",
+        shortcut: ["c"],
+        keywords: "chat",
+        perform: () => setTimeout(() => ref.current.focus(), 10),
+      },
+    ],
+    [ref]
+  );
   return (
     <div
       style={{
@@ -150,7 +190,7 @@ const Chat = ({ events, submit }) => {
         flexGrow: 1,
         ...rowSpacing,
         overflowY: "auto",
-        backgroundColor: "#300a24",
+        backgroundColor: "#1e1e1e",
       }}
     >
       <div style={rowSpacing}>{events.map(Event)}</div>
@@ -167,7 +207,6 @@ const Chat = ({ events, submit }) => {
             color: humanTextColor,
             border: "none",
           }}
-          autoFocus={true}
           type="text"
           value={textInput}
           onKeyDown={({ key }) => {
@@ -186,7 +225,6 @@ const Chat = ({ events, submit }) => {
 const StatusBar = ({ connectionStatus: { color, text } }) => (
   <div
     style={{
-      backgroundColor: "#202124",
       display: "flex",
       gap: 10,
       flexDirection: "row",
@@ -204,7 +242,7 @@ const StatusBar = ({ connectionStatus: { color, text } }) => (
   </div>
 );
 
-const App = () => {
+const App = ({ serverSocketUrl }) => {
   const [events, addEvent] = useReducer(
     (state, current) =>
       [configurationType, resetType].includes(current.type)
@@ -213,7 +251,7 @@ const App = () => {
     []
   );
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    "ws://0.0.0.0:9000/converse",
+    serverSocketUrl,
     {
       shouldReconnect: () => didUnmount.current === false,
       reconnectAttempts: 100,
@@ -243,10 +281,22 @@ const App = () => {
 
   const [configurationText, setConfigurationText] = useState("");
 
-  const [showEditor, setShowEditor] = useReducer(
-    (_, current) => current,
-    false
-  );
+  const [showEditor, setShowEditor] = useState(true);
+  const { query } = useKBar();
+  useEffect(() => {
+    if (!query) return;
+    const unsubscribe = tinykeys(window, {
+      "$mod+p": (e) => {
+        query.toggle();
+        e.preventDefault();
+        e.stopPropagation();
+      },
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [query]);
+
   useRegisterActions(
     [
       {
@@ -346,7 +396,7 @@ const RenderResults = () => {
   );
 };
 
-const AppWithKbar = () => (
+const AppWithKbar = ({ serverSocketUrl }) => (
   <KBarProvider actions={[]}>
     <KBarPortal>
       <KBarPositioner>
@@ -356,7 +406,7 @@ const AppWithKbar = () => (
         </KBarAnimator>
       </KBarPositioner>
     </KBarPortal>
-    <App />
+    <App serverSocketUrl={serverSocketUrl} />
   </KBarProvider>
 );
 
