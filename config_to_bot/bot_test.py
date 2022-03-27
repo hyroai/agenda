@@ -6,9 +6,12 @@ import gamla
 import agenda
 from config_to_bot import yaml_to_bot
 
-_PIZZA_YAML = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "examples/pizza/pizza.yaml"
-)
+
+def _from_examples(path):
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples", path)
+
+
+_PIZZA_YAML = _from_examples("pizza/pizza.yaml")
 
 
 async def _remote_function(url: str, params: Dict):
@@ -216,6 +219,17 @@ test_remove_misunderstanding_when_answering_faq = _make_test(
                 "What are your opening times?",
                 "2pm to 10pm every day. Would you like to order pizza?",
             ],
+        ]
+    ],
+)
+
+test_say_template = _make_test(
+    _from_examples("say_template.yaml"),
+    [
+        [
+            ["hi", "What is your name?"],
+            ["Eli Libman", "Got it. small large or medium?"],
+            ["large", "Got it. Eli Libman you said large."],
         ]
     ],
 )
