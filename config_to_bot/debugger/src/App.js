@@ -252,7 +252,7 @@ const App = ({ serverSocketUrl }) => {
     []
   );
   const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    serverSocketUrl,
+    serverSocketUrl || "ws://0.0.0.0:9000/converse",
     {
       shouldReconnect: () => didUnmount.current === false,
       reconnectAttempts: 100,
