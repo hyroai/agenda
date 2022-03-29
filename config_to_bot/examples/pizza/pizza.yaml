@@ -1,6 +1,6 @@
 slots:
   - &name
-    ack: Nice to meet you {value}!
+    ack: Nice to meet you {}!
     ask: What is your name?
     type: name
   - &address

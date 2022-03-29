@@ -1,0 +1,17 @@
+slots:
+  - &name
+    ask: What is your name?
+    type: name
+  - &size
+    ask: small large or medium?
+    choice:
+      - small
+      - medium
+      - large
+actions:
+  - say: "{name} you said {size}."
+    needs:
+        - key: name
+          value: *name
+        - key: size
+          value: *size

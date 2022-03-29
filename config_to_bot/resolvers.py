@@ -1,5 +1,6 @@
 import inspect
 import keyword
+import string
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Iterable, Set, Tuple, Union
 
@@ -114,11 +115,16 @@ def _say(say: str):
 def _say_with_needs(
     say, needs: Iterable[Tuple[str, base_types.GraphType]]
 ) -> base_types.GraphType:
-    return agenda.optionally_needs(agenda.say(say), dict(needs))
+    return agenda.optionally_needs(
+        agenda.say(_render_template(say) if _is_format_string(say) else say),
+        dict(needs),
+    )
 
 
 def _when(say: Union[str, Callable], when: base_types.GraphType):
-    return agenda.when(when, agenda.say(say))
+    return agenda.when(
+        when, agenda.say(_render_template(say) if _is_format_string(say) else say)
+    )
 
 
 def _when_with_needs(
@@ -126,7 +132,33 @@ def _when_with_needs(
     needs: Iterable[Tuple[str, base_types.GraphType]],
     when: base_types.GraphType,
 ) -> base_types.GraphType:
-    return agenda.when(when, agenda.optionally_needs(agenda.say(say), dict(needs)))
+    return agenda.when(
+        when,
+        agenda.optionally_needs(
+            agenda.say(_render_template(say) if _is_format_string(say) else say),
+            dict(needs),
+        ),
+    )
+
+
+def _is_format_string(say):
+    if not isinstance(say, str):
+        return False
+    parsed_format = tuple(string.Formatter().parse(say))
+    return (
+        len(parsed_format) > 1
+        or len(parsed_format) == 1
+        and parsed_format[0][1] is not None
+    )
+
+
+def _render_template(template):
+    assert _is_format_string(template), "template must be a valid python string format."
+    return gamla.ternary(
+        gamla.compose_left(dict.values, gamla.inside(agenda.UNKNOWN)),
+        gamla.just(""),
+        lambda kw: template.format(*kw.values(), **kw),
+    )
 
 
 def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
@@ -245,10 +277,15 @@ def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
     return agenda.slot(
         typed_state,
         agenda.ask(ask),
-        composers.compose_left(
-            agenda.state_sink(typed_state),
-            agenda.ack(lambda value: ack.format(value=value)),
-            key="value",
+        agenda.ack(
+            composers.compose_left_unary(
+                missing_cg_utils.package_into_dict(
+                    {"value": agenda.state_sink(typed_state)}
+                ),
+                _render_template(ack),
+            )
+            if _is_format_string(ack)
+            else ack
         ),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
@@ -454,6 +491,7 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _slot_with_remote_and_ack,
         _slot_with_remote,
         _slots,
+        _render_template,
         _actions,
         _knowledge,
     }
