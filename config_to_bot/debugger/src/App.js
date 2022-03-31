@@ -397,8 +397,8 @@ const RenderResults = () => {
   );
 };
 
-const AppWithKbar = ({ serverSocketUrl }) => (
-  <KBarProvider actions={[]}>
+const AppWithKbar = ({ serverSocketUrl, actions }) => (
+  <KBarProvider actions={actions}>
     <KBarPortal>
       <KBarPositioner>
         <KBarAnimator>
