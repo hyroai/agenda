@@ -343,8 +343,6 @@ const App = ({ serverSocketUrl }) => {
         height: "100vh",
         display: "flex",
         flexDirection: "column",
-        color: "white",
-        fontFamily: "monospace",
       }}
     >
       <div
@@ -353,8 +351,6 @@ const App = ({ serverSocketUrl }) => {
           flexDirection: "row",
           overflow: "hidden",
           flexBasis: "100%",
-          color: "white",
-          fontFamily: "monospace",
         }}
       >
         <Chat
@@ -402,7 +398,10 @@ const RenderResults = () => {
 };
 
 const AppWithKbar = ({ serverSocketUrl, actions }) => (
-  <KBarProvider actions={actions}>
+  <KBarProvider
+    actions={actions}
+    style={{ color: "white", fontFamily: "monospace" }}
+  >
     <KBarPortal>
       <KBarPositioner>
         <KBarAnimator>
