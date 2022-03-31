@@ -343,6 +343,8 @@ const App = ({ serverSocketUrl }) => {
         height: "100vh",
         display: "flex",
         flexDirection: "column",
+        color: "white",
+        fontFamily: "monospace",
       }}
     >
       <div
