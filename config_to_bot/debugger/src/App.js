@@ -239,7 +239,9 @@ const StatusBar = ({ connectionStatus: { color, text } }) => (
     >
       {text}
     </div>
-    <div>Hit ctrl+k for commands</div>
+    <div style={{ color: "white", fontFamily: "monospace" }}>
+      Hit ctrl+k for commands
+    </div>
   </div>
 );
 
@@ -382,7 +384,7 @@ const RenderResults = () => {
       items={results}
       onRender={({ item, active }) =>
         typeof item === "string" ? (
-          <div>{item}</div>
+          <div style={{ color: "white", fontFamily: "monospace" }}>{item}</div>
         ) : (
           <div
             style={{
@@ -398,10 +400,7 @@ const RenderResults = () => {
 };
 
 const AppWithKbar = ({ serverSocketUrl, actions }) => (
-  <KBarProvider
-    actions={actions}
-    style={{ color: "white", fontFamily: "monospace" }}
-  >
+  <KBarProvider actions={actions}>
     <KBarPortal>
       <KBarPositioner>
         <KBarAnimator>
