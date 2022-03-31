@@ -384,11 +384,13 @@ const RenderResults = () => {
       items={results}
       onRender={({ item, active }) =>
         typeof item === "string" ? (
-          <div style={{ color: "white", fontFamily: "monospace" }}>{item}</div>
+          <div>{item}</div>
         ) : (
           <div
             style={{
               background: active ? "black" : "gray",
+              color: "white",
+              fontFamily: "monospace",
             }}
           >
             {item.name}
