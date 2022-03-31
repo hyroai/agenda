@@ -353,6 +353,8 @@ const App = ({ serverSocketUrl }) => {
           flexDirection: "row",
           overflow: "hidden",
           flexBasis: "100%",
+          color: "white",
+          fontFamily: "monospace",
         }}
       >
         <Chat
