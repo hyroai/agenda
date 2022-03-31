@@ -243,7 +243,7 @@ const StatusBar = ({ connectionStatus: { color, text } }) => (
   </div>
 );
 
-const App = ({ serverSocketUrl, extraKbarFeatures }) => {
+const App = ({ serverSocketUrl }) => {
   const [events, addEvent] = useReducer(
     (state, current) =>
       [configurationType, resetType].includes(current.type)
@@ -335,8 +335,7 @@ const App = ({ serverSocketUrl, extraKbarFeatures }) => {
       addEventSendingMessage,
       configurationText,
       configurationType,
-    ],
-    extraKbarFeatures
+    ]
   );
   return (
     <div
@@ -398,8 +397,8 @@ const RenderResults = () => {
   );
 };
 
-const AppWithKbar = ({ serverSocketUrl, extraKbarFeatures }) => (
-  <KBarProvider actions={[]}>
+const AppWithKbar = ({ serverSocketUrl, actions }) => (
+  <KBarProvider actions={actions}>
     <KBarPortal>
       <KBarPositioner>
         <KBarAnimator>
@@ -408,10 +407,7 @@ const AppWithKbar = ({ serverSocketUrl, extraKbarFeatures }) => (
         </KBarAnimator>
       </KBarPositioner>
     </KBarPortal>
-    <App
-      serverSocketUrl={serverSocketUrl}
-      extraKbarFeatures={extraKbarFeatures}
-    />
+    <App serverSocketUrl={serverSocketUrl} />
   </KBarProvider>
 );
 
