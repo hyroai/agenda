@@ -12,9 +12,6 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(),
     zip_safe=False,
     install_requires=[
-        # version locking click because version 8.1.0 breaks typer
-        # TODO(eli): Remove click when https://github.com/tiangolo/typer/pull/375 is merged
-        "click==7.1.2",
         "gamla>=121",
         "computation-graph>=34",
         "pytest-asyncio>=0.17",

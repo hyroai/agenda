@@ -242,44 +242,7 @@ const StatusBar = ({ connectionStatus: { color, text } }) => (
     <div>Hit ctrl+k for commands</div>
   </div>
 );
-
-const App = ({ serverSocketUrl }) => {
-  const [events, addEvent] = useReducer(
-    (state, current) =>
-      [configurationType, resetType].includes(current.type)
-        ? []
-        : [...state, current],
-    []
-  );
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    serverSocketUrl || "ws://0.0.0.0:9000/converse",
-    {
-      shouldReconnect: () => didUnmount.current === false,
-      reconnectAttempts: 100,
-      reconnectInterval: 3000,
-    }
-  );
-
-  const addEventSendingMessage = useCallback(
-    (e) => {
-      addEvent(e);
-      sendJsonMessage(e);
-    },
-    [addEvent, sendJsonMessage]
-  );
-
-  const didUnmount = useRef(false);
-  useEffect(() => () => (didUnmount.current = true), []);
-  useEffect(() => {
-    if (lastJsonMessage !== null) {
-      addEvent(lastJsonMessage);
-    }
-  }, [lastJsonMessage, addEvent]);
-
-  useEffect(() => {
-    if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
-  }, [readyState, addEvent]);
-  const configExample = `slots:
+const configExample = `slots:
   - &name
     ack: Nice to meet you {}!
     ask: What is your name?
@@ -363,7 +326,43 @@ debug:
   - key: wants-pizza-intent
     value: *wants-pizza-intent
 `;
-  const [configurationText, setConfigurationText] = useState("");
+const App = ({ serverSocketUrl, setConfigurationText, configurationText }) => {
+  const [events, addEvent] = useReducer(
+    (state, current) =>
+      [configurationType, resetType].includes(current.type)
+        ? []
+        : [...state, current],
+    []
+  );
+  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
+    serverSocketUrl || "ws://0.0.0.0:9000/converse",
+    {
+      shouldReconnect: () => didUnmount.current === false,
+      reconnectAttempts: 100,
+      reconnectInterval: 3000,
+    }
+  );
+
+  const addEventSendingMessage = useCallback(
+    (e) => {
+      addEvent(e);
+      sendJsonMessage(e);
+    },
+    [addEvent, sendJsonMessage]
+  );
+  useEffect(() => setConfigurationText(configExample), []);
+  const didUnmount = useRef(false);
+  useEffect(() => () => (didUnmount.current = true), []);
+  useEffect(() => {
+    if (lastJsonMessage !== null) {
+      addEvent(lastJsonMessage);
+    }
+  }, [lastJsonMessage, addEvent]);
+
+  useEffect(() => {
+    if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
+  }, [readyState, addEvent]);
+
   const [showEditor, setShowEditor] = useState(true);
   const { query } = useKBar();
   useEffect(() => {
@@ -494,7 +493,12 @@ const RenderResults = () => {
   );
 };
 
-const AppWithKbar = ({ serverSocketUrl, actions }) => (
+const AppWithKbar = ({
+  serverSocketUrl,
+  actions,
+  setConfigurationText,
+  configurationText,
+}) => (
   <KBarProvider actions={actions}>
     <KBarPortal>
       <KBarPositioner>
@@ -504,7 +508,11 @@ const AppWithKbar = ({ serverSocketUrl, actions }) => (
         </KBarAnimator>
       </KBarPositioner>
     </KBarPortal>
-    <App serverSocketUrl={serverSocketUrl} />
+    <App
+      serverSocketUrl={serverSocketUrl}
+      setConfigurationText={setConfigurationText}
+      botConfig={configurationText}
+    />
   </KBarProvider>
 );
 
