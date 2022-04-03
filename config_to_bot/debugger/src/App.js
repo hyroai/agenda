@@ -279,9 +279,29 @@ const App = ({ serverSocketUrl }) => {
   useEffect(() => {
     if (readyState === ReadyState.CONNECTING) addEvent({ type: "reset" });
   }, [readyState, addEvent]);
-
-  const [configurationText, setConfigurationText] = useState("");
-
+  const configExample = `slots:
+  - &name
+    ack: Nice to meet you {}!
+    ask: What is your name?
+    type: name
+actions:
+  - say: This is just an example for a configuration.
+    when: *name 
+knowledge:
+  - faq:
+      - question: What is agenda?
+        answer: Agenda is a library to build bots with configurations.
+debug:
+  - key: name
+    value: *name`;
+  const [configurationText, setConfigurationText] = useState(configExample);
+  useEffect(() => {
+    if (readyState === ReadyState.CONNECTING)
+      addEventSendingMessage({
+        type: configurationType,
+        data: configurationText,
+      });
+  }, [readyState, configurationText, addEventSendingMessage]);
   const [showEditor, setShowEditor] = useState(true);
   const { query } = useKBar();
   useEffect(() => {
