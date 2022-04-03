@@ -233,3 +233,14 @@ test_say_template = _make_test(
         ]
     ],
 )
+
+
+test_capitalization_robustness = _make_test(
+    _PIZZA_YAML,
+    [
+        [
+            ["hello there", "Would you like to order pizza?"],
+            ["Yes", "Got it. Are you vegan?"],
+        ]
+    ],
+)

@@ -127,7 +127,7 @@ address: Callable[[str], str] = gamla.compose_left(
 
 
 _text_to_lower_case_words: Callable[[str], Iterable[str]] = gamla.compose_left(
-    lambda text: re.findall(r"[\w']+|[.,!?;]", text)
+    lambda text: re.findall(r"[\w']+|[.,!?;]", text.lower())
 )
 
 
