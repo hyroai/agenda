@@ -284,9 +284,6 @@ const App = ({ serverSocketUrl }) => {
     ack: Nice to meet you {}!
     ask: What is your name?
     type: name
-  - &address
-    ask: What is your address?
-    type: address
   - &phone
     ask: What is your phone number?
     type: phone
@@ -332,7 +329,7 @@ actions:
       all:
         - *wants-pizza
         - *is-vegan
-  - say: Thank you {name}! I got your phone {phone}, and your email {email}. We are sending you {amount_of_pizzas} {size} pizzas to {address}.
+  - say: Thank you {name}! I got your phone {phone}, and your email {email}. You want {amount_of_pizzas} {size} pizzas.
     needs:
       - key: name
         value: *name
@@ -342,8 +339,6 @@ actions:
         value: *toppings
       - key: size
         value: *size
-      - key: address
-        value: *address
       - key: phone
         value: *phone
       - key: email
