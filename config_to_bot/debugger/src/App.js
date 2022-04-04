@@ -363,14 +363,7 @@ debug:
   - key: wants-pizza-intent
     value: *wants-pizza-intent
 `;
-  const [configurationText, setConfigurationText] = useState(configExample);
-  useEffect(() => {
-    if (readyState === ReadyState.CONNECTING)
-      addEventSendingMessage({
-        type: configurationType,
-        data: configurationText,
-      });
-  }, [readyState, configurationText, addEventSendingMessage]);
+  const [configurationText, setConfigurationText] = useState("");
   const [showEditor, setShowEditor] = useState(true);
   const { query } = useKBar();
   useEffect(() => {
@@ -417,6 +410,20 @@ debug:
             type: "reset",
           }),
       },
+      {
+        id: "example configuration",
+        name: "example configuration",
+        shortcut: ["e", "c"],
+        keywords: "example",
+        perform: () => {
+          setConfigurationText(configExample);
+          if (readyState === ReadyState.CONNECTING)
+            addEventSendingMessage({
+              type: configurationType,
+              data: configExample,
+            });
+        },
+      },
     ],
     [
       showEditor,
@@ -424,6 +431,7 @@ debug:
       addEventSendingMessage,
       configurationText,
       configurationType,
+      configExample,
     ]
   );
   return (
