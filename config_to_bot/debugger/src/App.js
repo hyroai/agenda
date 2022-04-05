@@ -350,7 +350,9 @@ const App = ({ serverSocketUrl, setConfigurationText, configurationText }) => {
     },
     [addEvent, sendJsonMessage]
   );
-  useEffect(() => setConfigurationText(configExample), []);
+  useEffect(() => {
+    setConfigurationText(configExample);
+  }, [setConfigurationText]);
   const didUnmount = useRef(false);
   useEffect(() => () => (didUnmount.current = true), []);
   useEffect(() => {
@@ -511,7 +513,7 @@ const AppWithKbar = ({
     <App
       serverSocketUrl={serverSocketUrl}
       setConfigurationText={setConfigurationText}
-      botConfig={configurationText}
+      configurationText={configurationText}
     />
   </KBarProvider>
 );
