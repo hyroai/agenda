@@ -326,7 +326,12 @@ debug:
   - key: wants-pizza-intent
     value: *wants-pizza-intent
 `;
-const App = ({ serverSocketUrl, setConfigurationText, configurationText }) => {
+const App = ({
+  serverSocketUrl,
+  setConfigurationText,
+  configurationText,
+  actions,
+}) => {
   const [events, addEvent] = useReducer(
     (state, current) =>
       [configurationType, resetType].includes(current.type)
@@ -380,7 +385,7 @@ const App = ({ serverSocketUrl, setConfigurationText, configurationText }) => {
       unsubscribe();
     };
   }, [query]);
-
+  useRegisterActions(...actions);
   useRegisterActions(
     [
       {
@@ -501,7 +506,7 @@ const AppWithKbar = ({
   setConfigurationText,
   configurationText,
 }) => (
-  <KBarProvider actions={actions}>
+  <KBarProvider>
     <KBarPortal>
       <KBarPositioner>
         <KBarAnimator>
@@ -514,6 +519,7 @@ const AppWithKbar = ({
       serverSocketUrl={serverSocketUrl}
       setConfigurationText={setConfigurationText}
       configurationText={configurationText}
+      actions={actions}
     />
   </KBarProvider>
 );
