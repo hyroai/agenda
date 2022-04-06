@@ -1,29 +1,6 @@
 [book]
-title = "Agenda Documentation"
-description = "Create bots from configurations. No training data required."
+authors = ["Uri"]
 language = "en"
-
-[rust]
-edition = "2018"
-
-[output.html]
-mathjax-support = true
-site-url = "/agenda/"
-git-repository-url = "https://github.com/rhyro/agenda/tree/master/guide"
-edit-url-template = "https://github.com/hyro/agenda/edit/master/guide/{path}"
-
-[output.html.playground]
-editable = true
-line-numbers = true
-
-[output.html.search]
-limit-results = 20
-use-boolean-and = true
-boost-title = 2
-boost-hierarchy = 2
-boost-paragraph = 1
-expand = true
-heading-split-level = 2
-
-[output.html.redirect]
-"/format/config.html" = "configuration/index.html"
+multilingual = false
+src = "src"
+title = "Agenda Docs"
