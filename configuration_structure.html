@@ -136,7 +136,7 @@
                     <main>
                         <h1 id="configuration-structure"><a class="header" href="#configuration-structure">Configuration structure</a></h1>
 <p><code>Agenda</code> configurations are written in yaml files, the only thing which is nontrivial about yaml files is the usage of <code>*</code> and <code>&amp;</code> which defines some variable and then use it inline. So if you see <code>*something</code> then you know somehere there should be <code>&amp;something</code> that defines what it means.</p>
-<p>The configuration is built of 3 parts: <code>actions</code>, <code>knowledge</code> and <code>slots</code>.</p>
+<p>The configuration is built of 3 main parts: <code>actions</code>, <code>knowledge</code> and <code>slots</code>, and an additional part to debugging - <code>debug</code>.</p>
 <h2 id="knowledge"><a class="header" href="#knowledge"><code>knowledge</code></a></h2>
 <p>Currently supports questions and answers.</p>
 <pre><code class="language-yaml">knowledge:
@@ -271,6 +271,16 @@ multiple-choice:
       - is: gender
         equals: female
 </code></pre>
+<h2 id="debug"><a class="header" href="#debug"><code>debug</code></a></h2>
+<p>This part can be used in conjunction with the debugger UI to peek into the bot's state.</p>
+<p>When using it you need to label the subgraph you are watching like so:</p>
+<pre><code class="language-yaml">debug:
+  - key: some-label-for-the-slot-below
+    value: *my-slot
+  - key: some-other-label
+    value: *another-slot
+</code></pre>
+<p>The result shows the value the bot has in store at that moment of the conversation, alongisde what this part of the bot wants to say (not all parts participate every turn). You'll see a small checkmark if the bot-part has participated in the last turn.</p>
 
                     </main>
 
