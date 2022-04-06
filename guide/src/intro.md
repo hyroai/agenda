@@ -6,10 +6,10 @@ We imagine a conversational AI framework that is strapped down to the minimum po
 
 These requirements would be the bot's actions and knowledge.
 
-- Actions - what can the bot actually achieve in the world on behalf of the user. This is usually done via foreign APIs which the bot can call. Example: "The bot can order a pizza by calling http://order.com/pizza and has to give a phone, address and pizza_size".
-- Knowledge - what does the bot know and will be able to let the users interacting with it know. Example: "The bot should know that our opening hours are 2pm to 10pm.".
+- Actions - what effects can the bot have on the world. This is usually done via API calls. Example: "The bot can order a pizza by calling http://order.com/pizza and has to give a phone, address and pizza size".
+- Knowledge - what the bot knows and will be able to let the users interacting with it know. Example: "The bot should know that our opening hours are 2pm to 10pm.".
 
-Given a specification of knowledge and actions, `Agenda` will transform them into a bot that can interact with users, helping them perform actions and enabling access to knowledge. These bots can interact in a non-linear conversations, where the user can context switch without the bot forgetting its state. This is radically different from trying to come up with all the different paths a conversation could take, i.e. a conversation tree.
+Given the knowledge and actions, we create a bot that can interact with users, helping them perform actions and enabling access to knowledge. This means non-linear conversations, where the user can context switch without the bot forgetting its state - a stark difference from trying to come up with all the different paths a conversation could take, i.e. a conversation tree.
 
 As much as possible, we try to avoid having the user need to give different formulations and phrasings as we believe NLP has reached a point where this is no longer required.
 
