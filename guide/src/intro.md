@@ -1,13 +1,15 @@
+# `Agenda`
+
 `Agenda` is a declarative specification language for conversations, focused on specifying knowledge and actions, rather than sequential flows or conversation trees.
 
-We attempt to answer the question - what would a conversation AI framework look like if it were strapped down to the minimum possible requirements - the things you'd have to tell your agent even if it were human.
+We imagine a conversational AI framework that is strapped down to the minimum possible requirements - the things you'd have to tell your agent even if it were human.
 
 These requirements would be the bot's actions and knowledge.
 
 - Actions - what can the bot actually achieve in the world on behalf of the user. This is usually done via foreign APIs which the bot can call. Example: "The bot can order a pizza by calling http://order.com/pizza and has to give a phone, address and pizza_size".
 - Knowledge - what does the bot know and will be able to let the users interacting with it know. Example: "The bot should know that our opening hours are 2pm to 10pm.".
 
-Given a specification of knowledge and actions, Agenda will transform them into a bot that can interact with users, helping them access its actions and knowledge.
+Given a specification of knowledge and actions, `Agenda` will transform them into a bot that can interact with users, helping them perform actions and enabling access to knowledge. These bots can interact in a non-linear conversations, where the user can context switch without the bot forgetting its state. This is radically different from trying to come up with all the different paths a conversation could take, i.e. a conversation tree.
 
 As much as possible, we try to avoid having the user need to give different formulations and phrasings as we believe NLP has reached a point where this is no longer required.
 
