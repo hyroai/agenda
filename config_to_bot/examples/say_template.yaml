@@ -11,7 +11,7 @@ slots:
 actions:
   - say: "{name} you said {size}."
     needs:
-        - key: name
-          value: *name
-        - key: size
-          value: *size
+      - key: name
+        value: *name
+      - key: size
+        value: *size
