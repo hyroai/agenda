@@ -53,7 +53,7 @@ Let's imagine building a bot for pizza place. In terms of conversation trees, th
 👩 no I am not
 🤖 Cool. What is your name?
 👩 Alice
-🤖 Cool. How many pies would you like?
+🤖 Got it. How many pies would you like?
 👩 2
 🤖 Okay. What kind of toppings would you like?
 👩 mushrooms
@@ -63,9 +63,8 @@ Let's imagine building a bot for pizza place. In terms of conversation trees, th
 👩 881 Mill Street Greenville SC
 🤖 Got it. What is your phone number?
 👩 212 222 2222
-🤖 Alright. What is your email?
-👩 alice@gmail.com
-🤖 Cool. Thank you Alice! I got your phone: 212 222 2222, and your email: alice@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
+🤖 Cool. Thank you Alice! The phone I got is 212 222 2222.
+   We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
 ```
 
 ```
@@ -80,9 +79,8 @@ Let's imagine building a bot for pizza place. In terms of conversation trees, th
 👩 2 large pizzas with mushrooms
 🤖 Cool. What is your phone number?
 👩 212 222 2222
-🤖 Okay. What is your email?
-👩 alice@gmail.com
-🤖 Okay. Thank you Alice! I got your phone: 212 222 2222, and your email: alice@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
+🤖 Okay. Thank you Alice! The phone I got is 212 222 2222.
+   We are sending you you 2 large pizzas with mushrooms.
 ```
 
 Collecting data or making up transcriptions to cover all the options, even with machine learning is a pretty tedious task, and would be hard to maintain over time.
