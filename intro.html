@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Agenda API &amp; documentation</title>
-        <meta name="robots" content="noindex" />
+        <title>Intro - Agenda API &amp; documentation</title>
         <!-- Custom HTML head -->
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
@@ -76,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html"><strong aria-hidden="true">1.</strong> Intro</a></li><li class="chapter-item expanded "><a href="setup.html"><strong aria-hidden="true">2.</strong> Setup</a></li><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">3.</strong> Configuration basics</a></li><li class="chapter-item expanded "><a href="knowledge.html"><strong aria-hidden="true">4.</strong> Knowledge</a></li><li class="chapter-item expanded "><a href="slots.html"><strong aria-hidden="true">5.</strong> Slots</a></li><li class="chapter-item expanded "><a href="actions.html"><strong aria-hidden="true">6.</strong> Actions</a></li><li class="chapter-item expanded "><a href="debug.html"><strong aria-hidden="true">7.</strong> Debug</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="intro.html" class="active"><strong aria-hidden="true">1.</strong> Intro</a></li><li class="chapter-item expanded "><a href="setup.html"><strong aria-hidden="true">2.</strong> Setup</a></li><li class="chapter-item expanded "><a href="configuration.html"><strong aria-hidden="true">3.</strong> Configuration basics</a></li><li class="chapter-item expanded "><a href="knowledge.html"><strong aria-hidden="true">4.</strong> Knowledge</a></li><li class="chapter-item expanded "><a href="slots.html"><strong aria-hidden="true">5.</strong> Slots</a></li><li class="chapter-item expanded "><a href="actions.html"><strong aria-hidden="true">6.</strong> Actions</a></li><li class="chapter-item expanded "><a href="debug.html"><strong aria-hidden="true">7.</strong> Debug</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -284,191 +283,23 @@
 </code></pre>
 <p>Given this spec, agenda will create a bot that can handle the conversations above, and many other variations. <strong>No custom training or data collection is needed</strong>, and if requirements change, all the conversation designer needs to do is change the configuration.</p>
 <p>For Joe's pizza place, the actual API that orders the pizza is not a part of the bot code, so it is convenient to do this in an external server for the user to define. This allows combining agenda with any backend coding language, or use multiple backends within the same bot.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="setup"><a class="header" href="#setup">Setup</a></h1>
-<p>You can use <code>agenda</code> on your own machine, or use the managed version at &lt;agenda.hyro.ai&gt;.</p>
-<pre><code class="language-bash">git clone https://github.com/hyroai/agenda.git
-pip install -e ./agenda
-yarn install --cwd=./config_to_bot/debugger
-</code></pre>
-<p>In addition run <code>yarn install</code> in each example that you wish to run in <code>config_to_bot/examples</code></p>
-<h2 id="issues-with-dependencies"><a class="header" href="#issues-with-dependencies">Issues with dependencies</a></h2>
-<ul>
-<li><code>spacy</code> requires to run: <code>python -m spacy download en_core_web_sm</code></li>
-</ul>
-<h2 id="running-pizza-example"><a class="header" href="#running-pizza-example">Running pizza example</a></h2>
-<ul>
-<li>Running remote functions server:</li>
-</ul>
-<pre><code class="language-bash">cd ./agenda/config-to-bot/examples/pizza
-yarn install
-yarn start
-</code></pre>
-<ul>
-<li>Running bot's server: <code>python config_to_bot/main.py</code></li>
-<li>Running bot designer:</li>
-</ul>
-<pre><code class="language-bash">cd ./config_to_bot/debugger
-yarn install
-yarn start
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-basics"><a class="header" href="#configuration-basics">Configuration basics</a></h1>
-<p><code>Agenda</code> configurations are written in yaml files, the only thing which is nontrivial about yaml files is the usage of <code>*</code> and <code>&amp;</code> which defines some variable and then use it inline. So if you see <code>*something</code> then you know somehere there should be <code>&amp;something</code> that defines what it means.</p>
-<p>The configuration is built of 3 main parts: <code>actions</code>, <code>knowledge</code> and <code>slots</code>, and an additional part to debugging - <code>debug</code>.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="knowledge"><a class="header" href="#knowledge"><code>knowledge</code></a></h1>
-<p>Currently supports questions and answers.</p>
-<pre><code class="language-yaml">knowledge:
-  - faq:
-      - question: What is your opening hours?
-        answer: 2pm to 10pm every day.
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="slots"><a class="header" href="#slots"><code>slots</code></a></h1>
-<p>If you have a value that is recurring in more than one place, you can factor it out to the <code>slots</code> section.</p>
-<pre><code class="language-yaml">slots:
-  - &amp;wants-pizza
-    ask: Would you like to order pizza?
-    type: boolean
-
-actions:
-  - say: I can only help with pizza reservations.
-    when:
-      not: *wants-pizza
-  - say: you want pizza!
-    when: *wants-pizza
-</code></pre>
-<h2 id="types-of-slots"><a class="header" href="#types-of-slots">Types of slots</a></h2>
-<p>Currently supported types:</p>
-<h3 id="person-name"><a class="header" href="#person-name">Person name</a></h3>
-<pre><code class="language-yaml">&amp;name
-ack: Nice to meet you {}!
-ask: What is your name?
-type: name
-</code></pre>
-<h3 id="address"><a class="header" href="#address">Address</a></h3>
-<pre><code class="language-yaml">&amp;address
-ask: What is your address?
-type: address
-</code></pre>
-<h3 id="phone"><a class="header" href="#phone">Phone</a></h3>
-<pre><code class="language-yaml">&amp;phone
-ask: What is your phone number?
-type: phone
-</code></pre>
-<h3 id="email"><a class="header" href="#email">Email</a></h3>
-<pre><code class="language-yaml">&amp;email
-ask: What is your email?
-type: email
-</code></pre>
-<h3 id="amount-of"><a class="header" href="#amount-of">Amount of</a></h3>
-<pre><code class="language-yaml">&amp;amount_of_something
-ask: How many dogs do you have?
-amount-of: dogs
-</code></pre>
-<h3 id="boolean"><a class="header" href="#boolean">Boolean</a></h3>
-<pre><code class="language-yaml">&amp;user-wants-pizza
-ask: Would you like to order pizza?
-type: boolean
-</code></pre>
-<h3 id="intent"><a class="header" href="#intent">Intent</a></h3>
-<pre><code class="language-yaml">&amp;user-wants-to-complain
-intent:
-  - I have a complaint
-  - I want to complain
-</code></pre>
-<h3 id="choice"><a class="header" href="#choice">Choice</a></h3>
-<pre><code class="language-yaml">&amp;size-of-shirt
-ask: What size of t-shirt would you like?
-choice:
-  - small
-  - medium
-  - large
-</code></pre>
-<h3 id="multiple-choice"><a class="header" href="#multiple-choice">Multiple choice</a></h3>
-<pre><code class="language-yaml">&amp;choice-of-toppings
-ask: What kind of toppings would you like?
-multiple-choice:
-  - mushrooms
-  - olives
-  - tomatoes
-  - onions
-</code></pre>
-<h3 id="compound-slots"><a class="header" href="#compound-slots">Compound slots</a></h3>
-<p>Slots can be combined into compound slots via operators.</p>
-<p>List of available operators:</p>
-<ul>
-<li><code>not</code></li>
-<li><code>all</code></li>
-<li><code>any</code></li>
-<li><code>greater_equals</code></li>
-<li><code>equals</code></li>
-</ul>
-<p>For example:</p>
-<pre><code class="language-yaml">slots:
-  - &amp;age
-    ask: What is your age?
-    type: number
-  - &amp;gender
-    ask: What is your gender?
-    multiple-choice:
-      - male
-      - female
-      - non binary
-  - &amp;male_and_above_18
-    all:
-      - is: age
-        greater_than: 18
-      - is: gender
-        equals: female
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="actions"><a class="header" href="#actions"><code>actions</code></a></h1>
-<p>The <code>actions</code> part lists what the bot can do on behalf of the user. When deciding what to say, the bot will try to match the first relevant action, fulfill its dependencies and performing it, either a saying something or calling a remote API.</p>
-<p>Actions might have some dependencies, defined under the <code>needs</code> section.</p>
-<p>In addition - it might not make sense to do some things unless some conditions are met. This is what the <code>when</code> section is for.</p>
-<p>For example:</p>
-<pre><code class="language-yaml">actions:
-  - say: I can only help with pizza reservations.
-    when:
-      not: *wants-pizza
-  - say:
-      url: http://localhost:8000/order-pizza
-    when: *wants-pizza
-    needs:
-      - key: toppings
-        value:
-            ask: What kind of toppings would you like?
-            multiple-choice:
-                - mushrooms
-                - olives
-                - tomatoes
-                - onions
-      - key: size
-        value:
-            ask: What pizza size would you like?
-            choice:
-                - small
-                - medium
-                - large
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="debug"><a class="header" href="#debug"><code>debug</code></a></h1>
-<p>This part can be used in conjunction with the debugger UI to peek into the bot's state.</p>
-<p>When using it you need to label the subgraph you are watching like so:</p>
-<pre><code class="language-yaml">debug:
-  - key: some-label-for-the-slot-below
-    value: *my-slot
-  - key: some-other-label
-    value: *another-slot
-</code></pre>
-<p>The result shows the value the bot has in store at that moment of the conversation, alongisde what this part of the bot wants to say (not all parts participate every turn). You'll see a small checkmark if the bot-part has participated in the last turn.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="next" href="setup.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
                         <div style="clear: both"></div>
                     </nav>
                 </div>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="next" href="setup.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>
@@ -484,10 +315,5 @@ multiple-choice:
         <script src="book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
-        <script type="text/javascript">
-        window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
-        });
-        </script>
     </body>
 </html>
