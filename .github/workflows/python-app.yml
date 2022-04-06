@@ -33,6 +33,7 @@ jobs:
         uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: "latest"
+      - run: cd guide
       - run: mdbook build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
