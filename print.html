@@ -156,15 +156,13 @@
 <h2 id="target-audience"><a class="header" href="#target-audience">Target audience</a></h2>
 <p><code>Agenda</code> is ideal for general purpose developers who want to set up a conversational interface and are not looking to start an NLP research project, or train their own models. The bots produced will communicate by text via a socket run by a python server, so can be embedded in any service in a short time.</p>
 <p>That said those who want to leverage existing NLP services (e.g. an intent recognition service) can embed them within the configuration. This would look like this:</p>
-<pre><code>...
-
+<pre><code class="language-yaml"># The service would receive a post request, e.g.`{someKey: &quot;I want pizza&quot;}`
 &amp;my-custom-intent-recognizer
-  url: http://localhost:8000/listen-hello
+remote:
+  url: http://localhost:8000/listen-wants-pizza
   needs:
-    - key: incoming_utterance
+    - key: someKey
       value: incoming_utterance
-...
-
 </code></pre>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
 <p>Let's imagine building a bot for pizza place. In terms of conversation trees, there are many options as to how this conversation can go, here are a couple of examples:</p>
