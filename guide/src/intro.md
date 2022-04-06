@@ -29,16 +29,14 @@ We optimize on:
 
 That said those who want to leverage existing NLP services (e.g. an intent recognition service) can embed them within the configuration. This would look like this:
 
-```
-...
-
+```yaml
+# The service would receive a post request, e.g.`{someKey: "I want pizza"}`
 &my-custom-intent-recognizer
-  url: http://localhost:8000/listen-hello
+remote:
+  url: http://localhost:8000/listen-wants-pizza
   needs:
-    - key: incoming_utterance
+    - key: someKey
       value: incoming_utterance
-...
-
 ```
 
 ## Example
