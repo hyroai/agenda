@@ -33,12 +33,10 @@ jobs:
         uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: "latest"
-      - run: cd guide && mdbook build
-      - name: Deploy to GitHub
-        env:
-          GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
-        run: |
-          touch guide/book/.nojekyll
-          curl -LsSf https://raw.githubusercontent.com/rust-lang/simpleinfra/master/setup-deploy-keys/src/deploy.rs | rustc - -o /tmp/deploy
-          cd guide/book
-          /tmp/deploy
+      - run: cd guide; mdbook build
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./book
