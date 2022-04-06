@@ -17,7 +17,7 @@ knowledge:
 
 ## `actions`
 
-Actions list what the bot can do on behalf of the user. When deciding what to say, the bot will try to match the first relevant action, fulfill its dependencies and performing it, either a saying something or calling a remote API.
+The `actions` part lists what the bot can do on behalf of the user. When deciding what to say, the bot will try to match the first relevant action, fulfill its dependencies and performing it, either a saying something or calling a remote API.
 
 Actions might have some dependencies, defined under the `needs` section.
 
