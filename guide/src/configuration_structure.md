@@ -1,5 +1,7 @@
 # Configuration structure
 
+`Agenda` configurations are written in yaml files, the only thing which is nontrivial about yaml files is the usage of `*` and `&` which defines some variable and then use it inline. So if you see `*something` then you know somehere there should be `&something` that defines what it means.
+
 The configuration is built of 3 parts: `actions`, `knowledge` and `slots`.
 
 ## `knowledge`
@@ -65,6 +67,91 @@ actions:
       not: *wants-pizza
   - say: you want pizza!
     when: *wants-pizza
+```
+
+### Types of slots
+
+Currently supported types:
+
+#### Person name
+
+```yaml
+&name
+ack: Nice to meet you {}!
+ask: What is your name?
+type: name
+```
+
+#### Address
+
+```yaml
+&address
+ask: What is your address?
+type: address
+```
+
+#### Phone
+
+```yaml
+&phone
+ask: What is your phone number?
+type: phone
+```
+
+#### Email
+
+```yaml
+&email
+ask: What is your email?
+type: email
+```
+
+#### Amount of
+
+```yaml
+&amount_of_something
+ask: How many dogs do you have?
+amount-of: dogs
+```
+
+#### Boolean
+
+```yaml
+&user-wants-pizza
+ask: Would you like to order pizza?
+type: boolean
+```
+
+#### Intent
+
+```yaml
+&user-wants-to-complain
+intent:
+  - I have a complaint
+  - I want to complain
+```
+
+#### Choice
+
+```yaml
+&size-of-shirt
+ask: What size of t-shirt would you like?
+choice:
+  - small
+  - medium
+  - large
+```
+
+#### Multiple choice
+
+```yaml
+&choice-of-toppings
+ask: What kind of toppings would you like?
+multiple-choice:
+  - mushrooms
+  - olives
+  - tomatoes
+  - onions
 ```
 
 ### Compound slots
