@@ -1,6 +1,6 @@
 # Setup
 
-You can use `agenda` on your own machine, or use the managed version at <agenda.hyro.ai>.
+You can use `agenda` on your own machine, or use the version hosted by Hyro at agenda.hyro.ai.
 
 ```bash
 git clone https://github.com/hyroai/agenda.git
