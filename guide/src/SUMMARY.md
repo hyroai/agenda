@@ -1,3 +1,3 @@
 # Summary
 
-- [Configuration structure](./configuraiton_structure.md)
+- [Configuration structure](./configuration_structure.md)
