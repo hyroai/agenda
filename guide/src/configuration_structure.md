@@ -2,7 +2,7 @@
 
 `Agenda` configurations are written in yaml files, the only thing which is nontrivial about yaml files is the usage of `*` and `&` which defines some variable and then use it inline. So if you see `*something` then you know somehere there should be `&something` that defines what it means.
 
-The configuration is built of 3 parts: `actions`, `knowledge` and `slots`.
+The configuration is built of 3 main parts: `actions`, `knowledge` and `slots`, and an additional part to debugging - `debug`.
 
 ## `knowledge`
 
@@ -186,3 +186,19 @@ slots:
       - is: gender
         equals: female
 ```
+
+## `debug`
+
+This part can be used in conjunction with the debugger UI to peek into the bot's state.
+
+When using it you need to label the subgraph you are watching like so:
+
+```yaml
+debug:
+  - key: some-label-for-the-slot-below
+    value: *my-slot
+  - key: some-other-label
+    value: *another-slot
+```
+
+The result shows the value the bot has in store at that moment of the conversation, alongisde what this part of the bot wants to say (not all parts participate every turn). You'll see a small checkmark if the bot-part has participated in the last turn.
