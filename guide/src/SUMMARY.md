@@ -1,6 +1,8 @@
 # Summary
 
-- [Configuration structure](./configuration_structure.md)
+- [Intro](./intro.md)
+- [Setup](./setup.md)
+- [Configuration basics](./configuration.md)
 - [Knowledge](./knowledge.md)
 - [Slots](./slots.md)
 - [Actions](./actions.md)
