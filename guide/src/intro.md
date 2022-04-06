@@ -64,7 +64,7 @@ Let's imagine building a bot for pizza place. In terms of conversation trees, th
 🤖 Got it. What is your phone number?
 👩 212 222 2222
 🤖 Cool. Thank you Alice! The phone I got is 212 222 2222.
-   We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
+ We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
 ```
 
 ```
@@ -80,7 +80,7 @@ Let's imagine building a bot for pizza place. In terms of conversation trees, th
 🤖 Cool. What is your phone number?
 👩 212 222 2222
 🤖 Okay. Thank you Alice! The phone I got is 212 222 2222.
-   We are sending you you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
+  We are sending you you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.
 ```
 
 Collecting data or making up transcriptions to cover all the options, even with machine learning is a pretty tedious task, and would be hard to maintain over time.
