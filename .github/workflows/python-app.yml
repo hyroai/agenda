@@ -1,27 +1,41 @@
 name: Python application
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.9"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .[dev]
-        python -m spacy download en_core_web_lg
-    - name: pre-commit
-      uses: pre-commit/action@v2.0.3
-    - name: pytest
-      run: |
-        pytest
-
-
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+          python -m spacy download en_core_web_lg
+      - name: pre-commit
+        uses: pre-commit/action@v2.0.3
+      - name: pytest
+        run: |
+          pytest
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust (rustup)
+        run: rustup update stable --no-self-update && rustup default stable
+      - name: Build book
+        run: cargo run -- build guide
+      - name: Deploy to GitHub
+        env:
+          GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
+        run: |
+          touch guide/book/.nojekyll
+          curl -LsSf https://raw.githubusercontent.com/rust-lang/simpleinfra/master/setup-deploy-keys/src/deploy.rs | rustc - -o /tmp/deploy
+          cd guide/book
+          /tmp/deploy
