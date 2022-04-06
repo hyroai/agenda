@@ -135,14 +135,15 @@
 
                 <div id="content" class="content">
                     <main>
-                        <p><code>Agenda</code> is a declarative specification language for conversations, focused on specifying knowledge and actions, rather than sequential flows or conversation trees.</p>
-<p>We attempt to answer the question - what would a conversation AI framework look like if it were strapped down to the minimum possible requirements - the things you'd have to tell your agent even if it were human.</p>
+                        <h1 id="agenda"><a class="header" href="#agenda"><code>Agenda</code></a></h1>
+<p><code>Agenda</code> is a declarative specification language for conversations, focused on specifying knowledge and actions, rather than sequential flows or conversation trees.</p>
+<p>We imagine a conversational AI framework that is strapped down to the minimum possible requirements - the things you'd have to tell your agent even if it were human.</p>
 <p>These requirements would be the bot's actions and knowledge.</p>
 <ul>
 <li>Actions - what can the bot actually achieve in the world on behalf of the user. This is usually done via foreign APIs which the bot can call. Example: &quot;The bot can order a pizza by calling http://order.com/pizza and has to give a phone, address and pizza_size&quot;.</li>
 <li>Knowledge - what does the bot know and will be able to let the users interacting with it know. Example: &quot;The bot should know that our opening hours are 2pm to 10pm.&quot;.</li>
 </ul>
-<p>Given a specification of knowledge and actions, Agenda will transform them into a bot that can interact with users, helping them access its actions and knowledge.</p>
+<p>Given a specification of knowledge and actions, <code>Agenda</code> will transform them into a bot that can interact with users, helping them perform actions and enabling access to knowledge. These bots can interact in a non-linear conversations, where the user can context switch without the bot forgetting its state. This is radically different from trying to come up with all the different paths a conversation could take, i.e. a conversation tree.</p>
 <p>As much as possible, we try to avoid having the user need to give different formulations and phrasings as we believe NLP has reached a point where this is no longer required.</p>
 <p>We optimize on:</p>
 <ul>
@@ -312,7 +313,7 @@ yarn install
 yarn start
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="configuration-basics"><a class="header" href="#configuration-basics">Configuration basics</a></h1>
-<p><code>Agenda</code> configurations are written in yaml files, the only thing which is nontrivial about yaml files is the usage of <code>*</code> and <code>&amp;</code> which defines some variable and then use it inline. So if you see <code>*something</code> then you know somehere there should be <code>&amp;something</code> that defines what it means.</p>
+<p><code>Agenda</code> configurations are written in yaml files, the only thing which is nontrivial about yaml files is how variables work. Variable is defined using <code>&amp;</code>, as in <code>&amp;my-variable</code> and are dereferenced using <code>*</code>, e.g. <code>*my-variable</code> (basically a glorified copy paste).</p>
 <p>The configuration is built of 3 main parts: <code>actions</code>, <code>knowledge</code> and <code>slots</code>, and an additional part to debugging - <code>debug</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="knowledge"><a class="header" href="#knowledge"><code>knowledge</code></a></h1>
 <p>Currently supports questions and answers.</p>
