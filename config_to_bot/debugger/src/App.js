@@ -355,9 +355,6 @@ const App = ({
     },
     [addEvent, sendJsonMessage]
   );
-  useEffect(() => {
-    setConfigurationText(configExample);
-  }, [setConfigurationText]);
   const didUnmount = useRef(false);
   useEffect(() => () => (didUnmount.current = true), []);
   useEffect(() => {
@@ -385,7 +382,6 @@ const App = ({
       unsubscribe();
     };
   }, [query]);
-  useRegisterActions(...actions);
   useRegisterActions(
     [
       {
@@ -430,10 +426,11 @@ const App = ({
             });
         },
       },
-    ],
+    ].concat(actions === undefined ? [] : [...actions]),
     [
       showEditor,
       setShowEditor,
+      setConfigurationText,
       addEventSendingMessage,
       configurationText,
       configurationType,

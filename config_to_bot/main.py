@@ -41,7 +41,10 @@ def _create_socket_handler():
                     logging.exception(ex)
                     return _error_message("The configuration is invalid.")
 
-            if request["type"] == "reset":
+            if request["type"] == "reset" or (
+                request["type"] == "userUtterance"
+                and request["utterance"].lower() == "start over"
+            ):
                 state = {}
                 return _bot_utterance("Starting Over", None)
             if not bot:
