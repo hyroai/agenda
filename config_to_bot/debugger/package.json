@@ -43,7 +43,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "postinstall": "rm -rf dist && mkdir dist && babel ./src -d dist --copy-files"
+    "postinstall": "rm -rf dist && mkdir dist && babel ./src -d dist --copy-files",
+    "build:watch": "rm -rf dist && mkdir dist && babel --watch ./src -d dist --copy-files"
   },
   "eslintConfig": {
     "extends": [
