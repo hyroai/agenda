@@ -426,7 +426,7 @@ const App = ({
             });
         },
       },
-    ].concat(actions === undefined ? [] : [...actions]),
+    ].concat(actions === undefined ? [] : actions[0]),
     [
       showEditor,
       setShowEditor,
@@ -435,7 +435,7 @@ const App = ({
       configurationText,
       configurationType,
       configExample,
-    ]
+    ].concat(actions === undefined ? [] : actions[1])
   );
   return (
     <div
