@@ -392,6 +392,14 @@ const App = ({
         perform: () => setShowEditor(!showEditor),
       },
       {
+        id: "help",
+        name: "open documentation",
+        shortcut: ["h", "o"],
+        keywords: "help",
+        perform: () =>
+          window.open("https://hyroai.github.io/agenda/", "_blank"),
+      },
+      {
         id: "reload",
         name: "reload configuration",
         shortcut: ["r", "l"],
