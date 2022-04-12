@@ -7,36 +7,35 @@ from typing import Any, Callable, Dict, Iterable, Set, Tuple, Union
 import gamla
 import httpx
 from computation_graph import base_types, composers, graph
-from computation_graph.composers import duplication, lift
+from computation_graph.composers import lift
 
 import agenda
 from agenda import missing_cg_utils
 from config_to_bot import extract
 
-_TYPE_TO_LISTENER = {
-    "email": extract.email,
-    "phone": extract.phone,
-    "amount": extract.amount,
-    "boolean": extract.yes_no,
-    "intent": extract.intent,
-    "name": extract.person_name,
-    "address": extract.address,
-    "multiple-choice": extract.multiple_choices,
-    "single-choice": extract.single_choice,
-}
+_TYPE_TO_LISTENER = gamla.valmap(agenda.consumes_external_event(None))(
+    {
+        "email": extract.email,
+        "phone": extract.phone,
+        "amount": extract.amount,
+        "boolean": extract.yes_no,
+        "intent": extract.intent,
+        "name": extract.person_name,
+        "address": extract.address,
+        "multiple-choice": extract.multiple_choices,
+        "single-choice": extract.single_choice,
+        "date": agenda.consumes_time("relative_to", extract.future_date),
+        "time": agenda.consumes_time("relative_to", extract.time),
+    }
+)
 _TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean"})
 is_supported_type = gamla.contains(_TYPE_TO_LISTENER)
 
-_mark_as_state_and_remember = gamla.compose_left(
-    agenda.mark_state, agenda.remember, duplication.duplicate_graph
-)
+_mark_as_state_and_remember = gamla.compose_left(agenda.mark_state, agenda.remember)
 
 
 def parse_type(type: str) -> Callable:
-    def parse_type(user_utterance: str):
-        return _TYPE_TO_LISTENER.get(type)(user_utterance)  # type: ignore
-
-    return parse_type
+    return _TYPE_TO_LISTENER.get(type)
 
 
 def _complement(not_: base_types.GraphType) -> base_types.GraphType:
@@ -73,7 +72,7 @@ def _kv(
     key: str, value: Union[str, base_types.GraphType]
 ) -> Tuple[str, Union[str, base_types.GraphType]]:
     if value == "incoming_utterance":
-        return (key, agenda.consumes_external_event(lambda x: x))
+        return (key, agenda.consumes_external_event("x", lambda x: x))
     return (key, value)
 
 
@@ -178,12 +177,7 @@ def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: s
 
 
 def _listen_to_intent(intent: Tuple[str, ...]):
-    return gamla.pipe(
-        parse_type("intent")(intent),
-        agenda.listener_with_memory,
-        agenda.ever,
-        duplication.duplicate_graph,
-    )
+    return gamla.pipe(extract.intent(intent), agenda.listener_with_memory, agenda.ever)
 
 
 def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
@@ -212,16 +206,14 @@ def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> Callable[[str], str]:
             ),
         )
 
-    return agenda.say(agenda.consumes_external_event(highest_ranked_faq_with_score))
+    return agenda.say(
+        agenda.consumes_external_event("user_utterance", highest_ranked_faq_with_score)
+    )
 
 
 def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
     return agenda.slot(
-        gamla.pipe(
-            parse_type("single-choice")(choice),
-            agenda.listener_with_memory,
-            duplication.duplicate_graph,
-        ),
+        gamla.pipe(extract.single_choice(choice), agenda.listener_with_memory),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
@@ -233,9 +225,7 @@ def _ask_about_multiple_choice(
 ):
     return agenda.slot(
         gamla.pipe(
-            parse_type("multiple-choice")(multiple_choice),
-            agenda.listener_with_memory,
-            duplication.duplicate_graph,
+            extract.multiple_choices(multiple_choice), agenda.listener_with_memory
         ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
@@ -296,7 +286,6 @@ def _typed_state(type):
 
     return gamla.pipe(
         parse_type(type),
-        agenda.consumes_external_event,
         agenda.if_participated
         if type in _TYPES_TO_LISTEN_AFTER_ASKING
         else gamla.identity,

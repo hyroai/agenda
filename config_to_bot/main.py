@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import logging
 import os
 
@@ -59,7 +60,13 @@ def _create_socket_handler():
                     "You must provide a yaml in order to build a bot."
                 )
             if request["type"] == "userUtterance":
-                state = await bot(state, {composers.event: request["utterance"]})
+                state = await bot(
+                    state,
+                    {
+                        composers.event: request["utterance"],
+                        composers.now: datetime.datetime.now(),
+                    },
+                )
                 return _bot_utterance(
                     state[graph.make_computation_node(composers.utter)],
                     gamla.pipe(

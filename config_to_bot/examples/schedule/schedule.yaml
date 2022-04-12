@@ -1,0 +1,56 @@
+# TODO(eli):
+# [X] extract time
+# [X] extract date
+# [ ] dynamic single option
+# [ ] date option
+# [ ] resource
+# [ ] better extractors
+slots:
+#  - &location
+#    type: location
+#    ask: where will you be needing a meeting room?
+  - &date
+    type: date
+    ask: On what day is your meeting?
+  - &time
+    type: time
+    ask: On what time is your meeting?
+#  - &available-slots
+#    url: ...
+#    needs:
+##      - key: location
+##        value: *location
+#      - key: date
+#        value: *date
+#      - key: time
+#        value: *time
+#      - key: cannot
+#        value: *cannot
+#  - &chosen-slot
+#    date-choice: *available-slots
+#    ask: "I have these options: {}.\nWhich do you prefer?"
+actions:
+  - say: Ok, I booked the meeting room at {date} {time}. Have a productive day!
+    needs:
+#      - key: chosen-slot
+#        value: *chosen-slot
+#      - key: location
+#        value: *location
+      - key: date
+        value: *date
+      - key: time
+        value: *time
+debug:
+#  - key: location
+#    value: *location
+  - key: date
+    value: *date
+  - key: time
+    value: *time
+#  - key: slots
+#    value: *available-slots
+#  - key: chosen-slot
+#    value: *chosen-slot
+
+
+

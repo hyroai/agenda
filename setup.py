@@ -13,9 +13,10 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         "gamla>=121",
-        "computation-graph>=34",
+        "computation-graph>=38",
         "pytest-asyncio>=0.17",
         "dataclasses",
+        "dateparser",
         "httpx",
         "pyap",
         "spacy",

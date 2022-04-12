@@ -63,6 +63,7 @@ ack = _generic(sentence.str_to_ack)
 anti_ack = _generic(sentence.str_to_anti_ack)
 
 consumes_external_event = composers.consumes_external_event
+consumes_time = composers.consumes_time
 
 
 def sentence_renderer(ack_renderer, anti_ack_renderer):

@@ -15,6 +15,7 @@ class Unknown:
 forget = graph.make_source_with_name("forget")
 participated = graph.make_source_with_name("participated")
 event = graph.make_source_with_name("event")
+now = graph.make_source_with_name("now")
 
 UNKNOWN = Unknown()
 
@@ -29,8 +30,14 @@ def state(state):
     return state
 
 
-def consumes_external_event(x):
-    return composers.compose_source(x, None, event)
+@gamla.curry
+def consumes_external_event(at, x):
+    return composers.compose_source(x, at, event)
+
+
+@gamla.curry
+def consumes_time(at, x):
+    return composers.compose_source(x, at, now)
 
 
 utter_sink = missing_cg_utils.sink(utter)
@@ -272,7 +279,9 @@ not_equals = gamla.compose(_map_state, gamla.not_equals)
 inside = gamla.compose(_map_state, gamla.inside)
 contains = gamla.compose(_map_state, gamla.contains)
 
-listener_with_memory = gamla.compose(remember, mark_state, consumes_external_event)
+listener_with_memory = gamla.compose(
+    remember, mark_state, consumes_external_event(None)
+)
 
 
 def if_participated(graph):

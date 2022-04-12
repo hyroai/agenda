@@ -1,3 +1,5 @@
+import datetime
+
 import gamla
 from computation_graph import graph
 
@@ -21,7 +23,23 @@ def expect_convos(convos, f):
         for convo in convos:
             state = {}
             for input_event, expected in convo:
-                state = await bot(state, {composers.event: input_event})
+                state = (
+                    await bot(
+                        state,
+                        {
+                            composers.event: input_event,
+                            composers.now: datetime.datetime.now(),
+                        },
+                    )
+                    if isinstance(input_event, str)
+                    else await bot(
+                        state,
+                        {
+                            composers.event: input_event[0],
+                            composers.now: input_event[1],
+                        },
+                    )
+                )
                 result = state[graph.make_computation_node(composers.utter)]
                 assert result == expected, f"expected: {expected} actual: {result}"
 

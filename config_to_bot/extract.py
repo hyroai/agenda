@@ -1,6 +1,8 @@
+import datetime
 import re
-from typing import Callable, Iterable, Tuple
+from typing import Callable, Iterable, Tuple, Union
 
+import dateparser
 import gamla
 import number_parser
 import pyap
@@ -213,3 +215,63 @@ def amount_of(noun: str):
         )
 
     return amount_of
+
+
+def _parse_datetime(relative_to):
+    def parse_datetime(date_str):
+        return dateparser.parse(
+            date_str,
+            settings={
+                "RELATIVE_BASE": relative_to,
+                "PREFER_DATES_FROM": "future",
+                "TIMEZONE": "UTC",
+            },
+        )
+
+    return parse_datetime
+
+
+def _entities_of_type(date):
+    return gamla.compose_left(
+        _analyze,
+        gamla.attrgetter("ents"),
+        gamla.filter(
+            gamla.compose_left(gamla.attrgetter("label_"), gamla.equals(date))
+        ),
+    )
+
+
+def future_date(
+    relative_to: datetime.datetime, user_utterance
+) -> Union[datetime.date, agenda.Unknown]:
+    return gamla.pipe(
+        user_utterance,
+        _entities_of_type("DATE"),
+        gamla.map(
+            gamla.compose_left(gamla.attrgetter("text"), _parse_datetime(relative_to))
+        ),
+        gamla.filter(gamla.identity),
+        gamla.excepts(
+            StopIteration,
+            gamla.just(agenda.UNKNOWN),
+            gamla.compose_left(gamla.head, gamla.apply_method("date")),
+        ),
+    )
+
+
+def time(
+    relative_to: datetime.datetime, user_utterance
+) -> Union[datetime.time, agenda.Unknown]:
+    return gamla.pipe(
+        user_utterance,
+        _entities_of_type("TIME"),
+        gamla.map(
+            gamla.compose_left(gamla.attrgetter("text"), _parse_datetime(relative_to))
+        ),
+        gamla.filter(gamla.identity),
+        gamla.excepts(
+            StopIteration,
+            gamla.just(agenda.UNKNOWN),
+            gamla.compose_left(gamla.head, gamla.apply_method("time")),
+        ),
+    )
