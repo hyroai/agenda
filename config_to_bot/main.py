@@ -40,14 +40,13 @@ def _create_socket_handler():
                     bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
                 except Exception as ex:
                     logging.exception(ex)
-                    exception_error = (
+                    return _error_message(
                         f"YAML syntax error in line {ex.problem_mark.line}"
                         if isinstance(
                             ex, (yaml.composer.ComposerError, yaml.parser.ParserError)
                         )
                         else f"Some field has an unsupported key or value. Consult the example configuration or the documentation. Details: {ex}"
                     )
-                    return _error_message(exception_error)
 
             if request["type"] == "reset" or (
                 request["type"] == "userUtterance"
