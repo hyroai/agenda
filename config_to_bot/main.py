@@ -39,7 +39,9 @@ def _create_socket_handler():
                     bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
                 except Exception as ex:
                     logging.exception(ex)
-                    return _error_message("The configuration is invalid.")
+                    return _error_message(
+                        f"The configuration is invalid. There is an error in line {ex.problem_mark.line}."
+                    )
 
             if request["type"] == "reset" or (
                 request["type"] == "userUtterance"
