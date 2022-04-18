@@ -41,15 +41,13 @@ def _create_socket_handler():
                 except Exception as ex:
                     logging.exception(ex)
                     exception_error = (
-                        f"There is an error in line {ex.problem_mark.line}"
+                        f"YAML syntax error in line {ex.problem_mark.line}"
                         if isinstance(
                             ex, (yaml.composer.ComposerError, yaml.parser.ParserError)
                         )
-                        else "Please have a look at the example configuration."
+                        else f"Some field has an unsupported key or value. Consult the example configuration or the documentation. Details: {ex}"
                     )
-                    return _error_message(
-                        f"The configuration is invalid. {exception_error}"
-                    )
+                    return _error_message(exception_error)
 
             if request["type"] == "reset" or (
                 request["type"] == "userUtterance"
