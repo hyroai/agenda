@@ -131,7 +131,7 @@ const ConfigEditor = ({ text, setText }) => {
   useEffect(() => {
     if (editorRef.current && monaco && query) {
       editorRef.current.addCommand(
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_K,
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK,
         () => {
           query.toggle();
         }
