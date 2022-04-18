@@ -5,6 +5,7 @@ import os
 import fastapi
 import gamla
 import uvicorn
+import yaml
 from computation_graph import graph
 from starlette import websockets
 from uvicorn.main import Server
@@ -39,8 +40,15 @@ def _create_socket_handler():
                     bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
                 except Exception as ex:
                     logging.exception(ex)
+                    exception_error = (
+                        f"There is an error in line {ex.problem_mark.line}"
+                        if isinstance(
+                            ex, (yaml.composer.ComposerError, yaml.parser.ParserError)
+                        )
+                        else "Please have a look at the example configuration."
+                    )
                     return _error_message(
-                        f"The configuration is invalid. There is an error in line {ex.problem_mark.line}."
+                        f"The configuration is invalid. {exception_error}"
                     )
 
             if request["type"] == "reset" or (
