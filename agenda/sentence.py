@@ -180,6 +180,10 @@ def _sentence_part_reducer(
         and not _has_ack(sentence_so_far)
     ):
         return _add_constituent(_add_anti_ack(sentence_so_far, current), current)
+
+    if _is_anti_ack(current):
+        return sentence_so_far
+
     if _is_sentence(current):
         if _has_question(sentence_so_far) and _has_question(current):
             return sentence_so_far

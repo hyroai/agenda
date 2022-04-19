@@ -212,7 +212,7 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     )
     def final_utter(who_should_speak, listener_utter, acker_utter, anti_acker_utter):
         if anti_acker in who_should_speak:
-            return sentence.combine([anti_acker_utter, listener_utter])
+            return sentence.combine([listener_utter, anti_acker_utter])
         if asker_listener in who_should_speak:
             return listener_utter
         if acker in who_should_speak:
