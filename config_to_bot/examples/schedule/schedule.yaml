@@ -1,7 +1,7 @@
 # TODO(eli):
 # [X] extract time
 # [X] extract date
-# [ ] dynamic single option
+# [-] dynamic single option
 # [ ] date option
 # [ ] resource
 # [ ] better extractors
@@ -15,20 +15,20 @@ slots:
   - &time
     type: time
     ask: On what time is your meeting?
-#  - &available-slots
-#    url: ...
-#    needs:
-##      - key: location
-##        value: *location
-#      - key: date
-#        value: *date
-#      - key: time
-#        value: *time
+  - &available-slots
+    state-url: http://localhost:8000/available-slots
+    needs:
+#      - key: location
+#        value: *location
+      - key: date
+        value: *date
+      - key: time
+        value: *time
 #      - key: cannot
 #        value: *cannot
-#  - &chosen-slot
-#    date-choice: *available-slots
-#    ask: "I have these options: {}.\nWhich do you prefer?"
+  - &chosen-slot
+    choice: *available-slots
+    ask: "I have these options: {}.\nWhich do you prefer?"
 actions:
   - say: Ok, I booked the meeting room at {date} {time}. Have a productive day!
     needs:
@@ -45,8 +45,8 @@ debug:
 #    value: *location
   - key: date
     value: *date
-  - key: time
-    value: *time
+#  - key: time
+#    value: *time
 #  - key: slots
 #    value: *available-slots
 #  - key: chosen-slot

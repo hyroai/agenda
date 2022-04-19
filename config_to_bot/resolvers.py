@@ -72,7 +72,10 @@ def _kv(
     key: str, value: Union[str, base_types.GraphType]
 ) -> Tuple[str, Union[str, base_types.GraphType]]:
     if value == "incoming_utterance":
-        return (key, agenda.consumes_external_event("x", lambda x: x))
+        return (
+            key,
+            agenda.mark_state(agenda.consumes_external_event("x", lambda x: x)),
+        )
     return (key, value)
 
 
@@ -85,21 +88,58 @@ async def post_request_with_url_and_params(url, params):
     )
 
 
+def _remote_utter(request):
+    url_to_func = _build_remote_resolver(request)
+
+    def remote_utter(say_remote, needs):
+        return agenda.utter_optionally_needs(
+            agenda.say(
+                gamla.compose_left(
+                    url_to_func(say_remote),
+                    gamla.when(gamla.equals(None), gamla.just("")),
+                )
+            ),
+            dict(needs),
+        )
+
+    return remote_utter
+
+
+def _remote_state(request):
+    url_to_func = _build_remote_resolver(request)
+
+    def remote_state(state_url, needs):
+        return agenda.composers.state_optionally_needs(
+            agenda.mark_state(
+                gamla.compose_left(
+                    url_to_func(state_url),
+                    gamla.when(gamla.equals(None), gamla.just(agenda.UNKNOWN)),
+                )
+            ),
+            dict(needs),
+        )
+
+    return remote_state
+
+
 def _build_remote_resolver(request: Callable):
     def remote(url: str):
         async def post_request(params: Dict[str, Any]):
             return gamla.pipe(
-                await request(
-                    url,
-                    gamla.pipe(
-                        params,
-                        gamla.valmap(
-                            gamla.when(gamla.equals(agenda.UNKNOWN), gamla.just(None))
+                await gamla.to_awaitable(
+                    request(
+                        url,
+                        gamla.pipe(
+                            params,
+                            gamla.valmap(
+                                gamla.when(
+                                    gamla.equals(agenda.UNKNOWN), gamla.just(None)
+                                )
+                            ),
                         ),
-                    ),
+                    )
                 ),
                 gamla.freeze_deep,
-                gamla.when(gamla.equals(None), gamla.just("")),
             )
 
         return post_request
@@ -112,32 +152,14 @@ def _say(say: str):
 
 
 def _say_with_needs(
-    say, needs: Iterable[Tuple[str, base_types.GraphType]]
+    say: str, needs: Iterable[Tuple[str, base_types.GraphType]]
 ) -> base_types.GraphType:
-    return agenda.optionally_needs(
-        agenda.say(_render_template(say) if _is_format_string(say) else say),
-        dict(needs),
-    )
+    assert _is_format_string(say), "say must be a template if it has needs."
+    return agenda.utter_optionally_needs(agenda.say(_render_template(say)), dict(needs))
 
 
 def _when(say: Union[str, Callable], when: base_types.GraphType):
-    return agenda.when(
-        when, agenda.say(_render_template(say) if _is_format_string(say) else say)
-    )
-
-
-def _when_with_needs(
-    say: Union[str, Callable],
-    needs: Iterable[Tuple[str, base_types.GraphType]],
-    when: base_types.GraphType,
-) -> base_types.GraphType:
-    return agenda.when(
-        when,
-        agenda.optionally_needs(
-            agenda.say(_render_template(say) if _is_format_string(say) else say),
-            dict(needs),
-        ),
-    )
+    return agenda.when(when, agenda.say(say) if isinstance(say, str) else say)
 
 
 def _is_format_string(say):
@@ -157,22 +179,6 @@ def _render_template(template):
         gamla.compose_left(dict.values, gamla.inside(agenda.UNKNOWN)),
         gamla.just(""),
         lambda kw: template.format(*kw.values(), **kw),
-    )
-
-
-def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
-    async def remote_function(params: Dict[str, Any]):
-        return gamla.pipe(
-            await gamla.post_json_with_extra_headers_and_params_async(
-                {}, {"Content-Type": "application/json"}, 30, url, params
-            ),
-            httpx.Response.json,
-            gamla.when(gamla.equals(None), gamla.just(agenda.UNKNOWN)),
-        )
-
-    return agenda.optionally_needs(
-        lift.function_to_graph(remote_function),
-        gamla.pipe(dict(needs), gamla.valmap(agenda.mark_state)),
     )
 
 
@@ -211,9 +217,28 @@ def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> Callable[[str], str]:
     )
 
 
-def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
+_lift_any_to_state_graph = gamla.compose_left(
+    lift.any_to_graph, gamla.unless(agenda.state_sink_or_none, agenda.mark_state)
+)
+
+
+def _ask_about_choice(
+    choice: Union[Tuple[str, ...], base_types.CallableOrNodeOrGraph],
+    ask: base_types.GraphType,
+):
+    @agenda.consumes_external_event("user_utterance")
+    def _parse_dynamic_choice(user_utterance, choice):
+        if choice is agenda.UNKNOWN:
+            return agenda.UNKNOWN
+        return extract.single_choice(choice)(user_utterance)
+
     return agenda.slot(
-        gamla.pipe(extract.single_choice(choice), agenda.listener_with_memory),
+        gamla.pipe(
+            agenda.composers.compose_on_state(
+                _lift_any_to_state_graph(choice), _parse_dynamic_choice
+            ),
+            agenda.remember,
+        ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
@@ -237,7 +262,7 @@ def _slot_with_remote_and_ack(
     remote: base_types.GraphType, ask: base_types.GraphType, ack: base_types.GraphType
 ):
     return agenda.slot(
-        _mark_as_state_and_remember(remote),
+        agenda.remember(remote),
         agenda.ask(ask),
         agenda.ack(ack),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
@@ -246,7 +271,7 @@ def _slot_with_remote_and_ack(
 
 def _slot_with_remote(remote: base_types.GraphType, ask: base_types.GraphType):
     return agenda.slot(
-        _mark_as_state_and_remember(remote),
+        agenda.remember(remote),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
@@ -463,8 +488,8 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _say,
         _say_with_needs,
         _when,
-        _when_with_needs,
-        _remote_with_needs,
+        _remote_state(remote_function),
+        _remote_utter(remote_function),
         _ask_about,
         _ask_about_and_ack,
         _actions_with_slots,

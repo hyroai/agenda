@@ -31,7 +31,7 @@ def test_slot():
 @agenda.expect_convos([[["Hi", "say dog or cat"], ["cat", "Got it. You have a cat."]]])
 def test_needs():
     options = ["dog", "cat"]
-    return agenda.optionally_needs(
+    return agenda.utter_optionally_needs(
         agenda.say(
             gamla.double_star(
                 lambda pet: "" if pet == agenda.UNKNOWN else f"You have a {pet}."
@@ -88,7 +88,7 @@ def test_when1():
         agenda.slot(
             topping,
             agenda.ask("what kind of topping would you like?"),
-            agenda.optionally_needs(
+            agenda.utter_optionally_needs(
                 agenda.ack(
                     gamla.double_star(
                         lambda topping: ""
@@ -123,7 +123,7 @@ def test_when2():
             agenda.ack("okay."),
             agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         ),
-        agenda.optionally_needs(
+        agenda.utter_optionally_needs(
             agenda.say(
                 gamla.double_star(
                     lambda phone, email: ""
@@ -188,7 +188,7 @@ def test_complement():
     [[["Hi", "x?"], ["yes", "okay. true"]], [["Hi", "x?"], ["no", "okay. false"]]]
 )
 def test_listen_if_participated1():
-    return agenda.optionally_needs(
+    return agenda.utter_optionally_needs(
         agenda.say(
             gamla.double_star(
                 lambda x: "" if x == agenda.UNKNOWN else ("true" if x else "false")
@@ -214,7 +214,7 @@ def test_listen_if_participated1():
     ]
 )
 def test_listen_if_participated2():
-    return agenda.optionally_needs(
+    return agenda.utter_optionally_needs(
         agenda.say(
             gamla.double_star(
                 lambda x, y: ""
