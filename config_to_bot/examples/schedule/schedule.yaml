@@ -2,8 +2,10 @@
 # [X] extract time
 # [X] extract date
 # [-] dynamic single option
-# [ ] date option
-# [ ] resource
+#     [X] dynamic options
+#     [X] ask dynamic
+#     [ ] selection of datetime from options
+# [ ] room
 # [ ] better extractors
 slots:
 #  - &location
@@ -28,18 +30,18 @@ slots:
 #        value: *cannot
   - &chosen-slot
     choice: *available-slots
-    ask: "I have these options: {}.\nWhich do you prefer?"
+    ask: "I have these options: {}. Which do you prefer?"
 actions:
   - say: Ok, I booked the meeting room at {date} {time}. Have a productive day!
     needs:
-#      - key: chosen-slot
-#        value: *chosen-slot
+      - key: chosen-slot
+        value: *chosen-slot
 #      - key: location
 #        value: *location
-      - key: date
-        value: *date
-      - key: time
-        value: *time
+#      - key: date
+#        value: *date
+#      - key: time
+#        value: *time
 debug:
 #  - key: location
 #    value: *location

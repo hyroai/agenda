@@ -223,23 +223,22 @@ _lift_any_to_state_graph = gamla.compose_left(
 
 
 def _ask_about_choice(
-    choice: Union[Tuple[str, ...], base_types.CallableOrNodeOrGraph],
-    ask: base_types.GraphType,
+    choice: Union[Tuple[str, ...], base_types.CallableOrNodeOrGraph], ask: str
 ):
     @agenda.consumes_external_event("user_utterance")
-    def _parse_dynamic_choice(user_utterance, choice):
-        if choice is agenda.UNKNOWN:
+    def _parse_dynamic_choice(user_utterance, options):
+        if options is agenda.UNKNOWN:
             return agenda.UNKNOWN
-        return extract.single_choice(choice)(user_utterance)
+        return extract.single_choice(options)(user_utterance)
+
+    options = _lift_any_to_state_graph(choice)
 
     return agenda.slot(
         gamla.pipe(
-            agenda.composers.compose_on_state(
-                _lift_any_to_state_graph(choice), _parse_dynamic_choice
-            ),
+            agenda.composers.compose_on_state(options, _parse_dynamic_choice),
             agenda.remember,
         ),
-        agenda.ask(ask),
+        agenda.ask(_compose_template(ask, options)),
         agenda.ack(agenda.GENERIC_ACK),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
@@ -258,18 +257,17 @@ def _ask_about_multiple_choice(
     )
 
 
-def _slot_with_remote_and_ack(
-    remote: base_types.GraphType, ask: base_types.GraphType, ack: base_types.GraphType
-):
+def _slot_with_remote_and_ack(remote: base_types.GraphType, ask: str, ack: str):
+    state = agenda.remember(remote)
     return agenda.slot(
-        agenda.remember(remote),
+        state,
         agenda.ask(ask),
-        agenda.ack(ack),
+        agenda.ack(_compose_template(ack, state)),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
-def _slot_with_remote(remote: base_types.GraphType, ask: base_types.GraphType):
+def _slot_with_remote(remote: base_types.GraphType, ask: str):
     return agenda.slot(
         agenda.remember(remote),
         agenda.ask(ask),
@@ -292,17 +290,21 @@ def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
     return agenda.slot(
         typed_state,
         agenda.ask(ask),
-        agenda.ack(
-            composers.compose_left_unary(
-                missing_cg_utils.package_into_dict(
-                    {"value": agenda.state_sink(typed_state)}
-                ),
-                _render_template(ack),
-            )
-            if _is_format_string(ack)
-            else ack
-        ),
+        agenda.ack(_compose_template(ack, typed_state)),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+    )
+
+
+def _compose_template(template: str, stateful_graph: base_types.GraphType):
+    return (
+        composers.compose_left_unary(
+            missing_cg_utils.package_into_dict(
+                {"value": agenda.state_sink(stateful_graph)}
+            ),
+            _render_template(template),
+        )
+        if _is_format_string(template)
+        else template
     )
 
 

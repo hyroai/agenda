@@ -269,11 +269,14 @@ test_scheduling = _make_test(
             ],
             [
                 ("5 pm", datetime.datetime(2022, 4, 12, 18)),
-                "Got it. Ok, I booked the meeting room at 2022-04-13 17:00:00. Have a productive day!",
+                "Got it. I have these options: {}. Which do you prefer?".format(
+                    ("a", "b", "c")
+                )
+                # "Got it. Ok, I booked the meeting room at 2022-04-13 17:00:00. Have a productive day!",
             ],
         ]
     ],
-    gamla.just(""),
+    lambda url, params: None if None in params.values() else ["a", "b", "c"],
 )
 
 
