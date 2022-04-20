@@ -1,7 +1,7 @@
 __pycache__/
 pytype_output/
 *.pyc
-
+*.egg-info/
 .mypy_cache
 
 # Created by .ignore support plugin (hsz.mobi)
