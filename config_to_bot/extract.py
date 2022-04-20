@@ -1,6 +1,6 @@
 import datetime
 import re
-from typing import Callable, Iterable, Tuple, TypeVar, Union, cast
+from typing import Callable, Iterable, Tuple, Union, cast
 
 import dateparser
 import gamla
@@ -175,34 +175,36 @@ def multiple_choices(
     )
 
 
-def extract_datetime_choice(options, relative_to):
-    def extract_datetime_choice(
-        user_utterance: str,
-    ) -> Union[datetime.datetime, agenda.Unknown]:
+_single_timeslot_or_unknown = gamla.ternary(
+    gamla.len_equals(1),
+    gamla.compose_left(gamla.head, gamla.apply_method("isoformat")),
+    gamla.just(agenda.UNKNOWN),
+)
+
+
+def datetime_choice(options, relative_to):
+    def extract_datetime_choice(user_utterance: str) -> Union[str, agenda.Unknown]:
         d = future_date(relative_to, user_utterance)
         t = time(relative_to, user_utterance)
         if agenda.UNKNOWN not in (d, t):
             choice = datetime.datetime.combine(
                 cast(datetime.date, d), cast(datetime.time, t)
             )
-            return choice if choice in options else agenda.UNKNOWN
+            return choice.isoformat() if choice in options else agenda.UNKNOWN
+
         if d is not agenda.UNKNOWN:
             return gamla.pipe(
                 options,
                 gamla.filter(lambda o: o.date() == cast(datetime.date, d)),
                 tuple,
-                gamla.ternary(
-                    gamla.len_equals(1), gamla.head, gamla.just(agenda.UNKNOWN)
-                ),
+                _single_timeslot_or_unknown,
             )
         if t is not agenda.UNKNOWN:
             return gamla.pipe(
                 options,
                 gamla.filter(lambda o: o.time().hour == cast(datetime.time, t).hour),
                 tuple,
-                gamla.ternary(
-                    gamla.len_equals(1), gamla.head, gamla.just(agenda.UNKNOWN)
-                ),
+                _single_timeslot_or_unknown,
             )
 
         return agenda.UNKNOWN
@@ -210,10 +212,7 @@ def extract_datetime_choice(options, relative_to):
     return extract_datetime_choice
 
 
-OptionType = TypeVar("OptionType", str, datetime.datetime)
-
-
-def single_choice(options: Tuple[OptionType, ...]) -> Callable[[str], OptionType]:
+def single_choice(options: Tuple[str, ...]) -> Callable[[str], str]:
     return gamla.compose_left(
         _text_to_lower_case_words,
         gamla.filter(gamla.contains(options)),

@@ -16,12 +16,18 @@ def test_extract_time():
 
 
 def test_extract_datetime_options():
-    assert extract.extract_datetime_choice(
-        [datetime.datetime(2022, 4, 17, 17), datetime.datetime(2022, 4, 18, 18)],
-        datetime.datetime(2022, 4, 11),
-    )("sunday") == datetime.datetime(2022, 4, 17, 17)
+    assert (
+        extract.datetime_choice(
+            [datetime.datetime(2022, 4, 17, 17), datetime.datetime(2022, 4, 18, 18)],
+            datetime.datetime(2022, 4, 11),
+        )("sunday")
+        == datetime.datetime(2022, 4, 17, 17).isoformat()
+    )
 
-    assert extract.extract_datetime_choice(
-        [datetime.datetime(2022, 4, 17, 17), datetime.datetime(2022, 4, 17, 18)],
-        datetime.datetime(2022, 4, 11),
-    )("5 pm") == datetime.datetime(2022, 4, 17, 17)
+    assert (
+        extract.datetime_choice(
+            [datetime.datetime(2022, 4, 17, 17), datetime.datetime(2022, 4, 17, 18)],
+            datetime.datetime(2022, 4, 11),
+        )("5 pm")
+        == datetime.datetime(2022, 4, 17, 17).isoformat()
+    )

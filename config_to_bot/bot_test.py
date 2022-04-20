@@ -7,6 +7,8 @@ import gamla
 import agenda
 from config_to_bot import yaml_to_bot
 
+MOCK_APPOINTMENTS = ("2022-04-22T17:20:00", "2022-04-24T17:20:00")
+
 
 def _from_examples(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples", path)
@@ -264,19 +266,22 @@ test_scheduling = _make_test(
         [
             ["hi", "On what day is your meeting?"],
             [
-                ("Tomorrow", datetime.datetime(2022, 4, 12, 18)),
+                ("Tomorrow", datetime.datetime(2022, 4, 19, 18)),
                 "Got it. On what time is your meeting?",
             ],
             [
-                ("5 pm", datetime.datetime(2022, 4, 12, 18)),
+                ("5 pm", datetime.datetime(2022, 4, 19, 18)),
                 "Got it. I have these options: {}. Which do you prefer?".format(
-                    ("a", "b", "c")
-                )
-                # "Got it. Ok, I booked the meeting room at 2022-04-13 17:00:00. Have a productive day!",
+                    MOCK_APPOINTMENTS
+                ),
+            ],
+            [
+                ("The one on Sunday", datetime.datetime(2022, 4, 20, 18)),
+                "Got it. I booked the meeting room at 2022-04-24T17:20:00. Have a productive day!",
             ],
         ]
     ],
-    lambda url, params: None if None in params.values() else ["a", "b", "c"],
+    lambda url, params: None if None in params.values() else MOCK_APPOINTMENTS,
 )
 
 

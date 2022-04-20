@@ -1,12 +1,20 @@
 # TODO(eli):
 # [X] extract time
 # [X] extract date
-# [-] dynamic single option
+# [X] dynamic single option
 #     [X] dynamic options
 #     [X] ask dynamic
-#     [ ] selection of datetime from options
-# [ ] room
+#     [X] selection of datetime from options
+# [ ] smarter trigger listen for date and time (instead of only when asked)
 # [ ] better extractors
+#     [ ] datetime options
+#         [ ] the first one
+#         [ ] Sunday (relative to the suggested options, and not the current time)
+#         [ ] Can't on Sunday
+#     [ ] date
+#     [ ] time
+# [ ] better bot UX
+#     [ ] when choosing date that we can't accommodate use a relevant anti ack (instead of please rephrase)
 slots:
 #  - &location
 #    type: location
@@ -32,7 +40,7 @@ slots:
     choice: *available-slots
     ask: "I have these options: {}. Which do you prefer?"
 actions:
-  - say: Ok, I booked the meeting room at {date} {time}. Have a productive day!
+  - say: I booked the meeting room at {chosen-slot}. Have a productive day!
     needs:
       - key: chosen-slot
         value: *chosen-slot
@@ -45,14 +53,11 @@ actions:
 debug:
 #  - key: location
 #    value: *location
-  - key: date
-    value: *date
-#  - key: time
-#    value: *time
-#  - key: slots
-#    value: *available-slots
-#  - key: chosen-slot
-#    value: *chosen-slot
-
-
-
+ - key: date
+   value: *date
+ - key: time
+   value: *time
+ - key: slots
+   value: *available-slots
+ - key: chosen-slot
+   value: *chosen-slot

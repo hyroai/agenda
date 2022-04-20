@@ -1,3 +1,4 @@
+import datetime
 import inspect
 import keyword
 import string
@@ -28,7 +29,7 @@ _TYPE_TO_LISTENER = gamla.valmap(agenda.consumes_external_event(None))(
         "time": agenda.consumes_time("relative_to", extract.time),
     }
 )
-_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean"})
+_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean", "date", "time"})
 is_supported_type = gamla.contains(_TYPE_TO_LISTENER)
 
 _mark_as_state_and_remember = gamla.compose_left(agenda.mark_state, agenda.remember)
@@ -122,23 +123,24 @@ def _remote_state(request):
     return remote_state
 
 
+_to_json_serializable = gamla.map_dict(
+    gamla.identity,
+    gamla.case_dict(
+        {
+            gamla.equals(agenda.UNKNOWN): gamla.just(None),
+            gamla.is_instance(datetime.date): gamla.apply_method("isoformat"),
+            gamla.is_instance(datetime.time): gamla.apply_method("isoformat"),
+            gamla.just(True): gamla.identity,
+        }
+    ),
+)
+
+
 def _build_remote_resolver(request: Callable):
     def remote(url: str):
         async def post_request(params: Dict[str, Any]):
             return gamla.pipe(
-                await gamla.to_awaitable(
-                    request(
-                        url,
-                        gamla.pipe(
-                            params,
-                            gamla.valmap(
-                                gamla.when(
-                                    gamla.equals(agenda.UNKNOWN), gamla.just(None)
-                                )
-                            ),
-                        ),
-                    )
-                ),
+                await gamla.to_awaitable(request(url, _to_json_serializable(params))),
                 gamla.freeze_deep,
             )
 
@@ -221,26 +223,46 @@ _lift_any_to_state_graph = gamla.compose_left(
     lift.any_to_graph, gamla.unless(agenda.state_sink_or_none, agenda.mark_state)
 )
 
+_parse_isodatetime_or_none = gamla.excepts(
+    ValueError, gamla.just(None), datetime.datetime.fromisoformat
+)
+
 
 def _ask_about_choice(
     choice: Union[Tuple[str, ...], base_types.CallableOrNodeOrGraph], ask: str
 ):
-    @agenda.consumes_external_event("user_utterance")
-    def _parse_dynamic_choice(user_utterance, options):
-        if options is agenda.UNKNOWN:
-            return agenda.UNKNOWN
-        return extract.single_choice(options)(user_utterance)
-
     options = _lift_any_to_state_graph(choice)
 
-    return agenda.slot(
-        gamla.pipe(
-            agenda.composers.compose_on_state(options, _parse_dynamic_choice),
-            agenda.remember,
+    @agenda.consumes_external_event("user_utterance")
+    @agenda.consumes_time("now")
+    @composers.compose_left_dict({"options": agenda.state_sink(options)})
+    def _parse_dynamic_choice(user_utterance, now, did_participate, options):
+        if options is agenda.UNKNOWN:
+            return agenda.UNKNOWN
+        date_options = gamla.pipe(options, gamla.map(_parse_isodatetime_or_none), tuple)
+        if all(date_options):
+            if not did_participate:
+                return agenda.UNKNOWN
+            return extract.datetime_choice(date_options, now)(user_utterance)
+        return extract.single_choice(options)(user_utterance)
+
+    return agenda.combine_utter_sinks(
+        missing_cg_utils.remove_nodes([agenda.composers.state])(options),
+        agenda.slot(
+            agenda.remember(
+                agenda.mark_state(
+                    composers.compose_left_future(
+                        agenda.participated,
+                        _parse_dynamic_choice,
+                        "did_participate",
+                        False,
+                    )
+                )
+            ),
+            agenda.ask(_compose_template(ask, options)),
+            agenda.ack(agenda.GENERIC_ACK),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         ),
-        agenda.ask(_compose_template(ask, options)),
-        agenda.ack(agenda.GENERIC_ACK),
-        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -363,19 +385,7 @@ def _actions_with_slots_and_knowledge(
 
 @graph.make_terminal("debug_states")
 def debug_states(args):
-    return gamla.pipe(
-        args,
-        gamla.map_dict(
-            gamla.identity,
-            gamla.case_dict(
-                {
-                    gamla.equals(agenda.UNKNOWN): gamla.just(None),
-                    gamla.just(True): gamla.identity,
-                }
-            ),
-        ),
-        gamla.freeze_deep,
-    )
+    return gamla.pipe(args, _to_json_serializable, gamla.freeze_deep)
 
 
 _debug_dict = gamla.apply_spec(

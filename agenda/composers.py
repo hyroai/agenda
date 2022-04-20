@@ -256,7 +256,7 @@ def ever(graph):
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([state])
-def compose_on_state(stateful_graph, tranformer_graph):
+def compose_on_state(tranformer_graph, stateful_graph):
     return gamla.pipe(
         tranformer_graph,
         missing_cg_utils.compose_left_curry(state_sink(stateful_graph)),
