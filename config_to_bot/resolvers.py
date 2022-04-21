@@ -109,11 +109,11 @@ def _remote_utter(request):
 def _remote_state(request):
     url_to_func = _build_remote_resolver(request)
 
-    def remote_state(state_url, needs):
+    def remote_state(state_remote, needs):
         return agenda.composers.state_optionally_needs(
             agenda.mark_state(
                 gamla.compose_left(
-                    url_to_func(state_url),
+                    url_to_func(state_remote),
                     gamla.when(gamla.equals(None), gamla.just(agenda.UNKNOWN)),
                 )
             ),

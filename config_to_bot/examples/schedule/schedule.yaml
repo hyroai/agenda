@@ -26,7 +26,7 @@ slots:
     type: time
     ask: On what time is your meeting?
   - &available-slots
-    state-url: http://localhost:8000/available-slots
+    state-remote: http://localhost:8000/available-slots
     needs:
 #      - key: location
 #        value: *location
