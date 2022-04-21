@@ -1,3 +1,4 @@
+import datetime
 import inspect
 import keyword
 import string
@@ -7,36 +8,35 @@ from typing import Any, Callable, Dict, Iterable, Set, Tuple, Union
 import gamla
 import httpx
 from computation_graph import base_types, composers, graph
-from computation_graph.composers import duplication, lift
+from computation_graph.composers import lift
 
 import agenda
 from agenda import missing_cg_utils
 from config_to_bot import extract
 
-_TYPE_TO_LISTENER = {
-    "email": extract.email,
-    "phone": extract.phone,
-    "amount": extract.amount,
-    "boolean": extract.yes_no,
-    "intent": extract.intent,
-    "name": extract.person_name,
-    "address": extract.address,
-    "multiple-choice": extract.multiple_choices,
-    "single-choice": extract.single_choice,
-}
-_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean"})
+_TYPE_TO_LISTENER = gamla.valmap(agenda.consumes_external_event(None))(
+    {
+        "email": extract.email,
+        "phone": extract.phone,
+        "amount": extract.amount,
+        "boolean": extract.yes_no,
+        "intent": extract.intent,
+        "name": extract.person_name,
+        "address": extract.address,
+        "multiple-choice": extract.multiple_choices,
+        "single-choice": extract.single_choice,
+        "date": agenda.consumes_time("relative_to", extract.future_date),
+        "time": agenda.consumes_time("relative_to", extract.time),
+    }
+)
+_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean", "date", "time"})
 is_supported_type = gamla.contains(_TYPE_TO_LISTENER)
 
-_mark_as_state_and_remember = gamla.compose_left(
-    agenda.mark_state, agenda.remember, duplication.duplicate_graph
-)
+_mark_as_state_and_remember = gamla.compose_left(agenda.mark_state, agenda.remember)
 
 
 def parse_type(type: str) -> Callable:
-    def parse_type(user_utterance: str):
-        return _TYPE_TO_LISTENER.get(type)(user_utterance)  # type: ignore
-
-    return parse_type
+    return _TYPE_TO_LISTENER.get(type)
 
 
 def _complement(not_: base_types.GraphType) -> base_types.GraphType:
@@ -73,7 +73,10 @@ def _kv(
     key: str, value: Union[str, base_types.GraphType]
 ) -> Tuple[str, Union[str, base_types.GraphType]]:
     if value == "incoming_utterance":
-        return (key, agenda.consumes_external_event(lambda x: x))
+        return (
+            key,
+            agenda.mark_state(agenda.consumes_external_event("x", lambda x: x)),
+        )
     return (key, value)
 
 
@@ -86,21 +89,59 @@ async def post_request_with_url_and_params(url, params):
     )
 
 
+def _remote_utter(request):
+    url_to_func = _build_remote_resolver(request)
+
+    def remote_utter(say_remote, needs):
+        return agenda.utter_optionally_needs(
+            agenda.say(
+                gamla.compose_left(
+                    url_to_func(say_remote),
+                    gamla.when(gamla.equals(None), gamla.just("")),
+                )
+            ),
+            dict(needs),
+        )
+
+    return remote_utter
+
+
+def _remote_state(request):
+    url_to_func = _build_remote_resolver(request)
+
+    def remote_state(state_remote, needs):
+        return agenda.composers.state_optionally_needs(
+            agenda.mark_state(
+                gamla.compose_left(
+                    url_to_func(state_remote),
+                    gamla.when(gamla.equals(None), gamla.just(agenda.UNKNOWN)),
+                )
+            ),
+            dict(needs),
+        )
+
+    return remote_state
+
+
+_to_json_serializable = gamla.map_dict(
+    gamla.identity,
+    gamla.case_dict(
+        {
+            gamla.equals(agenda.UNKNOWN): gamla.just(None),
+            gamla.is_instance(datetime.date): gamla.apply_method("isoformat"),
+            gamla.is_instance(datetime.time): gamla.apply_method("isoformat"),
+            gamla.just(True): gamla.identity,
+        }
+    ),
+)
+
+
 def _build_remote_resolver(request: Callable):
     def remote(url: str):
         async def post_request(params: Dict[str, Any]):
             return gamla.pipe(
-                await request(
-                    url,
-                    gamla.pipe(
-                        params,
-                        gamla.valmap(
-                            gamla.when(gamla.equals(agenda.UNKNOWN), gamla.just(None))
-                        ),
-                    ),
-                ),
+                await gamla.to_awaitable(request(url, _to_json_serializable(params))),
                 gamla.freeze_deep,
-                gamla.when(gamla.equals(None), gamla.just("")),
             )
 
         return post_request
@@ -113,32 +154,14 @@ def _say(say: str):
 
 
 def _say_with_needs(
-    say, needs: Iterable[Tuple[str, base_types.GraphType]]
+    say: str, needs: Iterable[Tuple[str, base_types.GraphType]]
 ) -> base_types.GraphType:
-    return agenda.optionally_needs(
-        agenda.say(_render_template(say) if _is_format_string(say) else say),
-        dict(needs),
-    )
+    assert _is_format_string(say), "say must be a template if it has needs."
+    return agenda.utter_optionally_needs(agenda.say(_render_template(say)), dict(needs))
 
 
 def _when(say: Union[str, Callable], when: base_types.GraphType):
-    return agenda.when(
-        when, agenda.say(_render_template(say) if _is_format_string(say) else say)
-    )
-
-
-def _when_with_needs(
-    say: Union[str, Callable],
-    needs: Iterable[Tuple[str, base_types.GraphType]],
-    when: base_types.GraphType,
-) -> base_types.GraphType:
-    return agenda.when(
-        when,
-        agenda.optionally_needs(
-            agenda.say(_render_template(say) if _is_format_string(say) else say),
-            dict(needs),
-        ),
-    )
+    return agenda.when(when, agenda.say(say) if isinstance(say, str) else say)
 
 
 def _is_format_string(say):
@@ -161,29 +184,8 @@ def _render_template(template):
     )
 
 
-def _remote_with_needs(needs: Iterable[Tuple[str, base_types.GraphType]], url: str):
-    async def remote_function(params: Dict[str, Any]):
-        return gamla.pipe(
-            await gamla.post_json_with_extra_headers_and_params_async(
-                {}, {"Content-Type": "application/json"}, 30, url, params
-            ),
-            httpx.Response.json,
-            gamla.when(gamla.equals(None), gamla.just(agenda.UNKNOWN)),
-        )
-
-    return agenda.optionally_needs(
-        lift.function_to_graph(remote_function),
-        gamla.pipe(dict(needs), gamla.valmap(agenda.mark_state)),
-    )
-
-
 def _listen_to_intent(intent: Tuple[str, ...]):
-    return gamla.pipe(
-        parse_type("intent")(intent),
-        agenda.listener_with_memory,
-        agenda.ever,
-        duplication.duplicate_graph,
-    )
+    return gamla.pipe(extract.intent(intent), agenda.listener_with_memory, agenda.ever)
 
 
 def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
@@ -212,19 +214,55 @@ def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> Callable[[str], str]:
             ),
         )
 
-    return agenda.say(agenda.consumes_external_event(highest_ranked_faq_with_score))
+    return agenda.say(
+        agenda.consumes_external_event("user_utterance", highest_ranked_faq_with_score)
+    )
 
 
-def _ask_about_choice(choice: Tuple[str, ...], ask: base_types.GraphType):
-    return agenda.slot(
-        gamla.pipe(
-            parse_type("single-choice")(choice),
-            agenda.listener_with_memory,
-            duplication.duplicate_graph,
+_lift_any_to_state_graph = gamla.compose_left(
+    lift.any_to_graph, gamla.unless(agenda.state_sink_or_none, agenda.mark_state)
+)
+
+_parse_isodatetime_or_none = gamla.excepts(
+    ValueError, gamla.just(None), datetime.datetime.fromisoformat
+)
+
+
+def _ask_about_choice(
+    choice: Union[Tuple[str, ...], base_types.CallableOrNodeOrGraph], ask: str
+):
+    options = _lift_any_to_state_graph(choice)
+
+    @agenda.consumes_external_event("user_utterance")
+    @agenda.consumes_time("now")
+    @composers.compose_left_dict({"options": agenda.state_sink(options)})
+    def _parse_dynamic_choice(user_utterance, now, did_participate, options):
+        if options is agenda.UNKNOWN:
+            return agenda.UNKNOWN
+        date_options = gamla.pipe(options, gamla.map(_parse_isodatetime_or_none), tuple)
+        if all(date_options):
+            if not did_participate:
+                return agenda.UNKNOWN
+            return extract.datetime_choice(date_options, now)(user_utterance)
+        return extract.single_choice(options)(user_utterance)
+
+    return agenda.combine_utter_sinks(
+        missing_cg_utils.remove_nodes([agenda.composers.state])(options),
+        agenda.slot(
+            agenda.remember(
+                agenda.mark_state(
+                    composers.compose_left_future(
+                        agenda.participated,
+                        _parse_dynamic_choice,
+                        "did_participate",
+                        False,
+                    )
+                )
+            ),
+            agenda.ask(_compose_template(ask, options)),
+            agenda.ack(agenda.GENERIC_ACK),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         ),
-        agenda.ask(ask),
-        agenda.ack(agenda.GENERIC_ACK),
-        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
@@ -233,9 +271,7 @@ def _ask_about_multiple_choice(
 ):
     return agenda.slot(
         gamla.pipe(
-            parse_type("multiple-choice")(multiple_choice),
-            agenda.listener_with_memory,
-            duplication.duplicate_graph,
+            extract.multiple_choices(multiple_choice), agenda.listener_with_memory
         ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
@@ -243,20 +279,19 @@ def _ask_about_multiple_choice(
     )
 
 
-def _slot_with_remote_and_ack(
-    remote: base_types.GraphType, ask: base_types.GraphType, ack: base_types.GraphType
-):
+def _slot_with_remote_and_ack(remote: base_types.GraphType, ask: str, ack: str):
+    state = agenda.remember(remote)
     return agenda.slot(
-        _mark_as_state_and_remember(remote),
+        state,
         agenda.ask(ask),
-        agenda.ack(ack),
+        agenda.ack(_compose_template(ack, state)),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
-def _slot_with_remote(remote: base_types.GraphType, ask: base_types.GraphType):
+def _slot_with_remote(remote: base_types.GraphType, ask: str):
     return agenda.slot(
-        _mark_as_state_and_remember(remote),
+        agenda.remember(remote),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
@@ -277,17 +312,21 @@ def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
     return agenda.slot(
         typed_state,
         agenda.ask(ask),
-        agenda.ack(
-            composers.compose_left_unary(
-                missing_cg_utils.package_into_dict(
-                    {"value": agenda.state_sink(typed_state)}
-                ),
-                _render_template(ack),
-            )
-            if _is_format_string(ack)
-            else ack
-        ),
+        agenda.ack(_compose_template(ack, typed_state)),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+    )
+
+
+def _compose_template(template: str, stateful_graph: base_types.GraphType):
+    return (
+        composers.compose_left_unary(
+            missing_cg_utils.package_into_dict(
+                {"value": agenda.state_sink(stateful_graph)}
+            ),
+            _render_template(template),
+        )
+        if _is_format_string(template)
+        else template
     )
 
 
@@ -296,7 +335,6 @@ def _typed_state(type):
 
     return gamla.pipe(
         parse_type(type),
-        agenda.consumes_external_event,
         agenda.if_participated
         if type in _TYPES_TO_LISTEN_AFTER_ASKING
         else gamla.identity,
@@ -347,19 +385,7 @@ def _actions_with_slots_and_knowledge(
 
 @graph.make_terminal("debug_states")
 def debug_states(args):
-    return gamla.pipe(
-        args,
-        gamla.map_dict(
-            gamla.identity,
-            gamla.case_dict(
-                {
-                    gamla.equals(agenda.UNKNOWN): gamla.just(None),
-                    gamla.just(True): gamla.identity,
-                }
-            ),
-        ),
-        gamla.freeze_deep,
-    )
+    return gamla.pipe(args, _to_json_serializable, gamla.freeze_deep)
 
 
 _debug_dict = gamla.apply_spec(
@@ -474,8 +500,8 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _say,
         _say_with_needs,
         _when,
-        _when_with_needs,
-        _remote_with_needs,
+        _remote_state(remote_function),
+        _remote_utter(remote_function),
         _ask_about,
         _ask_about_and_ack,
         _actions_with_slots,

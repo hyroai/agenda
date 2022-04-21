@@ -1,3 +1,4 @@
+import datetime
 import os
 from typing import Dict, Tuple
 
@@ -5,6 +6,8 @@ import gamla
 
 import agenda
 from config_to_bot import yaml_to_bot
+
+_MOCK_APPOINTMENTS = ("2022-04-22T17:20:00", "2022-04-24T17:20:00")
 
 
 def _from_examples(path):
@@ -14,7 +17,7 @@ def _from_examples(path):
 _PIZZA_YAML = _from_examples("pizza/pizza.yaml")
 
 
-async def _remote_function(url: str, params: Dict):
+async def _pizza_api_mock(url: str, params: Dict):
     del url
     name, amount_of_pizzas, toppings, size, address, phone, email = (
         params["name"],
@@ -47,15 +50,15 @@ async def _remote_function(url: str, params: Dict):
     return None
 
 
-def _make_test(path: str, convos):
+def _make_test(path: str, convos, remote_mock):
     with open(path, "r") as f:
-        bot = yaml_to_bot.yaml_to_cg(_remote_function)(f)
+        bot = yaml_to_bot.yaml_to_cg(remote_mock)(f)
 
     return agenda.expect_convos(convos, gamla.just(bot))
 
 
 test_pizza_intent_detection = _make_test(
-    _PIZZA_YAML, [[["I want pizza", "Got it. Are you vegan?"]]]
+    _PIZZA_YAML, [[["I want pizza", "Got it. Are you vegan?"]]], _pizza_api_mock
 )
 
 test_skip_toppings_question = _make_test(
@@ -69,6 +72,7 @@ test_skip_toppings_question = _make_test(
             ["4", "Got it. What pizza size would you like?"],
         ]
     ],
+    _pizza_api_mock,
 )
 
 test_happy_flow = _make_test(
@@ -90,6 +94,7 @@ test_happy_flow = _make_test(
             ],
         ]
     ],
+    _pizza_api_mock,
 )
 
 test_happy_flow_without_toppings = _make_test(
@@ -111,6 +116,7 @@ test_happy_flow_without_toppings = _make_test(
             ],
         ]
     ],
+    _pizza_api_mock,
 )
 
 
@@ -130,6 +136,7 @@ test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
             ],
         ]
     ],
+    _pizza_api_mock,
 )
 
 test_faq = _make_test(
@@ -142,6 +149,7 @@ test_faq = _make_test(
             ]
         ]
     ],
+    _pizza_api_mock,
 )
 
 test_multiple_choice_robustness = _make_test(
@@ -166,6 +174,7 @@ test_multiple_choice_robustness = _make_test(
             ],
         ]
     ],
+    _pizza_api_mock,
 )
 
 test_misunderstanding = _make_test(
@@ -180,6 +189,7 @@ test_misunderstanding = _make_test(
             ["yes.", "Got it. Are you vegan?"],
         ]
     ],
+    _pizza_api_mock,
 )
 
 
@@ -207,6 +217,7 @@ test_punctuation_robustness = _make_test(
             ["Yoni.", "Nice to meet you Yoni! How many pies would you like?"],
         ],
     ],
+    _pizza_api_mock,
 )
 
 
@@ -221,6 +232,7 @@ test_remove_misunderstanding_when_answering_faq = _make_test(
             ],
         ]
     ],
+    _pizza_api_mock,
 )
 
 test_say_template = _make_test(
@@ -232,6 +244,7 @@ test_say_template = _make_test(
             ["large", "Got it. Eli Libman you said large."],
         ]
     ],
+    gamla.just(""),
 )
 
 
@@ -243,4 +256,41 @@ test_capitalization_robustness = _make_test(
             ["Yes", "Got it. Are you vegan?"],
         ]
     ],
+    _pizza_api_mock,
+)
+
+
+test_scheduling = _make_test(
+    _from_examples("schedule/schedule.yaml"),
+    [
+        [
+            ["hi", "On what day is your meeting?"],
+            [
+                ("Tomorrow", datetime.datetime(2022, 4, 19, 18)),
+                "Got it. On what time is your meeting?",
+            ],
+            [
+                ("5 pm", datetime.datetime(2022, 4, 19, 18)),
+                "Got it. I have these options: {}. Which do you prefer?".format(
+                    _MOCK_APPOINTMENTS
+                ),
+            ],
+            [
+                ("The one on Sunday", datetime.datetime(2022, 4, 20, 18)),
+                "Got it. I booked the meeting room at 2022-04-24T17:20:00. Have a productive day!",
+            ],
+        ]
+    ],
+    lambda url, params: None if None in params.values() else _MOCK_APPOINTMENTS,
+)
+
+
+test_remote_listener = _make_test(
+    _from_examples("hello/hello.yaml"),
+    [[["Hi", "say hello"], ["hello", "you said it"]]],
+    gamla.ternary(
+        lambda url, params: params["incoming_utterance"] == "hello",
+        gamla.just(True),
+        gamla.just(None),
+    ),
 )

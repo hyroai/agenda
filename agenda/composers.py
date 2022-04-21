@@ -15,6 +15,7 @@ class Unknown:
 forget = graph.make_source_with_name("forget")
 participated = graph.make_source_with_name("participated")
 event = graph.make_source_with_name("event")
+now = graph.make_source_with_name("now")
 
 UNKNOWN = Unknown()
 
@@ -29,8 +30,14 @@ def state(state):
     return state
 
 
-def consumes_external_event(x):
-    return composers.compose_source(x, None, event)
+@gamla.curry
+def consumes_external_event(at, x):
+    return composers.compose_source(x, at, event)
+
+
+@gamla.curry
+def consumes_time(at, x):
+    return composers.compose_source(x, at, now)
 
 
 utter_sink = missing_cg_utils.sink(utter)
@@ -205,7 +212,7 @@ def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     )
     def final_utter(who_should_speak, listener_utter, acker_utter, anti_acker_utter):
         if anti_acker in who_should_speak:
-            return sentence.combine([anti_acker_utter, listener_utter])
+            return sentence.combine([listener_utter, anti_acker_utter])
         if asker_listener in who_should_speak:
             return listener_utter
         if acker in who_should_speak:
@@ -248,6 +255,15 @@ def ever(graph):
     return ever_inner
 
 
+@_remove_sinks_and_sources_and_resolve_ambiguity([state])
+def compose_on_state(tranformer_graph, stateful_graph):
+    return gamla.pipe(
+        tranformer_graph,
+        missing_cg_utils.compose_left_curry(state_sink(stateful_graph)),
+        mark_state,
+    )
+
+
 def _map_state(func):
     @_remove_sinks_and_sources_and_resolve_ambiguity([state])
     def map_state(graph):
@@ -272,7 +288,9 @@ not_equals = gamla.compose(_map_state, gamla.not_equals)
 inside = gamla.compose(_map_state, gamla.inside)
 contains = gamla.compose(_map_state, gamla.contains)
 
-listener_with_memory = gamla.compose(remember, mark_state, consumes_external_event)
+listener_with_memory = gamla.compose(
+    remember, mark_state, consumes_external_event(None)
+)
 
 
 def if_participated(graph):
@@ -342,19 +360,36 @@ def _dict_composer(markers, f):
 
 
 @_dict_composer([state, utter, participated])
-def optionally_needs(
+def state_optionally_needs(
     recipient: base_types.GraphType, dependencies: Dict[str, base_types.GraphType]
 ):
     return base_types.merge_graphs(
         _combine_utter_graphs(recipient, *dependencies.values()),
-        gamla.pipe(
-            dependencies,
-            gamla.valmap(state_sink),
-            missing_cg_utils.package_into_dict,
-            missing_cg_utils.compose_curry(missing_cg_utils.infer_source(recipient)),
-            gamla.remove(gamla.contains(set(recipient))),
-            tuple,
-        ),
+        mark_state(state_sink(recipient)),
+        _compose_state_dict(dependencies, recipient),
+    )
+
+
+@_dict_composer([state, utter, participated])
+def utter_optionally_needs(
+    recipient: base_types.GraphType, dependencies: Dict[str, base_types.GraphType]
+):
+    return base_types.merge_graphs(
+        _combine_utter_graphs(recipient, *dependencies.values()),
+        _compose_state_dict(dependencies, recipient),
+    )
+
+
+def _compose_state_dict(
+    dependencies: Dict[str, base_types.GraphType], recipient: base_types.GraphOrCallable
+):
+    return gamla.pipe(
+        dependencies,
+        gamla.valmap(state_sink),
+        missing_cg_utils.package_into_dict,
+        missing_cg_utils.compose_curry(missing_cg_utils.infer_source(recipient)),
+        gamla.remove(gamla.contains(set(recipient))),
+        tuple,
     )
 
 

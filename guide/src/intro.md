@@ -33,7 +33,7 @@ That said those who want to leverage existing NLP services (e.g. an intent recog
 # The service would receive a post request, e.g.`{someKey: "I want pizza"}`
 &my-custom-intent-recognizer
 remote:
-  url: http://localhost:8000/listen-wants-pizza
+  state-remote: http://localhost:8000/listen-wants-pizza
   needs:
     - key: someKey
       value: incoming_utterance
@@ -96,22 +96,22 @@ actions:
         - *wants-pizza
         - *is-vegan
   - say:
-      url: http://localhost:8000/order-pizza
-    needs:
-      - key: name
-        value: *name
-      - key: amount_of_pizzas
-        value: *amount_of_pizzas
-      - key: toppings
-        value: *toppings
-      - key: size
-        value: *size
-      - key: address
-        value: *address
-      - key: phone
-        value: *phone
-      - key: email
-        value: *email
+      say-remote: http://localhost:8000/order-pizza
+      needs:
+        - key: name
+          value: *name
+        - key: amount_of_pizzas
+          value: *amount_of_pizzas
+        - key: toppings
+          value: *toppings
+        - key: size
+          value: *size
+        - key: address
+          value: *address
+        - key: phone
+          value: *phone
+        - key: email
+          value: *email
     when:
       all:
         - *wants-pizza

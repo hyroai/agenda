@@ -13,7 +13,8 @@ GENERIC_ANTI_ACK = sentence.GENERIC_ANTI_ACK
 combine_utter_sinks = composers.combine_utter_sinks
 listener_with_memory = composers.listener_with_memory
 if_participated = composers.if_participated
-optionally_needs = composers.optionally_needs
+state_optionally_needs = composers.state_optionally_needs
+utter_optionally_needs = composers.utter_optionally_needs
 slot = composers.slot
 when = composers.when
 remember = composers.remember
@@ -63,6 +64,7 @@ ack = _generic(sentence.str_to_ack)
 anti_ack = _generic(sentence.str_to_anti_ack)
 
 consumes_external_event = composers.consumes_external_event
+consumes_time = composers.consumes_time
 
 
 def sentence_renderer(ack_renderer, anti_ack_renderer):

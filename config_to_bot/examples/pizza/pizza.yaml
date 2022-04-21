@@ -52,22 +52,22 @@ actions:
         - *wants-pizza
         - *is-vegan
   - say:
-      url: http://localhost:8000/order-pizza
-    needs:
-      - key: name
-        value: *name
-      - key: amount_of_pizzas
-        value: *amount_of_pizzas
-      - key: toppings
-        value: *toppings
-      - key: size
-        value: *size
-      - key: address
-        value: *address
-      - key: phone
-        value: *phone
-      - key: email
-        value: *email
+      say-remote: http://localhost:8000/order-pizza
+      needs:
+        - key: name
+          value: *name
+        - key: amount_of_pizzas
+          value: *amount_of_pizzas
+        - key: toppings
+          value: *toppings
+        - key: size
+          value: *size
+        - key: address
+          value: *address
+        - key: phone
+          value: *phone
+        - key: email
+          value: *email
     when:
       all:
         - *wants-pizza
@@ -87,3 +87,5 @@ debug:
     value: *wants-pizza
   - key: wants-pizza-intent
     value: *wants-pizza-intent
+  - key: name
+    value: *name

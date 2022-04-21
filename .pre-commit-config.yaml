@@ -46,6 +46,7 @@ repos:
       - id: mypy
         additional_dependencies:
           - types-PyYAML
+          - types-dateparser
 
   - repo: https://github.com/hyroai/lint
     rev: 4373c9c07f94b3549b7a8521c5bb62b6698e383d

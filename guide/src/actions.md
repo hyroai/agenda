@@ -14,22 +14,23 @@ actions:
     when:
       not: *wants-pizza
   - say:
-      url: http://localhost:8000/order-pizza
-    when: *wants-pizza
-    needs:
-      - key: toppings
-        value:
+      say-remote: http://localhost:8000/order-pizza
+      needs:
+        - key: toppings
+          value:
             ask: What kind of toppings would you like?
             multiple-choice:
-                - mushrooms
-                - olives
-                - tomatoes
-                - onions
-      - key: size
-        value:
+              - mushrooms
+              - olives
+              - tomatoes
+              - onions
+        - key: size
+          value:
             ask: What pizza size would you like?
             choice:
-                - small
-                - medium
-                - large
+              - small
+              - medium
+              - large
+    when: *wants-pizza
+
 ```
