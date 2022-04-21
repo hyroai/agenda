@@ -159,7 +159,7 @@
 <pre><code class="language-yaml"># The service would receive a post request, e.g.`{someKey: &quot;I want pizza&quot;}`
 &amp;my-custom-intent-recognizer
 remote:
-  url: http://localhost:8000/listen-wants-pizza
+  state-remote: http://localhost:8000/listen-wants-pizza
   needs:
     - key: someKey
       value: incoming_utterance
@@ -212,22 +212,22 @@ remote:
         - *wants-pizza
         - *is-vegan
   - say:
-      url: http://localhost:8000/order-pizza
-    needs:
-      - key: name
-        value: *name
-      - key: amount_of_pizzas
-        value: *amount_of_pizzas
-      - key: toppings
-        value: *toppings
-      - key: size
-        value: *size
-      - key: address
-        value: *address
-      - key: phone
-        value: *phone
-      - key: email
-        value: *email
+      say-remote: http://localhost:8000/order-pizza
+      needs:
+        - key: name
+          value: *name
+        - key: amount_of_pizzas
+          value: *amount_of_pizzas
+        - key: toppings
+          value: *toppings
+        - key: size
+          value: *size
+        - key: address
+          value: *address
+        - key: phone
+          value: *phone
+        - key: email
+          value: *email
     when:
       all:
         - *wants-pizza
@@ -426,24 +426,25 @@ multiple-choice:
     when:
       not: *wants-pizza
   - say:
-      url: http://localhost:8000/order-pizza
-    when: *wants-pizza
-    needs:
-      - key: toppings
-        value:
+      say-remote: http://localhost:8000/order-pizza
+      needs:
+        - key: toppings
+          value:
             ask: What kind of toppings would you like?
             multiple-choice:
-                - mushrooms
-                - olives
-                - tomatoes
-                - onions
-      - key: size
-        value:
+              - mushrooms
+              - olives
+              - tomatoes
+              - onions
+        - key: size
+          value:
             ask: What pizza size would you like?
             choice:
-                - small
-                - medium
-                - large
+              - small
+              - medium
+              - large
+    when: *wants-pizza
+
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="debug"><a class="header" href="#debug"><code>debug</code></a></h1>
 <p>This part can be used in conjunction with the debugger UI to peek into the bot's state.</p>
