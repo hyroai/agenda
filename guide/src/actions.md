@@ -34,3 +34,6 @@ actions:
     when: *wants-pizza
 
 ```
+
+The remote server will be invoked with an HTTP post and a JSON body. The JSON will contain key-value mapping of known values from the `needs` definition.
+The server should respond with a string, or null to indicate nothing to say.
