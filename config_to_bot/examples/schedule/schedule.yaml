@@ -16,9 +16,6 @@
 # [ ] better bot UX
 #     [ ] when choosing date that we can't accommodate use a relevant anti ack (instead of please rephrase)
 slots:
-#  - &location
-#    type: location
-#    ask: where will you be needing a meeting room?
   - &date
     type: date
     ask: On what day is your meeting?
@@ -28,14 +25,10 @@ slots:
   - &available-slots
     state-remote: http://localhost:8000/available-slots
     needs:
-#      - key: location
-#        value: *location
       - key: date
         value: *date
       - key: time
         value: *time
-#      - key: cannot
-#        value: *cannot
   - &chosen-slot
     choice: *available-slots
     ask: "I have these options: {}. Which do you prefer?"
@@ -44,15 +37,7 @@ actions:
     needs:
       - key: chosen-slot
         value: *chosen-slot
-#      - key: location
-#        value: *location
-#      - key: date
-#        value: *date
-#      - key: time
-#        value: *time
 debug:
-#  - key: location
-#    value: *location
  - key: date
    value: *date
  - key: time
