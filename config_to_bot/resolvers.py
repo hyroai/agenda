@@ -156,8 +156,10 @@ def _say(say: str):
 def _say_with_needs(
     say: str, needs: Iterable[Tuple[str, base_types.GraphType]]
 ) -> base_types.GraphType:
-    assert _is_format_string(say), "say must be a template if it has needs."
-    return agenda.utter_optionally_needs(agenda.say(_render_template(say)), dict(needs))
+    return agenda.utter_optionally_needs(
+        agenda.say(_render_template(say) if _is_format_string(say) else say),
+        dict(needs),
+    )
 
 
 def _when(say: Union[str, base_types.GraphOrCallable], when: base_types.GraphType):
