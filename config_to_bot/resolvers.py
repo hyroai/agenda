@@ -160,8 +160,16 @@ def _say_with_needs(
     return agenda.utter_optionally_needs(agenda.say(_render_template(say)), dict(needs))
 
 
-def _when(say: Union[str, Callable], when: base_types.GraphType):
+def _when(say: Union[str, base_types.GraphOrCallable], when: base_types.GraphType):
     return agenda.when(when, agenda.say(say) if isinstance(say, str) else say)
+
+
+def _say_needs_when(
+    say: str,
+    needs: Iterable[Tuple[str, base_types.GraphType]],
+    when: base_types.GraphType,
+):
+    return _when(_say_with_needs(say, needs), when)
 
 
 def _is_format_string(say):
@@ -499,6 +507,7 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _ask_about_multiple_choice,
         _say,
         _say_with_needs,
+        _say_needs_when,
         _when,
         _remote_state(remote_function),
         _remote_utter(remote_function),
