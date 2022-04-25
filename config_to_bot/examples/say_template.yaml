@@ -15,3 +15,6 @@ actions:
         value: *name
       - key: size
         value: *size
+    when:
+      is: *size
+      equals: "large"

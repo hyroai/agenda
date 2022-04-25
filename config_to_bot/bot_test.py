@@ -239,9 +239,9 @@ test_say_template = _make_test(
     _from_examples("say_template.yaml"),
     [
         [
-            ["hi", "What is your name?"],
-            ["Eli Libman", "Got it. small large or medium?"],
-            ["large", "Got it. Eli Libman you said large."],
+            ["hi", "small large or medium?"],
+            ["large", "Got it. What is your name?"],
+            ["Eli Libman", "Got it. Eli Libman you said large."],
         ]
     ],
     gamla.just(""),
