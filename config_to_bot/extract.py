@@ -20,9 +20,6 @@ def _cached_inflect_engine():
     return inflect.engine()
 
 
-_INFLECT_ENGINE = _cached_inflect_engine()
-
-
 def _remove_punctuation(text: str) -> str:
     return re.sub(r"[.,!?;]", "", text)
 
@@ -79,14 +76,14 @@ _NEGATIVE = {
 
 @functools.cache
 def _singular_noun(word: str) -> str:
-    return _INFLECT_ENGINE.singular_noun(word) or word
+    return _cached_inflect_engine().singular_noun(word) or word
 
 
 @functools.cache
 def _plural_noun(word: str) -> str:
-    if _INFLECT_ENGINE.singular_noun(word):
+    if _cached_inflect_engine().singular_noun(word):
         return word
-    return _INFLECT_ENGINE.plural_noun(word, count=None)
+    return _cached_inflect_engine().plural_noun(word, count=None)
 
 
 _singularize_or_pluralize_words: Callable[
