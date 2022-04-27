@@ -323,3 +323,16 @@ test_parsing_amount = _make_test(
     ],
     _pizza_api_mock,
 )
+
+
+test_multi_words_options = _make_test(
+    _from_examples("covid/covid.yaml"),
+    [
+        [
+            ["Hey.", "are you under 18?"],
+            ["No...", "Got it. what is your profession?"],
+            ["Mechanical engineer", "Got it."],
+        ]
+    ],
+    gamla.just(""),
+)

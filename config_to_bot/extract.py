@@ -111,6 +111,16 @@ def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> flo
     )
 
 
+_text_to_lower_case_words: Callable[[str], Iterable[str]] = gamla.compose_left(
+    lambda text: re.findall(r"[\w']+|[.,!?;]", text.lower())
+)
+
+
+_text_to_ngram_text: Callable[[str], Tuple[str]] = gamla.compose_left(
+    _text_to_lower_case_words, gamla.get_all_n_grams, gamla.map(" ".join), tuple
+)
+
+
 def faq_score(question: str, user_utternace: str) -> float:
     return gamla.pipe(
         user_utternace,
@@ -158,11 +168,6 @@ address: Callable[[str], str] = gamla.compose_left(
 )
 
 
-_text_to_lower_case_words: Callable[[str], Iterable[str]] = gamla.compose_left(
-    lambda text: re.findall(r"[\w']+|[.,!?;]", text.lower())
-)
-
-
 def intent(examples: Tuple[str, ...]) -> Callable[[str], bool]:
     def parse_bool(user_utterance: str):
         return bool(examples) and _sentences_similarity(user_utterance, examples) >= 0.9
@@ -190,7 +195,7 @@ def multiple_choices(
     options: Tuple[str, ...]
 ) -> Callable[[str], Tuple[str, agenda.Unknown]]:
     return gamla.compose_left(
-        _text_to_lower_case_words,
+        _text_to_ngram_text,
         gamla.filter(
             gamla.contains([*_singularize_or_pluralize_words(options), "none"])
         ),
@@ -246,7 +251,7 @@ def datetime_choice(options, relative_to):
 
 def single_choice(options: Tuple[str, ...]) -> Callable[[str], str]:
     return gamla.compose_left(
-        _text_to_lower_case_words,
+        _text_to_ngram_text,
         gamla.filter(gamla.contains(_singularize_or_pluralize_words(options))),
         tuple,
         gamla.ternary(gamla.len_equals(1), gamla.head, gamla.just(agenda.UNKNOWN)),

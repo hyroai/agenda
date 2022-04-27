@@ -43,7 +43,7 @@ def _complement(not_: base_types.GraphType) -> base_types.GraphType:
     return agenda.complement(not_)
 
 
-def _equals(is_: base_types.GraphType, equals: int):
+def _equals(is_: base_types.GraphType, equals: Union[str, int]):
     return agenda.equals(equals)(is_)
 
 
