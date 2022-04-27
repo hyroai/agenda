@@ -1,20 +1,18 @@
-definitions:
+slots:
   - &under-18
     ask: are you under 18?
-    listen:
-      type: bool
+    type: boolean
   - &profession
     ask: what is your profession?
-    listen:
-      type: single-choice
-      options:
+    choice:
         - teacher
         - doctor
         - programmer
+        - mechanical engineer
   - &is-teacher
     is: *profession
     equals: teacher
-goals:
+actions:
   - say: you are eligible!
     when:
       any:
