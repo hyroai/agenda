@@ -14,7 +14,13 @@ import agenda
 
 _nlp = spacy.load("en_core_web_lg")
 
-_INFLECT_ENGINE = inflect.engine()
+
+@functools.cache
+def _cached_inflect_engine():
+    return inflect.engine()
+
+
+_INFLECT_ENGINE = _cached_inflect_engine()
 
 
 def _remove_punctuation(text: str) -> str:
