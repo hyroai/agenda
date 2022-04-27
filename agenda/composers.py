@@ -387,7 +387,11 @@ def _compose_state_dict(
         dependencies,
         gamla.valmap(state_sink),
         missing_cg_utils.package_into_dict,
-        missing_cg_utils.compose_curry(missing_cg_utils.infer_source(recipient)),
+        gamla.excepts(
+            AssertionError,
+            gamla.just(lift.any_to_graph(missing_cg_utils.infer_source(recipient))),
+            missing_cg_utils.compose_curry(missing_cg_utils.infer_source(recipient)),
+        ),
         gamla.remove(gamla.contains(set(recipient))),
         tuple,
     )

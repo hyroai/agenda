@@ -1,9 +1,11 @@
 import datetime
+import functools
 import re
 from typing import Callable, Iterable, Tuple, Union, cast
 
 import dateparser
 import gamla
+import inflect
 import number_parser
 import pyap
 import spacy
@@ -11,6 +13,8 @@ import spacy
 import agenda
 
 _nlp = spacy.load("en_core_web_lg")
+
+_INFLECT_ENGINE = inflect.engine()
 
 
 def _remove_punctuation(text: str) -> str:
@@ -65,6 +69,29 @@ _NEGATIVE = {
     "i disagree",
     "disagree",
 }
+
+
+@functools.cache
+def _singular_noun(word: str) -> str:
+    return _INFLECT_ENGINE.singular_noun(word) or word
+
+
+@functools.cache
+def _plural_noun(word: str) -> str:
+    if _INFLECT_ENGINE.singular_noun(word):
+        return word
+    return _INFLECT_ENGINE.plural_noun(word, count=None)
+
+
+_singularize_or_pluralize_words: Callable[
+    [Iterable[str]], Tuple[str, ...]
+] = gamla.compose_left(
+    gamla.juxtcat(
+        gamla.compose_left(gamla.map(_singular_noun), frozenset),
+        gamla.compose_left(gamla.map(_plural_noun), frozenset),
+    ),
+    tuple,
+)
 
 
 def _sentences_similarity(user_utterance: str, examples: Tuple[str, ...]) -> float:
@@ -161,7 +188,9 @@ def multiple_choices(
 ) -> Callable[[str], Tuple[str, agenda.Unknown]]:
     return gamla.compose_left(
         _text_to_lower_case_words,
-        gamla.filter(gamla.contains([*options, "none"])),
+        gamla.filter(
+            gamla.contains([*_singularize_or_pluralize_words(options), "none"])
+        ),
         tuple,
         gamla.when(gamla.empty, gamla.just(agenda.UNKNOWN)),
         gamla.when(
@@ -215,7 +244,7 @@ def datetime_choice(options, relative_to):
 def single_choice(options: Tuple[str, ...]) -> Callable[[str], str]:
     return gamla.compose_left(
         _text_to_lower_case_words,
-        gamla.filter(gamla.contains(options)),
+        gamla.filter(gamla.contains(_singularize_or_pluralize_words(options))),
         tuple,
         gamla.ternary(gamla.len_equals(1), gamla.head, gamla.just(agenda.UNKNOWN)),
     )
@@ -223,8 +252,11 @@ def single_choice(options: Tuple[str, ...]) -> Callable[[str], str]:
 
 amount = gamla.compose_left(
     _remove_punctuation,
-    number_parser.parse_number,
-    gamla.unless(gamla.identity, gamla.just(agenda.UNKNOWN)),
+    _text_to_lower_case_words,
+    gamla.map(number_parser.parse_number),
+    gamla.remove(gamla.equals(None)),
+    tuple,
+    gamla.ternary(gamla.nonempty, gamla.head, gamla.just(agenda.UNKNOWN)),
 )
 
 

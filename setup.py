@@ -18,6 +18,7 @@ setuptools.setup(
         "dataclasses",
         "dateparser",
         "httpx",
+        "inflect",
         "pyap",
         "spacy",
         "asyncio",
