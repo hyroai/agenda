@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, Iterable, Set, Tuple, Union
 
 import gamla
 import httpx
+import knowledge_graph
 from computation_graph import base_types, composers, graph
 from computation_graph.composers import lift
 
@@ -238,9 +239,40 @@ _parse_isodatetime_or_none = gamla.excepts(
 )
 
 
+def _option_has_more_than_a_single_type(kg) -> Callable[[Tuple[str, ...]], bool]:
+    return gamla.anymap(
+        gamla.compose_left(
+            lambda option: knowledge_graph.find_exactly_bare(option, kg),
+            knowledge_graph.get_node_types,
+            gamla.len_greater(1),
+        )
+    )
+
+
+def _get_options_from_string(
+    type_string: str, kg: knowledge_graph.KnowledgeGraph
+) -> Tuple[str, ...]:
+    return gamla.pipe(
+        knowledge_graph.find_exactly_bare(type_string, kg),
+        knowledge_graph.get_node_instances,
+        gamla.map(knowledge_graph.get_node_title),
+        tuple,
+    )
+
+
+@gamla.curry
 def _ask_about_choice(
-    choice: Union[Tuple[str, ...], base_types.CallableOrNodeOrGraph], ask: str
+    kg: knowledge_graph.KnowledgeGraph,
+    choice: Union[str, base_types.CallableOrNodeOrGraph],
+    ask: str,
 ):
+    if isinstance(choice, str):
+        options_for_single_choice = _get_options_from_string(choice, kg)
+        should_asker_participate = gamla.pipe(
+            options_for_single_choice, _option_has_more_than_a_single_type(kg)
+        )
+    else:
+        should_asker_participate = False
     options = _lift_any_to_state_graph(choice)
 
     @agenda.consumes_external_event("user_utterance")
@@ -254,7 +286,7 @@ def _ask_about_choice(
             if not did_participate:
                 return agenda.UNKNOWN
             return extract.datetime_choice(date_options, now)(user_utterance)
-        return extract.single_choice(options)(user_utterance)
+        return extract.single_choice(options_for_single_choice)(user_utterance)
 
     return agenda.combine_utter_sinks(
         missing_cg_utils.remove_nodes([agenda.composers.state])(options),
@@ -263,7 +295,12 @@ def _ask_about_choice(
                 agenda.mark_state(
                     composers.compose_left_future(
                         agenda.participated,
-                        _parse_dynamic_choice,
+                        gamla.pipe(
+                            _parse_dynamic_choice,
+                            agenda.if_participated
+                            if should_asker_participate
+                            else gamla.identity,
+                        ),
                         "did_participate",
                         False,
                     )
@@ -276,12 +313,16 @@ def _ask_about_choice(
     )
 
 
-def _ask_about_multiple_choice(
-    multiple_choice: Tuple[str, ...], ask: base_types.GraphType
-):
+@gamla.curry
+def _ask_about_multiple_choice(kg, multiple_choice: str, ask: base_types.GraphType):
+    options = _get_options_from_string(multiple_choice, kg)
     return agenda.slot(
         gamla.pipe(
-            extract.multiple_choices(multiple_choice), agenda.listener_with_memory
+            extract.multiple_choices(options),
+            agenda.if_participated
+            if _option_has_more_than_a_single_type(kg)(options)
+            else gamla.identity,
+            agenda.listener_with_memory,
         ),
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
@@ -495,7 +536,13 @@ def _amount_of(amount_of: str, ask: str):
     )
 
 
-def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
+def _concept_and_instances(concept: str, instances: Iterable[str]):
+    return ()
+
+
+def _composers_for_dag_reducer(
+    remote_function: Callable, kg: knowledge_graph.KnowledgeGraph
+) -> Set[Callable]:
     return {
         _amount_of,
         _first_known,
@@ -505,8 +552,8 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _kv,
         _build_remote_resolver(remote_function),
         _listen_to_intent,
-        _ask_about_choice,
-        _ask_about_multiple_choice,
+        _ask_about_choice(kg),
+        _ask_about_multiple_choice(kg),
         _say,
         _say_with_needs,
         _say_needs_when,
@@ -531,6 +578,7 @@ def _composers_for_dag_reducer(remote_function: Callable) -> Set[Callable]:
         _render_template,
         _actions,
         _knowledge,
+        _concept_and_instances,
     }
 
 

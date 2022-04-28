@@ -1,14 +1,17 @@
+knowledge: 
+  - concept: profession
+    instances:
+      - teacher
+      - doctor
+      - programmer
+      - mechanical engineer
 slots:
   - &under-18
     ask: are you under 18?
     type: boolean
   - &profession
     ask: what is your profession?
-    choice:
-        - teacher
-        - doctor
-        - programmer
-        - mechanical engineer
+    choice: profession
   - &is-teacher
     is: *profession
     equals: teacher

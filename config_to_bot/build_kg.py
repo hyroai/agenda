@@ -2,7 +2,9 @@ import dataclasses
 from typing import Callable, Dict, FrozenSet, Iterable, List, Tuple, Union
 
 import gamla
+import knowledge_graph
 from computation_graph import base_types
+from knowledge_graph import primitives
 
 from config_to_bot import dag_reducer
 
@@ -129,3 +131,59 @@ def reduce_kg(reducer: Callable, triplets: FrozenSet[_Triplet]) -> base_types.Gr
         ),
         gamla.itemgetter(_infer_sink(dependencies)),
     )
+
+
+def _build_trigger_and_display_triplets(
+    subject: str, relation: str, object: str
+) -> FrozenSet[knowledge_graph.Triplet]:
+    return frozenset(
+        {
+            knowledge_graph.display_triplet(
+                subject, primitives.text_to_textual(object)
+            ),
+            knowledge_graph.trigger_triplet(
+                subject, primitives.text_to_textual(object)
+            ),
+        }
+    )
+
+
+def _build_instances_triplets(
+    subject: str, relation: str, instances: Tuple[str, ...]
+) -> FrozenSet[knowledge_graph.Triplet]:
+    return gamla.pipe(
+        instances,
+        gamla.mapcat(
+            gamla.compose_left(
+                gamla.juxt(
+                    lambda instance: knowledge_graph.type_triplet(instance, subject),
+                    lambda instance: knowledge_graph.trigger_triplet(
+                        instance, primitives.text_to_textual(instance)
+                    ),
+                    lambda instance: knowledge_graph.display_triplet(
+                        instance, primitives.text_to_textual(instance)
+                    ),
+                ),
+                frozenset,
+            )
+        ),
+        frozenset,
+    )
+
+
+_triplet_transformer = gamla.case_dict(
+    gamla.keymap(gamla.before(gamla.second))(
+        {
+            gamla.equals("instances"): gamla.star(_build_instances_triplets),
+            gamla.equals("concept"): gamla.star(_build_trigger_and_display_triplets),
+            gamla.just(True): gamla.wrap_frozenset,
+        }
+    )
+)
+
+
+adapt_kg: Callable[
+    [FrozenSet[_Triplet]], knowledge_graph.KnowledgeGraph
+] = gamla.compose_left(
+    gamla.mapcat(_triplet_transformer), frozenset, knowledge_graph.from_triplets
+)

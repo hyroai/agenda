@@ -1,13 +1,16 @@
+knowledge:
+  - concept: size
+    instances:
+      - small
+      - medium
+      - large
 slots:
   - &name
     ask: What is your name?
     type: name
   - &size
     ask: small large or medium?
-    choice:
-      - small
-      - medium
-      - large
+    choice: size
 actions:
   - say: "{name} you said {size}."
     needs:
