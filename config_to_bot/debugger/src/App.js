@@ -242,7 +242,23 @@ const StatusBar = ({ connectionStatus: { color, text } }) => (
     <div>Hit ctrl+k for commands</div>
   </div>
 );
-const configExample = `slots:
+const configExample = `
+knowledge:
+  - faq:
+      - question: What is your opening hours?
+        answer: 2pm to 10pm every day.
+  - concept: size
+    instances:
+      - small
+      - medium
+      - large
+  - concept: toppings
+    instances:
+      - mushrooms
+      - olives
+      - tomatoes
+      - onions
+slots:
   - &name
     ack: Nice to meet you {}!
     ask: What is your name?
@@ -272,17 +288,10 @@ const configExample = `slots:
     type: boolean
   - &toppings
     ask: What kind of toppings would you like?
-    multiple-choice:
-      - mushrooms
-      - olives
-      - tomatoes
-      - onions
+    multiple-choice: toppings
   - &size
     ask: What pizza size would you like?
-    choice:
-      - small
-      - medium
-      - large
+    choice: size
 actions:
   - say: I can only help with pizza reservations.
     when:
@@ -310,10 +319,6 @@ actions:
       all:
         - *wants-pizza
         - not: *is-vegan
-knowledge:
-  - faq:
-      - question: What is your opening hours?
-        answer: 2pm to 10pm every day.
 debug:
   - key: toppings
     value: *toppings
