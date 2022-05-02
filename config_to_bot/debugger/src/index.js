@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useState, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import App from "./App";
 
 const IdeWrapper = () => {
@@ -12,9 +12,11 @@ const IdeWrapper = () => {
   );
 };
 
-ReactDOM.render(
-  <React.StrictMode>
+const rootElement = document.getElementById("root");
+const root = createRoot(rootElement);
+
+root.render(
+  <StrictMode>
     <IdeWrapper />
-  </React.StrictMode>,
-  document.getElementById("root")
+  </StrictMode>
 );
