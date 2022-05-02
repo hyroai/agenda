@@ -250,11 +250,13 @@ const App = ({
   actions,
 }) => {
   const [configExample, setConfigExample] = useState("");
-  fetch(doc)
-    .then((response) => response.text())
-    .then((textContent) => {
-      setConfigExample(textContent);
-    });
+  useEffect(() => {
+    fetch(doc)
+      .then((response) => response.text())
+      .then((textContent) => {
+        setConfigExample(textContent);
+      });
+  }, [configExample, setConfigExample]);
   const [events, addEvent] = useReducer(
     (state, current) =>
       [configurationType, resetType].includes(current.type)
