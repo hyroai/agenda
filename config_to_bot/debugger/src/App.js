@@ -15,6 +15,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 
 import React from "react";
 import tinykeys from "tinykeys";
+import doc from "./configExample.yaml";
 
 // const monacoReddish = "#ce9178";
 // const monacoWhiteish = "#d4d4d4";
@@ -242,101 +243,18 @@ const StatusBar = ({ connectionStatus: { color, text } }) => (
     <div>Hit ctrl+k for commands</div>
   </div>
 );
-const configExample = `
-knowledge:
-  - faq:
-      - question: What is your opening hours?
-        answer: 2pm to 10pm every day.
-  - concept: size
-    instances:
-      - small
-      - medium
-      - large
-  - concept: toppings
-    instances:
-      - mushrooms
-      - olives
-      - tomatoes
-      - onions
-slots:
-  - &name
-    ack: Nice to meet you {}!
-    ask: What is your name?
-    type: name
-  - &phone
-    ask: What is your phone number?
-    type: phone
-  - &email
-    ask: What is your email?
-    type: email
-  - &amount_of_pizzas
-    ask: How many pies would you like?
-    amount-of: pie
-  - &wants-pizza-question
-    ask: Would you like to order pizza?
-    type: boolean
-  - &wants-pizza-intent
-    intent:
-      - I want to order pizza
-      - I want pizza
-  - &wants-pizza
-    any:
-      - *wants-pizza-question
-      - *wants-pizza-intent
-  - &is-vegan
-    ask: Are you vegan?
-    type: boolean
-  - &toppings
-    ask: What kind of toppings would you like?
-    multiple-choice: toppings
-  - &size
-    ask: What pizza size would you like?
-    choice: size
-actions:
-  - say: I can only help with pizza reservations.
-    when:
-      not: *wants-pizza
-  - say: We currently do not sell vegan pizzas.
-    when:
-      all:
-        - *wants-pizza
-        - *is-vegan
-  - say: Thank you {name}! I got your phone {phone}, and your email {email}. You want {amount_of_pizzas} {size} pizzas.
-    needs:
-      - key: name
-        value: *name
-      - key: amount_of_pizzas
-        value: *amount_of_pizzas
-      - key: toppings
-        value: *toppings
-      - key: size
-        value: *size
-      - key: phone
-        value: *phone
-      - key: email
-        value: *email
-    when:
-      all:
-        - *wants-pizza
-        - not: *is-vegan
-debug:
-  - key: toppings
-    value: *toppings
-  - key: amount_of_pizzas
-    value: *amount_of_pizzas
-  - key: size
-    value: *size
-  - key: wants-pizza
-    value: *wants-pizza
-  - key: wants-pizza-intent
-    value: *wants-pizza-intent
-`;
 const App = ({
   serverSocketUrl,
   setConfigurationText,
   configurationText,
   actions,
 }) => {
+  const [configExample, setConfigExample] = useState("");
+  fetch(doc)
+    .then((response) => response.text())
+    .then((textContent) => {
+      setConfigExample(textContent);
+    });
   const [events, addEvent] = useReducer(
     (state, current) =>
       [configurationType, resetType].includes(current.type)
