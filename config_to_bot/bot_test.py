@@ -9,9 +9,11 @@ from config_to_bot import yaml_to_bot
 
 _MOCK_APPOINTMENTS = ("2022-04-22T17:20:00", "2022-04-24T17:20:00")
 
+_DIR_NAME = os.path.dirname(os.path.realpath(__file__))
+
 
 def _from_examples(path):
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), "examples", path)
+    return os.path.join(_DIR_NAME, "examples", path)
 
 
 _PIZZA_YAML = _from_examples("pizza/pizza.yaml")
@@ -332,6 +334,27 @@ test_multi_words_options = _make_test(
             ["Hey.", "are you under 18?"],
             ["No...", "Got it. what is your profession?"],
             ["Mechanical engineer", "Got it."],
+        ]
+    ],
+    gamla.just(""),
+)
+
+test_config_example = _make_test(
+    os.path.join(_DIR_NAME, "debugger/src/configExample.yaml"),
+    [
+        [
+            ["hi", "Would you like to order pizza?"],
+            ["yes, I want pizza", "Got it. Are you vegan?"],
+            ["no", "Got it. What is your name?"],
+            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["4", "Got it. What kind of toppings would you like?"],
+            ["mushrooms and olives", "Got it. What pizza size would you like?"],
+            ["small", "Got it. What is your phone number?"],
+            ["9998887777", "Got it. What is your email?"],
+            [
+                "abcd1234@gmail.com",
+                "Got it. Thank you Yoni! I got your phone 9998887777, and your email abcd1234@gmail.com. You want 4 small pizzas.",
+            ],
         ]
     ],
     gamla.just(""),
