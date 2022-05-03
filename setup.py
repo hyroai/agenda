@@ -20,6 +20,7 @@ setuptools.setup(
         "httpx",
         "inflect",
         "knowledge-graph @ git+https://github.com/hyroai/knowledge-graph.git@b36e9b366ac5cbb2486427628133362dec6ca629",
+        "phonenumbers",
         "pyap",
         "spacy",
         "asyncio",
