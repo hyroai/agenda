@@ -150,6 +150,24 @@ def _build_remote_resolver(request: Callable):
     return remote
 
 
+def _say_once(say_once: str):
+    return agenda.slot(
+        agenda.remember(
+            agenda.mark_state(
+                composers.compose_left_future(
+                    agenda.participated,
+                    lambda participated: participated or agenda.UNKNOWN,
+                    None,
+                    False,
+                )
+            )
+        ),
+        agenda.say(say_once),
+        agenda.ack(None),
+        agenda.anti_ack(None),
+    )
+
+
 def _say(say: str):
     return agenda.say(say)
 
@@ -554,6 +572,7 @@ def _composers_for_dag_reducer(
         _listen_to_intent,
         _ask_about_choice(kg),
         _ask_about_multiple_choice(kg),
+        _say_once,
         _say,
         _say_with_needs,
         _say_needs_when,

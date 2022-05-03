@@ -67,7 +67,7 @@ test_skip_toppings_question = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Would you like to order pizza?"],
+            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
             ["yes I want pizza with olives", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -81,7 +81,7 @@ test_happy_flow = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Would you like to order pizza?"],
+            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -103,7 +103,7 @@ test_happy_flow_without_toppings = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Would you like to order pizza?"],
+            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -126,7 +126,7 @@ test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Would you like to order pizza?"],
+            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
             ["yes, I want 2 large pizzas with mushrooms", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! What is your address?"],
@@ -158,7 +158,7 @@ test_multiple_choice_robustness = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Would you like to order pizza?"],
+            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -183,7 +183,10 @@ test_misunderstanding = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             [
                 "hi again",
                 "I'm sorry I couldn't get that. Please rephrase. Would you like to order pizza?",
@@ -199,21 +202,30 @@ test_punctuation_robustness = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
             ["4 pizzas.", "Got it. What kind of toppings would you like?"],
         ],
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
             ["4.", "Got it. What kind of toppings would you like?"],
         ],
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni.", "Nice to meet you Yoni! How many pies would you like?"],
@@ -227,7 +239,10 @@ test_remove_misunderstanding_when_answering_faq = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             [
                 "What are your opening times?",
                 "2pm to 10pm every day. Would you like to order pizza?",
@@ -254,7 +269,10 @@ test_capitalization_robustness = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["Yes", "Got it. Are you vegan?"],
         ]
     ],
@@ -301,7 +319,10 @@ test_singular_in_options = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -316,7 +337,10 @@ test_parsing_amount = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hello there", "Would you like to order pizza?"],
+            [
+                "hello there",
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -343,7 +367,7 @@ test_config_example = _make_test(
     os.path.join(_DIR_NAME, "debugger/src/configExample.yaml"),
     [
         [
-            ["hi", "Would you like to order pizza?"],
+            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
