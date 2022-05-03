@@ -109,7 +109,7 @@ def _set_question(sentence, element):
 def _add_statement(sentence, element):
     assert element != EMPTY_SENTENCE
     return gamla.freeze_deep(
-        gamla.update_in(sentence, [_STATEMENT], {element}.union, frozenset())
+        gamla.assoc_in(sentence, [_STATEMENT], frozenset({element}))
     )
 
 
