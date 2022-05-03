@@ -7,6 +7,7 @@ import dateparser
 import gamla
 import inflect
 import number_parser
+import phonenumbers
 import pyap
 import spacy
 
@@ -138,10 +139,16 @@ email: Callable[[str], str] = gamla.compose_left(
 )
 
 phone: Callable[[str], str] = gamla.compose_left(
-    gamla.regex_match(re.compile(r"((?:\(\d{3}\) ?|\d{3}-?)?\d{3}[- ]?\d{4})")),
-    gamla.ternary(
-        gamla.identity, gamla.apply_method("group", 1), gamla.just(agenda.UNKNOWN)
+    lambda text: phonenumbers.PhoneNumberMatcher(
+        text, "US", leniency=phonenumbers.Leniency.POSSIBLE
     ),
+    gamla.map(
+        lambda match: phonenumbers.format_number(
+            match.number, phonenumbers.PhoneNumberFormat.NATIONAL
+        )
+    ),
+    tuple,
+    gamla.ternary(gamla.identity, gamla.head, gamla.just(agenda.UNKNOWN)),
 )
 
 person_name: Callable[[str], str] = gamla.compose_left(
