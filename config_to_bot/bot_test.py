@@ -5,6 +5,7 @@ from typing import Dict, Tuple
 import gamla
 
 import agenda
+from agenda import events
 from config_to_bot import yaml_to_bot
 
 _MOCK_APPOINTMENTS = ("2022-04-22T17:20:00", "2022-04-24T17:20:00")
@@ -67,7 +68,10 @@ test_skip_toppings_question = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
+            [
+                events.conversation_start(),
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes I want pizza with olives", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -81,7 +85,10 @@ test_happy_flow = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
+            [
+                events.conversation_start(),
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -103,7 +110,10 @@ test_happy_flow_without_toppings = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
+            [
+                events.conversation_start(),
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -126,7 +136,10 @@ test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
+            [
+                events.conversation_start(),
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes, I want 2 large pizzas with mushrooms", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! What is your address?"],
@@ -158,7 +171,10 @@ test_multiple_choice_robustness = _make_test(
     _PIZZA_YAML,
     [
         [
-            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
+            [
+                events.conversation_start(),
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
@@ -184,7 +200,7 @@ test_misunderstanding = _make_test(
     [
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             [
@@ -203,7 +219,7 @@ test_punctuation_robustness = _make_test(
     [
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             ["yes", "Got it. Are you vegan?"],
@@ -213,7 +229,7 @@ test_punctuation_robustness = _make_test(
         ],
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             ["yes", "Got it. Are you vegan?"],
@@ -223,7 +239,7 @@ test_punctuation_robustness = _make_test(
         ],
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             ["yes", "Got it. Are you vegan?"],
@@ -240,7 +256,7 @@ test_remove_misunderstanding_when_answering_faq = _make_test(
     [
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             [
@@ -256,7 +272,7 @@ test_say_template = _make_test(
     _from_examples("say_template.yaml"),
     [
         [
-            ["hi", "small large or medium?"],
+            [events.conversation_start(), "small large or medium?"],
             ["large", "Got it. What is your name?"],
             ["Eli Libman", "Got it. Eli Libman you said large."],
         ]
@@ -270,7 +286,7 @@ test_capitalization_robustness = _make_test(
     [
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             ["Yes", "Got it. Are you vegan?"],
@@ -284,7 +300,7 @@ test_scheduling = _make_test(
     _from_examples("schedule/schedule.yaml"),
     [
         [
-            ["hi", "On what day is your meeting?"],
+            [events.conversation_start(), "On what day is your meeting?"],
             [
                 ("Tomorrow", datetime.datetime(2022, 4, 19, 18)),
                 "Got it. On what time is your meeting?",
@@ -307,7 +323,7 @@ test_scheduling = _make_test(
 
 test_remote_listener = _make_test(
     _from_examples("hello/hello.yaml"),
-    [[["Hi", "say hello"], ["hello", "you said it"]]],
+    [[[events.conversation_start(), "say hello"], ["hello", "you said it"]]],
     gamla.ternary(
         lambda url, params: params["incoming_utterance"] == "hello",
         gamla.just(True),
@@ -320,7 +336,7 @@ test_singular_in_options = _make_test(
     [
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             ["yes", "Got it. Are you vegan?"],
@@ -338,7 +354,7 @@ test_parsing_amount = _make_test(
     [
         [
             [
-                "hello there",
+                events.conversation_start(),
                 "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
             ],
             ["yes", "Got it. Are you vegan?"],
@@ -367,7 +383,10 @@ test_config_example = _make_test(
     os.path.join(_DIR_NAME, "debugger/src/configExample.yaml"),
     [
         [
-            ["hi", "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?"],
+            [
+                events.conversation_start(),
+                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+            ],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
             ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],

@@ -11,7 +11,7 @@ from computation_graph import graph
 from starlette import websockets
 from uvicorn.main import Server
 
-from agenda import composers, sentence
+from agenda import composers, events, sentence
 from config_to_bot import resolvers, yaml_to_bot
 
 
@@ -38,7 +38,7 @@ def _create_socket_handler():
             if request["type"] == "configuration":
                 state = {}
                 try:
-                    bot = yaml_to_bot.yaml_to_slot_bot(request["data"])()
+                    bot = yaml_to_bot.yaml_to_slot_bot(request["data"])
                 except Exception as ex:
                     logging.exception(ex)
                     return _error_message(
@@ -48,40 +48,50 @@ def _create_socket_handler():
                         )
                         else f"Some field has an unsupported key or value. Consult the example configuration or the documentation. Details: {ex}"
                     )
-
-            if request["type"] == "reset" or (
-                request["type"] == "userUtterance"
-                and request["utterance"].lower() == "start over"
-            ):
-                state = {}
-                return _bot_utterance("Starting Over", None)
             if not bot:
                 return _error_message(
                     "You must provide a yaml in order to build a bot."
                 )
+
+            if (
+                request["type"] == "configuration"
+                or request["type"] == "reset"
+                or (
+                    request["type"] == "userUtterance"
+                    and request["utterance"].lower() == "start over"
+                )
+            ):
+                state = await bot(
+                    {},
+                    {
+                        composers.event: events.conversation_start(),
+                        composers.now: datetime.datetime.now(),
+                    },
+                )
+
             if request["type"] == "userUtterance":
                 state = await bot(
                     state,
                     {
-                        composers.event: request["utterance"],
+                        composers.event: events.user_utterance(request["utterance"]),
                         composers.now: datetime.datetime.now(),
                     },
                 )
-                return _bot_utterance(
-                    state[graph.make_computation_node(composers.utter)],
-                    gamla.pipe(
-                        graph.make_computation_node(resolvers.debug_states),
-                        gamla.dict_to_getter_with_default({}, state),
+            return _bot_utterance(
+                state[graph.make_computation_node(composers.utter)],
+                gamla.pipe(
+                    graph.make_computation_node(resolvers.debug_states),
+                    gamla.dict_to_getter_with_default({}, state),
+                    gamla.valmap(
                         gamla.valmap(
-                            gamla.valmap(
-                                gamla.when(
-                                    sentence.is_sentence_or_part,
-                                    yaml_to_bot.sentence_to_str,
-                                )
+                            gamla.when(
+                                sentence.is_sentence_or_part,
+                                yaml_to_bot.sentence_to_str,
                             )
-                        ),
+                        )
                     ),
-                )
+                ),
+            )
 
         await websocket.accept()
         while True:

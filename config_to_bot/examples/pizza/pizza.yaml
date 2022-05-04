@@ -51,7 +51,7 @@ slots:
     ask: What pizza size would you like?
     choice: size
 actions:
-  - say-once: Hi! I'm Margherita the PizzaBot!
+  - say-welcome: Hi! I'm Margherita the PizzaBot!
   - say: I can only help with pizza reservations.
     when:
       not: *wants-pizza

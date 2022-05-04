@@ -4,7 +4,9 @@ import gamla
 from computation_graph import graph
 
 import agenda
-from agenda import composers
+from agenda import composers, events
+
+_ensure_event = gamla.when(gamla.is_instance(str), events.user_utterance)
 
 
 @gamla.curry
@@ -27,16 +29,16 @@ def expect_convos(convos, f):
                     await bot(
                         state,
                         {
-                            composers.event: input_event,
-                            composers.now: datetime.datetime.now(),
+                            composers.event: _ensure_event(input_event[0]),
+                            composers.now: input_event[1],
                         },
                     )
-                    if isinstance(input_event, str)
+                    if isinstance(input_event, tuple)
                     else await bot(
                         state,
                         {
-                            composers.event: input_event[0],
-                            composers.now: input_event[1],
+                            composers.event: _ensure_event(input_event),
+                            composers.now: datetime.datetime.now(),
                         },
                     )
                 )
