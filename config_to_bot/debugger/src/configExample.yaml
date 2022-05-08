@@ -1,7 +1,6 @@
 knowledge:
   - faq:
-      - question: What is your opening hours?
-        answer: 2pm to 10pm every day.
+      -  answer: 2pm to 10pm every day.
   - concept: size
     instances:
       - small
