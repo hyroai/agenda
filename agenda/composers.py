@@ -3,7 +3,7 @@ from typing import Callable, Collection, Dict, FrozenSet, Iterable
 
 import gamla
 from computation_graph import base_types, composers, graph, run
-from computation_graph.composers import lift, logic, memory
+from computation_graph.composers import condition, lift, logic, memory
 
 from agenda import missing_cg_utils, sentence
 
@@ -33,6 +33,15 @@ def state(state):
 @gamla.curry
 def consumes_external_event(at, x):
     return composers.compose_source(x, at, event)
+
+
+@gamla.curry
+def consumes_user_utterance(at, x):
+    is_user_utterance = consumes_external_event(None, gamla.is_instance(str))
+    user_utterance = condition.require_or_default("")(
+        is_user_utterance, consumes_external_event(None, lambda x: x)
+    )
+    return composers.compose_left(user_utterance, x, key=at)
 
 
 @gamla.curry
@@ -289,7 +298,7 @@ inside = gamla.compose(_map_state, gamla.inside)
 contains = gamla.compose(_map_state, gamla.contains)
 
 listener_with_memory = gamla.compose(
-    remember, mark_state, consumes_external_event(None)
+    remember, mark_state, consumes_user_utterance(None)
 )
 
 
