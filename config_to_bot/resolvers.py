@@ -12,10 +12,10 @@ from computation_graph import base_types, composers, graph
 from computation_graph.composers import lift
 
 import agenda
-from agenda import missing_cg_utils
+from agenda import events, missing_cg_utils
 from config_to_bot import extract
 
-_TYPE_TO_LISTENER = gamla.valmap(agenda.consumes_external_event(None))(
+_TYPE_TO_LISTENER = gamla.valmap(agenda.consumes_user_utterance(None))(
     {
         "email": extract.email,
         "phone": extract.phone,
@@ -76,7 +76,7 @@ def _kv(
     if value == "incoming_utterance":
         return (
             key,
-            agenda.mark_state(agenda.consumes_external_event("x", lambda x: x)),
+            agenda.mark_state(agenda.consumes_user_utterance("x", lambda x: x)),
         )
     return (key, value)
 
@@ -148,6 +148,18 @@ def _build_remote_resolver(request: Callable):
         return post_request
 
     return remote
+
+
+def _event_is(event_is: str):
+    return agenda.mark_state(
+        agenda.consumes_external_event(
+            None,
+            gamla.alljuxt(
+                gamla.is_instance(events.ConversationEvent),
+                gamla.attr_equals("type", event_is.replace(" ", "_").upper()),
+            ),
+        )
+    )
 
 
 def _say(say: str):
@@ -226,7 +238,7 @@ def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> Callable[[str], str]:
         )
 
     return agenda.say(
-        agenda.consumes_external_event("user_utterance", highest_ranked_faq_with_score)
+        agenda.consumes_user_utterance("user_utterance", highest_ranked_faq_with_score)
     )
 
 
@@ -275,7 +287,7 @@ def _ask_about_choice(
         should_asker_participate = False
     options = _lift_any_to_state_graph(choice)
 
-    @agenda.consumes_external_event("user_utterance")
+    @agenda.consumes_user_utterance("user_utterance")
     @agenda.consumes_time("now")
     @composers.compose_left_dict({"options": agenda.state_sink(options)})
     def _parse_dynamic_choice(user_utterance, now, did_participate, options):
@@ -557,6 +569,7 @@ def _composers_for_dag_reducer(
         _say,
         _say_with_needs,
         _say_needs_when,
+        _event_is,
         _when,
         _remote_state(remote_function),
         _remote_utter(remote_function),
