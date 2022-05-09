@@ -349,7 +349,32 @@ def _slot_with_remote(remote: base_types.GraphType, ask: str):
     )
 
 
+def _ask_about_name(ack, ask: str):
+    typed_state = _typed_state("name")
+    name_listener = gamla.pipe(
+        extract.person_name_less_strict,
+        agenda.if_participated,
+        agenda.listener_with_memory,
+    )
+    name_slot = agenda.first_known(
+        typed_state,
+        agenda.slot(
+            name_listener,
+            agenda.ask(ask),
+            agenda.ack(_compose_template(ack, name_listener)),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+        ),
+    )
+    return agenda.utter_unless_known_and_ack(
+        name_slot,
+        agenda.ack(_compose_template(ack, name_slot)),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+    )
+
+
 def _ask_about(type: str, ask: str) -> base_types.GraphType:
+    if type == "name":
+        return _ask_about_name(agenda.GENERIC_ACK, ask)
     return agenda.slot(
         _typed_state(type),
         agenda.ask(ask),
@@ -359,6 +384,8 @@ def _ask_about(type: str, ask: str) -> base_types.GraphType:
 
 
 def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
+    if type == "name":
+        return _ask_about_name(ack, ask)
     typed_state = _typed_state(type)
     return agenda.slot(
         typed_state,

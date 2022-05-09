@@ -304,7 +304,7 @@ test_singular_in_options = _make_test(
             ["hello there", "Would you like to order pizza?"],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Eli", "Nice to meet you Eli! How many pies would you like?"],
             ["4 pizzas.", "Got it. What kind of toppings would you like?"],
             ["mushroom and olive.", "Got it. What pizza size would you like?"],
         ]
@@ -319,7 +319,7 @@ test_parsing_amount = _make_test(
             ["hello there", "Would you like to order pizza?"],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Uri", "Nice to meet you Uri! How many pies would you like?"],
             ["I want 4 please.", "Got it. What kind of toppings would you like?"],
         ]
     ],

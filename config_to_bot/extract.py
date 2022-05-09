@@ -154,16 +154,22 @@ phone: Callable[[str], str] = gamla.compose_left(
 person_name: Callable[[str], str] = gamla.compose_left(
     _remove_punctuation,
     _analyze,
-    tuple,
     gamla.filter(
         gamla.compose_left(gamla.attrgetter("ent_type_"), gamla.equals("PERSON"))
     ),
     gamla.map(gamla.attrgetter("text")),
-    tuple,
     " ".join,
     gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN)),
 )
 
+person_name_less_strict: Callable[[str], str] = gamla.compose_left(
+    _remove_punctuation,
+    _analyze,
+    gamla.filter(gamla.compose_left(gamla.attrgetter("pos_"), gamla.equals("PROPN"))),
+    gamla.map(gamla.attrgetter("text")),
+    " ".join,
+    gamla.when(gamla.equals(""), gamla.just(agenda.UNKNOWN)),
+)
 
 address: Callable[[str], str] = gamla.compose_left(
     lambda user_utterance: pyap.parse(user_utterance, country="US"),

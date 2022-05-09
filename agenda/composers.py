@@ -125,11 +125,11 @@ def slot(listener, asker, acker, anti_acker):
     # If the listener has an utter sink then we need to combine it with asker. Otherwise, we just merge the graphs.
     try:
         utter_sink(listener)
-        return _utter_unless_known_and_ack(
+        return utter_unless_known_and_ack(
             combine_utter_sinks(listener, asker), acker, anti_acker
         )
     except AssertionError:
-        return _utter_unless_known_and_ack(
+        return utter_unless_known_and_ack(
             base_types.merge_graphs(listener, asker), acker, anti_acker
         )
 
@@ -137,7 +137,7 @@ def slot(listener, asker, acker, anti_acker):
 def combine_slots(
     aggregator: Callable, acker, anti_acker, graphs: Iterable[base_types.GraphType]
 ):
-    return _utter_unless_known_and_ack(
+    return utter_unless_known_and_ack(
         aggregator(*graphs),
         acker,
         mark_utter(lift.any_to_graph(sentence.EMPTY_SENTENCE)),
@@ -160,7 +160,7 @@ def combine_state(aggregator: Callable):
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
-def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
+def utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     def who_should_speak(
         listener_state,
         listener_output_changed_to_known,
