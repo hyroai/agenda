@@ -31,3 +31,7 @@ def test_extract_datetime_options():
         )("5 pm")
         == datetime.datetime(2022, 4, 17, 17).isoformat()
     )
+
+
+def test_person_name_less_strict():
+    assert extract.person_name_less_strict("My name is Aviva Shalom") == "Aviva Shalom"

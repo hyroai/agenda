@@ -350,14 +350,14 @@ def _slot_with_remote(remote: base_types.GraphType, ask: str):
 
 
 def _ask_about_name(ack, ask: str):
-    typed_state = _typed_state("name")
     name_listener = gamla.pipe(
         extract.person_name_less_strict,
         agenda.if_participated,
         agenda.listener_with_memory,
     )
+    # TODO(Yoni): Currently combine states only work on slot + state, but we want it to work on 2 states. It doesn't because the utter sink of a state is an empty sentece which confuses the participation.
     name_slot = agenda.first_known(
-        typed_state,
+        _typed_state("name"),
         agenda.slot(
             name_listener,
             agenda.ask(ask),
