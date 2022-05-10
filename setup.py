@@ -19,7 +19,7 @@ setuptools.setup(
         "dateparser",
         "httpx",
         "inflect",
-        "knowledge-graph @ git+https://github.com/hyroai/knowledge-graph.git@dbdcf052e59d675064ccaa2501669ecb06aa8a69",
+        "knowledge-graph @ git+https://github.com/hyroai/knowledge-graph.git@411da3a3989fec76158d894f7a7d8df38df942ec",
         "phonenumbers",
         "pyap",
         "spacy",
