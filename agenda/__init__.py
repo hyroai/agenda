@@ -20,6 +20,7 @@ when = composers.when
 remember = composers.remember
 mark_state = composers.mark_state
 participated = composers.participated
+utter_unless_known_and_ack = composers.utter_unless_known_and_ack
 
 wrap_up = composers.wrap_up
 complement = composers.complement
