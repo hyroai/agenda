@@ -23,7 +23,7 @@ def expect_convos(convos, f):
         for convo in convos:
             state = {}
             for input_event, expected in convo:
-                state = (
+                new_state = (
                     await bot(
                         state,
                         {
@@ -40,7 +40,8 @@ def expect_convos(convos, f):
                         },
                     )
                 )
-                result = state[graph.make_computation_node(composers.utter)]
+                result = new_state[graph.make_computation_node(composers.utter)]
                 assert result == expected, f"expected: {expected} actual: {result}"
+                state = new_state
 
     return inner
