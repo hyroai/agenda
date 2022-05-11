@@ -5,6 +5,7 @@ You can use `agenda` on your own machine, or use the version hosted by Hyro at a
 ```bash
 git clone https://github.com/hyroai/agenda.git
 pip install -e ./agenda
+pip install cloud-utils@https://github.com/hyroai/cloud-utils/tarball/master
 yarn install --cwd=./config_to_bot/debugger
 ```
 

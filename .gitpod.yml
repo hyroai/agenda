@@ -1,6 +1,7 @@
 tasks:
   - before: |
       pip install -e .[dev]
+      pip install cloud-utils@https://github.com/hyroai/cloud-utils/tarball/master
       yarn install --cwd=config_to_bot/debugger/
       python -m pre_commit install --install-hooks
       python -m pytest
