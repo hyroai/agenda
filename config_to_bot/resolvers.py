@@ -362,24 +362,18 @@ def _slot_with_remote(remote: base_types.GraphType, ask: str):
 
 
 def _ask_about_name(ack, ask: str):
-    name_listener = gamla.pipe(
-        extract.person_name_less_strict,
-        agenda.if_participated,
-        agenda.listener_with_memory,
-    )
-    # TODO(Yoni): Currently combine states only work on slot + state, but we want it to work on 2 states. It doesn't because the utter sink of a state is an empty sentece which confuses the participation.
-    name_slot = agenda.first_known(
+    name_listener = agenda.first_known(
         _typed_state("name"),
-        agenda.slot(
-            name_listener,
-            agenda.ask(ask),
-            agenda.ack(_compose_template(ack, name_listener)),
-            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+        gamla.pipe(
+            extract.person_name_less_strict,
+            agenda.if_participated,
+            agenda.listener_with_memory,
         ),
     )
-    return agenda.utter_unless_known_and_ack(
-        name_slot,
-        agenda.ack(_compose_template(ack, name_slot)),
+    return agenda.slot(
+        name_listener,
+        agenda.ask(ask),
+        agenda.ack(_compose_template(ack, name_listener)),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
@@ -559,19 +553,14 @@ def _first_known(first_known: Tuple):
 
 
 def _amount_of(amount_of: str, ask: str):
-    return agenda.combine_slots(
-        agenda.first_known,
+    return agenda.slot(
+        agenda.first_known(
+            agenda.listener_with_memory(extract.amount_of(amount_of)),
+            _typed_state("amount"),
+        ),
+        agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
-        (
-            agenda.listener_with_memory(extract.amount_of(amount_of)),
-            agenda.slot(
-                _typed_state("amount"),
-                agenda.ask(ask),
-                agenda.ack(agenda.GENERIC_ACK),
-                agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
-            ),
-        ),
     )
 
 

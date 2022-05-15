@@ -102,16 +102,7 @@ package_into_dict: Callable[
 
 _cg_to_source = gamla.compose_left(
     gamla.bifurcate(
-        gamla.mapcat(
-            gamla.compose_left(
-                gamla.ternary(
-                    base_types.edge_source,
-                    gamla.compose_left(base_types.edge_source, gamla.wrap_tuple),
-                    base_types.edge_args,
-                )
-            )
-        ),
-        gamla.map(base_types.edge_destination),
+        gamla.mapcat(base_types.edge_sources), gamla.map(base_types.edge_destination)
     ),
     gamla.map(set),
     gamla.star(set.difference),

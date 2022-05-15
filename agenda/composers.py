@@ -342,13 +342,37 @@ def _combine_utterances_track_source(graphs, utterances):
     )
 
 
+_partition_graphs_by_has_utter_sink = gamla.groupby(
+    gamla.excepts(
+        Exception, gamla.just(False), gamla.compose_left(utter_sink, gamla.just(True))
+    )
+)
+_graphs_with_utter_sink = gamla.compose_left(
+    _partition_graphs_by_has_utter_sink, gamla.itemgetter_with_default((), True)
+)
+_graphs_without_utter_sink = gamla.compose_left(
+    _partition_graphs_by_has_utter_sink, gamla.itemgetter_with_default((), False)
+)
+_participation_edges = gamla.compose_left(
+    gamla.filter(graph.edge_source_equals(participated)), tuple
+)
+
+
 def _combine_utter_graphs(*utter_graphs: base_types.GraphType) -> base_types.GraphType:
-    return _make_gate(
-        missing_cg_utils.compose_left_many_to_one(
-            map(_utter_sink_or_empty_sentence, utter_graphs),
-            lambda args: _combine_utterances_track_source(utter_graphs, args),
-        ),
-        utter_graphs,
+    graphs_with_utter_sink = _graphs_with_utter_sink(utter_graphs)
+    return base_types.merge_graphs(
+        *gamla.map(_participation_edges)(_graphs_without_utter_sink(utter_graphs)),
+        _make_gate(
+            missing_cg_utils.compose_left_many_to_one(
+                map(_utter_sink_or_empty_sentence, graphs_with_utter_sink),
+                lambda args: _combine_utterances_track_source(
+                    graphs_with_utter_sink, args
+                ),
+            ),
+            graphs_with_utter_sink,
+        )
+        if graphs_with_utter_sink
+        else base_types.EMPTY_GRAPH,
     )
 
 
@@ -445,7 +469,10 @@ def _interject(old, new):
 def wrap_up(sentence_renderer: Callable[[sentence.SentenceOrPart], str]):
     return gamla.compose_left(
         gamla.assert_that_with_message(
-            base_types.ambiguity_groups,
+            gamla.compose_left(
+                base_types.ambiguity_groups,
+                gamla.wrap_str("Computation has unresolved ambiguities: {}"),
+            ),
             gamla.compose(gamla.empty, base_types.ambiguity_groups),
         ),
         graph.replace_source(participated, lambda: True),
