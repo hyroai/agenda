@@ -200,11 +200,11 @@ def _listen_to_intent(intent: Tuple[str, ...]):
     return gamla.pipe(extract.intent(intent), agenda.listener_with_memory, agenda.ever)
 
 
-def _answer(answer: str) -> str:
-    return answer
+def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
+    return (question, answer)
 
 
-def _faq_intent(faq: Tuple[str, ...]) -> base_types.GraphType:
+def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> base_types.GraphType:
     jina_faq.index(faq)
 
     async def highest_ranked_faq_with_score(user_utterance: str):
@@ -562,7 +562,7 @@ def _composers_for_dag_reducer(
         _actions_with_slots_and_debug_and_knowledge,
         _equals,
         _greater_equals,
-        _answer,
+        _question_and_answer_dict,
         _faq_intent,
         _slot_with_remote_and_ack,
         _slot_with_remote,
