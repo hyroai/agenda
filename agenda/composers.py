@@ -3,7 +3,7 @@ from typing import Callable, Collection, Dict, FrozenSet, Iterable
 
 import gamla
 from computation_graph import base_types, composers, graph, run
-from computation_graph.composers import lift, logic, memory
+from computation_graph.composers import condition, lift, logic, memory
 
 from agenda import missing_cg_utils, sentence
 
@@ -33,6 +33,15 @@ def state(state):
 @gamla.curry
 def consumes_external_event(at, x):
     return composers.compose_source(x, at, event)
+
+
+@gamla.curry
+def consumes_user_utterance(at, x):
+    is_user_utterance = consumes_external_event(None, gamla.is_instance(str))
+    user_utterance = condition.require_or_default("")(
+        is_user_utterance, consumes_external_event(None, lambda x: x)
+    )
+    return composers.compose_left(user_utterance, x, key=at)
 
 
 @gamla.curry
@@ -125,11 +134,11 @@ def slot(listener, asker, acker, anti_acker):
     # If the listener has an utter sink then we need to combine it with asker. Otherwise, we just merge the graphs.
     try:
         utter_sink(listener)
-        return _utter_unless_known_and_ack(
+        return utter_unless_known_and_ack(
             combine_utter_sinks(listener, asker), acker, anti_acker
         )
     except AssertionError:
-        return _utter_unless_known_and_ack(
+        return utter_unless_known_and_ack(
             base_types.merge_graphs(listener, asker), acker, anti_acker
         )
 
@@ -137,7 +146,7 @@ def slot(listener, asker, acker, anti_acker):
 def combine_slots(
     aggregator: Callable, acker, anti_acker, graphs: Iterable[base_types.GraphType]
 ):
-    return _utter_unless_known_and_ack(
+    return utter_unless_known_and_ack(
         aggregator(*graphs),
         acker,
         mark_utter(lift.any_to_graph(sentence.EMPTY_SENTENCE)),
@@ -160,7 +169,7 @@ def combine_state(aggregator: Callable):
 
 
 @_remove_sinks_and_sources_and_resolve_ambiguity([utter, participated])
-def _utter_unless_known_and_ack(asker_listener, acker, anti_acker):
+def utter_unless_known_and_ack(asker_listener, acker, anti_acker):
     def who_should_speak(
         listener_state,
         listener_output_changed_to_known,
@@ -289,7 +298,7 @@ inside = gamla.compose(_map_state, gamla.inside)
 contains = gamla.compose(_map_state, gamla.contains)
 
 listener_with_memory = gamla.compose(
-    remember, mark_state, consumes_external_event(None)
+    remember, mark_state, consumes_user_utterance(None)
 )
 
 

@@ -51,10 +51,9 @@ def yaml_to_cg(
 
 
 yaml_to_slot_bot: Callable[
-    [_YAML_STREAM], Callable[[], Awaitable]
+    [_YAML_STREAM], Callable[..., Awaitable]
 ] = gamla.compose_left(
     yaml_to_cg(resolvers.post_request_with_url_and_params),
     agenda.wrap_up(agenda.sentence_renderer(_ack_generator, _anti_ack_generator)),
     gamla.after(gamla.to_awaitable),
-    gamla.just,
 )

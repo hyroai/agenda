@@ -27,16 +27,16 @@ def expect_convos(convos, f):
                     await bot(
                         state,
                         {
-                            composers.event: input_event,
-                            composers.now: datetime.datetime.now(),
+                            composers.event: input_event[0],
+                            composers.now: input_event[1],
                         },
                     )
-                    if isinstance(input_event, str)
+                    if isinstance(input_event, tuple)
                     else await bot(
                         state,
                         {
-                            composers.event: input_event[0],
-                            composers.now: input_event[1],
+                            composers.event: input_event,
+                            composers.now: datetime.datetime.now(),
                         },
                     )
                 )

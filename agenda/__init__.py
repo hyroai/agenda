@@ -20,6 +20,7 @@ when = composers.when
 remember = composers.remember
 mark_state = composers.mark_state
 participated = composers.participated
+utter_unless_known_and_ack = composers.utter_unless_known_and_ack
 
 wrap_up = composers.wrap_up
 complement = composers.complement
@@ -64,6 +65,7 @@ ack = _generic(sentence.str_to_ack)
 anti_ack = _generic(sentence.str_to_anti_ack)
 
 consumes_external_event = composers.consumes_external_event
+consumes_user_utterance = composers.consumes_user_utterance
 consumes_time = composers.consumes_time
 
 

@@ -3,7 +3,7 @@ import gamla
 import agenda
 
 _listen_with_memory_when_participated = gamla.compose_left(
-    agenda.consumes_external_event(None),
+    agenda.consumes_user_utterance(None),
     agenda.if_participated,
     agenda.mark_state,
     agenda.remember,
