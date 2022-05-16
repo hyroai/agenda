@@ -1,0 +1,13 @@
+jtype: Flow
+with:
+  asyncio: True
+version: '1'
+executors:
+  - name: transformer
+    uses: 'jinahub://TransformerTorchEncoder'
+  - name: indexer
+    uses: 'jinahub://SimpleIndexer'
+  - name: ranker
+    uses: 'jinahub://SimpleRanker'
+    uses_with:
+      metric: 'cosine'

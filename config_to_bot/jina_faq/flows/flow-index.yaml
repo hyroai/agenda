@@ -1,0 +1,9 @@
+jtype: Flow
+with:
+  asyncio: True
+version: '1'
+executors:
+  - name: transformer
+    uses: 'jinahub://TransformerTorchEncoder'
+  - name: indexer
+    uses: 'jinahub://SimpleIndexer'
