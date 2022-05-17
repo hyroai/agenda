@@ -1,12 +1,17 @@
 import functools
 import os
-from typing import Iterator, Tuple
+from typing import Callable, Iterator, Tuple
 
 import async_lru
 import gamla
 from jina import Document, DocumentArray, Flow
 
 _DIR_NAME = os.path.dirname(__file__)
+
+
+_question_answer_mapper: Callable[
+    [Tuple[Tuple[str, str], ...]], Callable[[str], str]
+] = gamla.compose_left(dict, gamla.attrgetter("__getitem__"))
 
 
 def _input_generator(faq: Tuple[Tuple[str, str], ...]) -> Iterator[Document]:
@@ -32,7 +37,9 @@ def make_query_flow():
     )
 
 
-async def query(user_utterance: str) -> Tuple[str, float]:
+async def query(
+    user_utterance: str, faq: Tuple[Tuple[str, str], ...]
+) -> Tuple[str, float]:
     flow = make_query_flow()
     with flow:
         result = flow.post(
@@ -55,7 +62,16 @@ async def query(user_utterance: str) -> Tuple[str, float]:
                 gamla.compose_left(
                     gamla.attrgetter("_data"),
                     gamla.head,
-                    gamla.juxt(gamla.attrgetter("text"), gamla.attrgetter("scores")),
+                    gamla.juxt(
+                        gamla.compose_left(
+                            gamla.attrgetter("text"), _question_answer_mapper(faq)
+                        ),
+                        gamla.compose_left(
+                            gamla.attrgetter("scores"),
+                            gamla.itemgetter("cosine"),
+                            gamla.attrgetter("value"),
+                        ),
+                    ),
                 ),
                 gamla.just(("", 1)),
             ),

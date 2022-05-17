@@ -13,6 +13,9 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         "gamla>=132",
+        "async_lru",
+        "jina",
+        "transformers",
         "computation-graph>=38",
         "pytest-asyncio>=0.17",
         "dataclasses",

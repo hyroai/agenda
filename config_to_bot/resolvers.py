@@ -221,7 +221,7 @@ async def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> base_types.GraphType:
 
     async def highest_ranked_faq_with_score(user_utterance: str):
         return gamla.pipe(
-            await jina_faq.query(user_utterance),
+            await jina_faq.query(user_utterance, faq),
             gamla.ternary(
                 gamla.compose_left(gamla.second, gamla.less_than(0.6)),
                 gamla.head,
