@@ -53,352 +53,379 @@ async def _pizza_api_mock(url: str, params: Dict):
     return None
 
 
-def _make_test(path: str, convos, remote_mock):
+async def _make_test(path: str, convos, remote_mock):
     with open(path, "r") as f:
-        bot = yaml_to_bot.yaml_to_cg(remote_mock)(f)
-
+        bot = await yaml_to_bot.yaml_to_cg(remote_mock)(f)
     return agenda.expect_convos(convos, gamla.just(bot))
 
 
-test_pizza_intent_detection = _make_test(
-    _PIZZA_YAML, [[["I want pizza", "Got it. Are you vegan?"]]], _pizza_api_mock
-)
+async def test_pizza_intent_detection():
+    return await _make_test(
+        _PIZZA_YAML, [[["I want pizza", "Got it. Are you vegan?"]]], _pizza_api_mock
+    )
 
-test_skip_toppings_question = _make_test(
-    _PIZZA_YAML,
-    [
+
+async def test_skip_toppings_question():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes I want pizza with olives", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
-            ["4", "Got it. What pizza size would you like?"],
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-test_happy_flow = _make_test(
-    _PIZZA_YAML,
-    [
-        [
-            [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes, I want pizza", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
-            ["4", "Got it. What kind of toppings would you like?"],
-            ["mushrooms and olives", "Got it. What pizza size would you like?"],
-            ["small", "Got it. What is your address?"],
-            ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
-            ["9998887777", "Got it. What is your email?"],
-            [
-                "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas with mushrooms, and olives to 881 Mill Street Greenville SC.",
-            ],
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-test_happy_flow_without_toppings = _make_test(
-    _PIZZA_YAML,
-    [
-        [
-            [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes, I want pizza", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
-            ["4", "Got it. What kind of toppings would you like?"],
-            ["none", "Got it. What pizza size would you like?"],
-            ["small", "Got it. What is your address?"],
-            ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
-            ["9998887777", "Got it. What is your email?"],
-            [
-                "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas to 881 Mill Street Greenville SC.",
-            ],
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-
-test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
-    _PIZZA_YAML,
-    [
-        [
-            [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes, I want 2 large pizzas with mushrooms", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! What is your address?"],
-            ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
-            ["9998887777", "Got it. What is your email?"],
-            [
-                "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.",
-            ],
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-test_faq = _make_test(
-    _PIZZA_YAML,
-    [
-        [
-            [
-                "What are your opening times?",
-                "2pm to 10pm every day. Would you like to order pizza?",
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes I want pizza with olives", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+                ["4", "Got it. What pizza size would you like?"],
             ]
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-test_multiple_choice_robustness = _make_test(
-    _PIZZA_YAML,
-    [
-        [
-            [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
-            ["2", "Got it. What kind of toppings would you like?"],
-            [
-                "mushrooms, olives and tomatoes",
-                "Got it. What pizza size would you like?",
-            ],
-            ["large", "Got it. What is your address?"],
-            ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
-            ["9998887777", "Got it. What is your email?"],
-            [
-                "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms, olives, and tomatoes to 881 Mill Street Greenville SC.",
-            ],
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-test_misunderstanding = _make_test(
-    _PIZZA_YAML,
-    [
-        [
-            [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            [
-                "hi again",
-                "I'm sorry I couldn't get that. Please rephrase. Would you like to order pizza?",
-            ],
-            ["yes.", "Got it. Are you vegan?"],
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-
-test_punctuation_robustness = _make_test(
-    _PIZZA_YAML,
-    [
-        [
-            [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
-            ["4 pizzas.", "Got it. What kind of toppings would you like?"],
         ],
+        _pizza_api_mock,
+    )
+
+
+async def test_happy_flow():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
-            ["4.", "Got it. What kind of toppings would you like?"],
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes, I want pizza", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+                ["4", "Got it. What kind of toppings would you like?"],
+                ["mushrooms and olives", "Got it. What pizza size would you like?"],
+                ["small", "Got it. What is your address?"],
+                ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
+                ["9998887777", "Got it. What is your email?"],
+                [
+                    "abcd1234@gmail.com",
+                    "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas with mushrooms, and olives to 881 Mill Street Greenville SC.",
+                ],
+            ]
         ],
+        _pizza_api_mock,
+    )
+
+
+async def test_happy_flow_without_toppings():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni.", "Nice to meet you Yoni! How many pies would you like?"],
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes, I want pizza", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+                ["4", "Got it. What kind of toppings would you like?"],
+                ["none", "Got it. What pizza size would you like?"],
+                ["small", "Got it. What is your address?"],
+                ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
+                ["9998887777", "Got it. What is your email?"],
+                [
+                    "abcd1234@gmail.com",
+                    "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas to 881 Mill Street Greenville SC.",
+                ],
+            ]
         ],
-    ],
-    _pizza_api_mock,
-)
+        _pizza_api_mock,
+    )
 
 
-test_remove_misunderstanding_when_answering_faq = _make_test(
-    _PIZZA_YAML,
-    [
+async def test_happy_flow_wihtout_asking_for_amount_and_size():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            [
-                "What are your opening times?",
-                "2pm to 10pm every day. Would you like to order pizza?",
-            ],
-        ]
-    ],
-    _pizza_api_mock,
-)
-
-test_say_template = _make_test(
-    _from_examples("say_template.yaml"),
-    [
-        [
-            [events.conversation_start(), "small large or medium?"],
-            ["large", "Got it. What is your name?"],
-            ["Eli Libman", "Got it. Eli Libman you said large."],
-        ]
-    ],
-    gamla.just(""),
-)
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes, I want 2 large pizzas with mushrooms", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! What is your address?"],
+                ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
+                ["9998887777", "Got it. What is your email?"],
+                [
+                    "abcd1234@gmail.com",
+                    "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.",
+                ],
+            ]
+        ],
+        _pizza_api_mock,
+    )
 
 
-test_capitalization_robustness = _make_test(
-    _PIZZA_YAML,
-    [
+async def test_faq():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["Yes", "Got it. Are you vegan?"],
-        ]
-    ],
-    _pizza_api_mock,
-)
+                [
+                    "What are your opening times?",
+                    "2pm to 10pm every day. Would you like to order pizza?",
+                ]
+            ]
+        ],
+        _pizza_api_mock,
+    )
 
 
-test_scheduling = _make_test(
-    _from_examples("schedule/schedule.yaml"),
-    [
-        [
-            [events.conversation_start(), "On what day is your meeting?"],
-            [
-                ("Tomorrow", datetime.datetime(2022, 4, 19, 18)),
-                "Got it. On what time is your meeting?",
-            ],
-            [
-                ("5 pm", datetime.datetime(2022, 4, 19, 18)),
-                "Got it. I have these options: {}. Which do you prefer?".format(
-                    _MOCK_APPOINTMENTS
-                ),
-            ],
-            [
-                ("The one on Sunday", datetime.datetime(2022, 4, 20, 18)),
-                "Got it. I booked the meeting room at 2022-04-24T17:20:00. Have a productive day!",
-            ],
-        ]
-    ],
-    lambda url, params: None if None in params.values() else _MOCK_APPOINTMENTS,
-)
-
-
-test_remote_listener = _make_test(
-    _from_examples("hello/hello.yaml"),
-    [[[events.conversation_start(), "say hello"], ["hello", "you said it"]]],
-    gamla.ternary(
-        lambda url, params: params["incoming_utterance"] == "hello",
-        gamla.just(True),
-        gamla.just(None),
-    ),
-)
-
-test_singular_in_options = _make_test(
-    _PIZZA_YAML,
-    [
+async def test_multiple_choice_robustness():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Eli", "Nice to meet you Eli! How many pies would you like?"],
-            ["4 pizzas.", "Got it. What kind of toppings would you like?"],
-            ["mushroom and olive.", "Got it. What pizza size would you like?"],
-        ]
-    ],
-    _pizza_api_mock,
-)
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+                ["2", "Got it. What kind of toppings would you like?"],
+                [
+                    "mushrooms, olives and tomatoes",
+                    "Got it. What pizza size would you like?",
+                ],
+                ["large", "Got it. What is your address?"],
+                ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
+                ["9998887777", "Got it. What is your email?"],
+                [
+                    "abcd1234@gmail.com",
+                    "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms, olives, and tomatoes to 881 Mill Street Greenville SC.",
+                ],
+            ]
+        ],
+        _pizza_api_mock,
+    )
 
-test_parsing_amount = _make_test(
-    _PIZZA_YAML,
-    [
+
+async def test_misunderstanding():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
-            ],
-            ["yes", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Uri", "Nice to meet you Uri! How many pies would you like?"],
-            ["I want 4 please.", "Got it. What kind of toppings would you like?"],
-        ]
-    ],
-    _pizza_api_mock,
-)
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                [
+                    "hi again",
+                    "I'm sorry I couldn't get that. Please rephrase. Would you like to order pizza?",
+                ],
+                ["yes.", "Got it. Are you vegan?"],
+            ]
+        ],
+        _pizza_api_mock,
+    )
 
 
-test_multi_words_options = _make_test(
-    _from_examples("covid/covid.yaml"),
-    [
-        [
-            ["Hey.", "are you under 18?"],
-            ["No...", "Got it. what is your profession?"],
-            ["Mechanical engineer", "Got it."],
-        ]
-    ],
-    gamla.just(""),
-)
-
-test_config_example = _make_test(
-    os.path.join(_DIR_NAME, "debugger/src/configExample.yaml"),
-    [
+async def test_punctuation_robustness():
+    return await _make_test(
+        _PIZZA_YAML,
         [
             [
-                events.conversation_start(),
-                "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+                ["4 pizzas.", "Got it. What kind of toppings would you like?"],
             ],
-            ["yes, I want pizza", "Got it. Are you vegan?"],
-            ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
-            ["4", "Got it. What kind of toppings would you like?"],
-            ["mushrooms and olives", "Got it. What pizza size would you like?"],
-            ["small", "Got it. What is your phone number?"],
-            ["9998887777", "Got it. What is your email?"],
             [
-                "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone (999) 888-7777, and your email abcd1234@gmail.com. You want 4 small pizzas.",
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+                ["4.", "Got it. What kind of toppings would you like?"],
             ],
-        ]
-    ],
-    gamla.just(""),
-)
+            [
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni.", "Nice to meet you Yoni! How many pies would you like?"],
+            ],
+        ],
+        _pizza_api_mock,
+    )
+
+
+async def test_remove_misunderstanding_when_answering_faq():
+    return await _make_test(
+        _PIZZA_YAML,
+        [
+            [
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                [
+                    "What are your opening times?",
+                    "2pm to 10pm every day. Would you like to order pizza?",
+                ],
+            ]
+        ],
+        _pizza_api_mock,
+    )
+
+
+async def test_say_template():
+    return await _make_test(
+        _from_examples("say_template.yaml"),
+        [
+            [
+                [events.conversation_start(), "small large or medium?"],
+                ["large", "Got it. What is your name?"],
+                ["Eli Libman", "Got it. Eli Libman you said large."],
+            ]
+        ],
+        gamla.just(""),
+    )
+
+
+async def test_capitalization_robustness():
+    return await _make_test(
+        _PIZZA_YAML,
+        [
+            [
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["Yes", "Got it. Are you vegan?"],
+            ]
+        ],
+        _pizza_api_mock,
+    )
+
+
+async def test_scheduling():
+    return await _make_test(
+        _from_examples("schedule/schedule.yaml"),
+        [
+            [
+                [events.conversation_start(), "On what day is your meeting?"],
+                [
+                    ("Tomorrow", datetime.datetime(2022, 4, 19, 18)),
+                    "Got it. On what time is your meeting?",
+                ],
+                [
+                    ("5 pm", datetime.datetime(2022, 4, 19, 18)),
+                    "Got it. I have these options: {}. Which do you prefer?".format(
+                        _MOCK_APPOINTMENTS
+                    ),
+                ],
+                [
+                    ("The one on Sunday", datetime.datetime(2022, 4, 20, 18)),
+                    "Got it. I booked the meeting room at 2022-04-24T17:20:00. Have a productive day!",
+                ],
+            ]
+        ],
+        lambda url, params: None if None in params.values() else _MOCK_APPOINTMENTS,
+    )
+
+
+async def test_remote_listener():
+    return await _make_test(
+        _from_examples("hello/hello.yaml"),
+        [[[events.conversation_start(), "say hello"], ["hello", "you said it"]]],
+        gamla.ternary(
+            lambda url, params: params["incoming_utterance"] == "hello",
+            gamla.just(True),
+            gamla.just(None),
+        ),
+    )
+
+
+async def test_singular_in_options():
+    return await _make_test(
+        _PIZZA_YAML,
+        [
+            [
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Eli", "Nice to meet you Eli! How many pies would you like?"],
+                ["4 pizzas.", "Got it. What kind of toppings would you like?"],
+                ["mushroom and olive.", "Got it. What pizza size would you like?"],
+            ]
+        ],
+        _pizza_api_mock,
+    )
+
+
+async def test_parsing_amount():
+    return await _make_test(
+        _PIZZA_YAML,
+        [
+            [
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Uri", "Nice to meet you Uri! How many pies would you like?"],
+                ["I want 4 please.", "Got it. What kind of toppings would you like?"],
+            ]
+        ],
+        _pizza_api_mock,
+    )
+
+
+async def test_multi_words_options():
+    return await _make_test(
+        _from_examples("covid/covid.yaml"),
+        [
+            [
+                ["Hey.", "are you under 18?"],
+                ["No...", "Got it. what is your profession?"],
+                ["Mechanical engineer", "Got it."],
+            ]
+        ],
+        gamla.just(""),
+    )
+
+
+async def test_config_example():
+    return await _make_test(
+        os.path.join(_DIR_NAME, "debugger/src/configExample.yaml"),
+        [
+            [
+                [
+                    events.conversation_start(),
+                    "Hi! I'm Margherita the PizzaBot! Would you like to order pizza?",
+                ],
+                ["yes, I want pizza", "Got it. Are you vegan?"],
+                ["no", "Got it. What is your name?"],
+                ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+                ["4", "Got it. What kind of toppings would you like?"],
+                ["mushrooms and olives", "Got it. What pizza size would you like?"],
+                ["small", "Got it. What is your phone number?"],
+                ["9998887777", "Got it. What is your email?"],
+                [
+                    "abcd1234@gmail.com",
+                    "Got it. Thank you Yoni! I got your phone (999) 888-7777, and your email abcd1234@gmail.com. You want 4 small pizzas.",
+                ],
+            ]
+        ],
+        gamla.just(""),
+    )
