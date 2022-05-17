@@ -2,6 +2,7 @@ import functools
 import os
 from typing import Iterator, Tuple
 
+import async_lru
 import gamla
 from jina import Document, DocumentArray, Flow
 
@@ -13,7 +14,7 @@ def _input_generator(faq: Tuple[Tuple[str, str], ...]) -> Iterator[Document]:
         yield Document(text=question)
 
 
-@functools.cache
+@async_lru.alru_cache
 async def index(faq: Tuple[Tuple[str, str], ...]) -> None:
     flow = Flow(asyncio=True).load_config(
         os.path.join(_DIR_NAME, "flows/flow-index.yaml")

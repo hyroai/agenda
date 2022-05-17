@@ -40,7 +40,7 @@ def yaml_to_cg(
     return gamla.compose_left(
         yaml.safe_load,
         build_kg.yaml_dict_to_triplets,
-        gamla.prepare_and_apply(
+        gamla.prepare_and_apply_async(
             lambda triplets: build_kg.reduce_kg(
                 dag_reducer.reducer(
                     resolvers.build_cg(remote_function, build_kg.adapt_kg(triplets))

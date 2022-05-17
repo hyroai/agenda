@@ -38,7 +38,7 @@ def _create_socket_handler():
             if request["type"] == "configuration":
                 state = {}
                 try:
-                    bot = yaml_to_bot.yaml_to_slot_bot(request["data"])
+                    bot = await yaml_to_bot.yaml_to_slot_bot(request["data"])
                 except Exception as ex:
                     logging.exception(ex)
                     return _error_message(

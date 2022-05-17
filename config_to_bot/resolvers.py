@@ -216,8 +216,8 @@ def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
     return (question, answer)
 
 
-def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> base_types.GraphType:
-    jina_faq.index(faq)
+async def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> base_types.GraphType:
+    await jina_faq.index(faq)
 
     async def highest_ranked_faq_with_score(user_utterance: str):
         return gamla.pipe(
