@@ -1,13 +1,10 @@
 import functools
-import os
 from typing import Callable, Iterator, Tuple
 
 import async_lru
 import gamla
-from jina import Document, DocumentArray, Flow
-
-_DIR_NAME = os.path.dirname(__file__)
-
+import torch
+from jina import AsyncFlow, Document, DocumentArray
 
 _question_answer_mapper: Callable[
     [Tuple[Tuple[str, str], ...]], Callable[[str], str]
@@ -21,9 +18,7 @@ def _input_generator(faq: Tuple[Tuple[str, str], ...]) -> Iterator[Document]:
 
 @async_lru.alru_cache
 async def index(faq: Tuple[Tuple[str, str], ...]) -> None:
-    flow = Flow(asyncio=True).load_config(
-        os.path.join(_DIR_NAME, "flows/flow-index.yaml")
-    )
+    flow = make_index_flow()
     with flow:
         result = flow.post(on="/index", inputs=DocumentArray(_input_generator(faq)))
         results = [r async for r in result]  # noqa
@@ -31,9 +26,21 @@ async def index(faq: Tuple[Tuple[str, str], ...]) -> None:
 
 
 @functools.cache
+def make_index_flow():
+    return (
+        AsyncFlow()
+        .add(
+            uses="jinahub://TransformerTorchEncoder/latest",
+            uses_with={"device": "cuda" if torch.cuda.is_available() else "cpu"},
+        )
+        .add(uses="jinahub://SimpleIndexer/latest")
+    )
+
+
+@functools.cache
 def make_query_flow():
-    return Flow(asyncio=True).load_config(
-        os.path.join(_DIR_NAME, "flows/flow-query.yaml")
+    return make_index_flow().add(
+        uses="jinahub://SimpleRanker/latest", uses_with={"metric": "cosine"}
     )
 
 

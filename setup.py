@@ -16,6 +16,7 @@ setuptools.setup(
         "async_lru",
         "jina",
         "transformers",
+        "torch",
         "computation-graph>=38",
         "pytest-asyncio>=0.17",
         "dataclasses",
