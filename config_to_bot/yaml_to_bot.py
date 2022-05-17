@@ -12,7 +12,7 @@ from config_to_bot import build_kg, dag_reducer, resolvers
 def _ack_generator() -> str:
     x = random.choice(["Okay.", "Alright.", "Got it.", "Cool."])
     # TODO(uri): For a reason I don't fully understand, unless we have a `print` or `breakpoint` here, it always selects the same option.
-    print(x)  # noqa: T001
+    print(x)  # noqa
     return x
 
 
@@ -25,7 +25,7 @@ def _anti_ack_generator() -> str:
         ]
     )
     # TODO(uri): For a reason I don't fully understand, unless we have a `print` or `breakpoint` here, it always selects the same option.
-    print(x)  # noqa: T001
+    print(x)  # noqa
     return x
 
 
