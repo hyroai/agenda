@@ -56,7 +56,7 @@ async def _pizza_api_mock(url: str, params: Dict):
 async def _make_test(path: str, convos, remote_mock):
     with open(path, "r") as f:
         bot = await yaml_to_bot.yaml_to_cg(remote_mock)(f)
-    return agenda.expect_convos(convos, gamla.just(bot))
+    return await agenda.expect_convos(convos, gamla.just(bot))()
 
 
 async def test_pizza_intent_detection():

@@ -217,11 +217,11 @@ def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
 
 
 async def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> base_types.GraphType:
-    await jina_faq.index(faq)
+    jina_query = await jina_faq.make_jina_query(faq)
 
     async def highest_ranked_faq_with_score(user_utterance: str):
         return gamla.pipe(
-            await jina_faq.query(user_utterance, faq),
+            await jina_query(user_utterance),
             gamla.ternary(
                 gamla.compose_left(gamla.second, gamla.less_than(0.6)),
                 gamla.head,

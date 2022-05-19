@@ -37,16 +37,18 @@ _YAML_STREAM = Union[str, bytes, IO[str], IO[bytes]]
 def yaml_to_cg(
     remote_function: Callable,
 ) -> Callable[[_YAML_STREAM], base_types.GraphType]:
-    return gamla.compose_left(
-        yaml.safe_load,
-        build_kg.yaml_dict_to_triplets,
-        gamla.prepare_and_apply_async(
-            lambda triplets: build_kg.reduce_kg(
-                dag_reducer.reducer(
-                    resolvers.build_cg(remote_function, build_kg.adapt_kg(triplets))
+    return gamla.after(gamla.to_awaitable)(
+        gamla.compose_left(
+            yaml.safe_load,
+            build_kg.yaml_dict_to_triplets,
+            gamla.prepare_and_apply_async(
+                lambda triplets: build_kg.reduce_kg(
+                    dag_reducer.reducer(
+                        resolvers.build_cg(remote_function, build_kg.adapt_kg(triplets))
+                    )
                 )
-            )
-        ),
+            ),
+        )
     )
 
 
@@ -55,5 +57,4 @@ yaml_to_slot_bot: Callable[
 ] = gamla.compose_left(
     yaml_to_cg(resolvers.post_request_with_url_and_params),
     agenda.wrap_up(agenda.sentence_renderer(_ack_generator, _anti_ack_generator)),
-    gamla.after(gamla.to_awaitable),
 )

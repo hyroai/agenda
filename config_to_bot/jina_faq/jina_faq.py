@@ -1,5 +1,5 @@
 import functools
-from typing import Callable, Iterator, Tuple
+from typing import Awaitable, Callable, Iterator, Tuple
 
 import async_lru
 import gamla
@@ -17,37 +17,39 @@ def _input_generator(faq: Tuple[Tuple[str, str], ...]) -> Iterator[Document]:
 
 
 @async_lru.alru_cache
-async def index(faq: Tuple[Tuple[str, str], ...]) -> None:
-    flow = make_index_flow()
+async def _index(faq: Tuple[Tuple[str, str], ...]) -> None:
+    flow = _make_index_flow(faq)
     with flow:
         result = flow.post(on="/index", inputs=DocumentArray(_input_generator(faq)))
         results = [r async for r in result]  # noqa
-    flow = make_query_flow()
+    flow = _make_query_flow(faq)
 
 
 @functools.cache
-def make_index_flow():
+def _make_index_flow(faq: Tuple[Tuple[str, str], ...]):
+    faq_hash = gamla.compute_stable_json_hash(faq)
     return (
         AsyncFlow()
         .add(
             uses="jinahub://TransformerTorchEncoder/latest",
             uses_with={"device": "cuda" if torch.cuda.is_available() else "cpu"},
         )
-        .add(uses="jinahub://SimpleIndexer/latest")
+        .add(uses="jinahub://SimpleIndexer/latest", workspace=f"./workspace_{faq_hash}")
     )
 
 
 @functools.cache
-def make_query_flow():
-    return make_index_flow().add(
+def _make_query_flow(faq: Tuple[Tuple[str, str], ...]):
+    return _make_index_flow(faq).add(
         uses="jinahub://SimpleRanker/latest", uses_with={"metric": "cosine"}
     )
 
 
-async def query(
-    user_utterance: str, faq: Tuple[Tuple[str, str], ...]
+@gamla.curry
+async def _query(
+    faq: Tuple[Tuple[str, str], ...], user_utterance: str
 ) -> Tuple[str, float]:
-    flow = make_query_flow()
+    flow = _make_query_flow(faq)
     with flow:
         result = flow.post(
             on="/search",
@@ -83,3 +85,8 @@ async def query(
                 gamla.just(("", 1)),
             ),
         )
+
+
+async def make_jina_query(faq: Tuple[Tuple[str, str], ...]) -> Awaitable:
+    await _index(faq)
+    return _query(faq)
