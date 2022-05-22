@@ -15,16 +15,18 @@ _either = gamla.compose_left(
 )
 
 
-@agenda.expect_convos([[["Hi", "say hello"], ["hello", "you said it"], ["Hello", ""]]])
-def test_slot():
+async def test_slot():
     what_needs_to_be_said = "hello"
-    return agenda.slot(
-        agenda.listener_with_memory(
-            _either(gamla.equals(what_needs_to_be_said), gamla.just(agenda.UNKNOWN))
+    return await agenda.expect_convos(
+        [[["Hi", "say hello"], ["hello", "you said it"], ["Hello", ""]]],
+        agenda.slot(
+            agenda.listener_with_memory(
+                _either(gamla.equals(what_needs_to_be_said), gamla.just(agenda.UNKNOWN))
+            ),
+            agenda.ask(f"say {what_needs_to_be_said}"),
+            agenda.ack("you said it"),
+            agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
         ),
-        agenda.ask(f"say {what_needs_to_be_said}"),
-        agenda.ack("you said it"),
-        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
     )
 
 
