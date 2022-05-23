@@ -6,14 +6,14 @@ from computation_graph import base_types
 
 
 @gamla.curry
-def reducer(
+async def reducer(
     process_children_dict: Callable,
     state: Dict[str, base_types.GraphType],
     current: str,
     node_to_neighbors: Callable[[str], Dict[str, str]],
 ) -> Any:
     try:
-        return gamla.pipe(
+        return await gamla.pipe(
             current,
             node_to_neighbors,
             gamla.valmap(
@@ -24,12 +24,13 @@ def reducer(
                 )
             ),
             process_children_dict,
+            gamla.to_awaitable,
         )
     except KeyError:
         return current
 
 
-def reduce_graph(
+async def reduce_graph(
     depenedencies: Dict[str, FrozenSet[str]],
     node_to_neighbors: Callable[[str], Dict[str, str]],
     reducer: Callable[
@@ -37,13 +38,13 @@ def reduce_graph(
         Dict[str, base_types.GraphType],
     ],
 ) -> Dict[str, base_types.GraphType]:
-    return gamla.pipe(
+    async def graph_reducer(state, current):
+        return gamla.pipe(
+            await reducer(state, current, node_to_neighbors),
+            gamla.assoc_in(state, [current]),
+        )
+
+    return await gamla.pipe(
         toposort.toposort_flatten(depenedencies, False),
-        gamla.reduce_curried(
-            lambda state, current: gamla.pipe(
-                reducer(state, current, node_to_neighbors),
-                gamla.assoc_in(state, [current]),
-            ),
-            {},
-        ),
+        gamla.reduce_curried(graph_reducer, {}),
     )

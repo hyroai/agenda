@@ -14,6 +14,7 @@ from computation_graph.composers import lift
 import agenda
 from agenda import events, missing_cg_utils
 from config_to_bot import extract
+from config_to_bot.jina_faq import jina_faq
 
 _TYPE_TO_LISTENER = gamla.valmap(agenda.consumes_user_utterance(None))(
     {
@@ -215,24 +216,15 @@ def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
     return (question, answer)
 
 
-def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> Callable[[str], str]:
-    def highest_ranked_faq_with_score(user_utterance: str):
+async def _faq_intent(faq: Tuple[Tuple[str, str], ...]) -> base_types.GraphType:
+    jina_query = await jina_faq.make_jina_query(faq)
+
+    async def highest_ranked_faq_with_score(user_utterance: str):
         return gamla.pipe(
-            faq,
-            gamla.map(
-                gamla.pair_right(
-                    lambda question_and_answer: extract.faq_score(
-                        question_and_answer[0], user_utterance
-                    )
-                )
-            ),
-            gamla.filter(gamla.compose_left(gamla.second, gamla.greater_equals(0.9))),
-            tuple,
+            await jina_query(user_utterance),
             gamla.ternary(
-                gamla.nonempty,
-                gamla.compose_left(
-                    gamla.sort_by(gamla.second), gamla.last, gamla.head, gamla.second
-                ),
+                gamla.compose_left(gamla.second, gamla.less_than(0.6)),
+                gamla.head,
                 gamla.just(""),
             ),
         )

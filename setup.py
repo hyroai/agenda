@@ -12,7 +12,11 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(),
     zip_safe=False,
     install_requires=[
-        "gamla>=121",
+        "gamla>=132",
+        "async_lru",
+        "jina",
+        "transformers",
+        "torch",
         "computation-graph>=38",
         "pytest-asyncio>=0.17",
         "dataclasses",

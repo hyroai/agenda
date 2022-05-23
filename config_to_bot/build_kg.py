@@ -123,10 +123,12 @@ def yaml_dict_to_triplets(yaml_dict: Dict) -> FrozenSet[_Triplet]:
 
 
 @gamla.curry
-def reduce_kg(reducer: Callable, triplets: FrozenSet[_Triplet]) -> base_types.GraphType:
+async def reduce_kg(
+    reducer: Callable, triplets: FrozenSet[_Triplet]
+) -> base_types.GraphType:
     dependencies = _subject_to_object(triplets)
     return gamla.pipe(
-        dag_reducer.reduce_graph(
+        await dag_reducer.reduce_graph(
             dependencies, _subject_to_relation_object_map(triplets), reducer
         ),
         gamla.itemgetter(_infer_sink(dependencies)),
