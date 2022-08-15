@@ -34,7 +34,7 @@ slots:
     ask: Would you like to order pizza?
     type: boolean
   - &wants-pizza-intent
-    intent:
+    triggers:
       - I want to order pizza
       - I want pizza
   - &wants-pizza
