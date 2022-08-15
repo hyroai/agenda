@@ -28,9 +28,12 @@ _TYPE_TO_LISTENER = gamla.valmap(agenda.consumes_user_utterance(None))(
         "single-choice": extract.single_choice,
         "date": agenda.consumes_time("relative_to", extract.future_date),
         "time": agenda.consumes_time("relative_to", extract.time),
+        "free-text": gamla.identity,
     }
 )
-_TYPES_TO_LISTEN_AFTER_ASKING = frozenset({"amount", "boolean", "date", "time"})
+_TYPES_TO_LISTEN_AFTER_ASKING = frozenset(
+    {"amount", "boolean", "date", "time", "free-text"}
+)
 is_supported_type = gamla.contains(_TYPE_TO_LISTENER)
 
 _mark_as_state_and_remember = gamla.compose_left(agenda.mark_state, agenda.remember)
@@ -395,6 +398,23 @@ def _ask_about(type: str, ask: str) -> base_types.GraphType:
     )
 
 
+def _identification_builder(
+    type: str, num_of_chars: int
+) -> Callable[[str], Union[str, agenda.Unknown]]:
+    return extract.identification(type, str(num_of_chars))
+
+
+def _ask_about_identification(
+    ask: str, identification: Callable[[str], Union[str, agenda.Unknown]]
+) -> base_types.GraphType:
+    return agenda.slot(
+        gamla.pipe(identification, agenda.if_participated, agenda.listener_with_memory),
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+    )
+
+
 def _ask_about_and_ack(ack: str, type: str, ask: str) -> base_types.GraphType:
     if type == "name":
         return _ask_about_name(ack, ask)
@@ -619,6 +639,8 @@ def _composers_for_dag_reducer(
         _actions,
         _knowledge,
         _concept_and_instances,
+        _identification_builder,
+        _ask_about_identification,
     }
 
 

@@ -188,6 +188,24 @@ def intent(examples: Tuple[str, ...]) -> Callable[[str], bool]:
     return parse_bool
 
 
+def identification(type: str, num_of_chars: str):
+    if type == "str":
+        return gamla.compose_left(
+            lambda user_utterance: re.findall(
+                r"\b[\D\S]{" + num_of_chars + "}\b", user_utterance
+            ),
+            gamla.ternary(gamla.nonempty, gamla.head, gamla.just(agenda.UNKNOWN)),
+        )
+    if type == "int":
+        return gamla.compose_left(
+            lambda user_utterance: re.findall(
+                r"(?<!\d)\d{" + num_of_chars + r"}(?!\d)", user_utterance
+            ),
+            gamla.ternary(gamla.nonempty, gamla.head, gamla.just(agenda.UNKNOWN)),
+        )
+    raise AttributeError("Only int or str are currently supported")
+
+
 def yes_no(user_utterance: str):
     if gamla.pipe(
         user_utterance,
