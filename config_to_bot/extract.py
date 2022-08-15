@@ -188,7 +188,7 @@ def intent(examples: Tuple[str, ...]) -> Callable[[str], bool]:
     return parse_bool
 
 
-def identifiaction(type: str, num_of_chars: str):
+def identification(type: str, num_of_chars: str):
     if type == "str":
         return gamla.compose_left(
             lambda user_utterance: re.findall(

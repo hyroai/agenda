@@ -401,7 +401,7 @@ def _ask_about(type: str, ask: str) -> base_types.GraphType:
 def _identification_builder(
     type: str, num_of_chars: int
 ) -> Callable[[str], Union[str, agenda.Unknown]]:
-    return extract.identifiaction(type, str(num_of_chars))
+    return extract.identification(type, str(num_of_chars))
 
 
 def _ask_about_identification(
