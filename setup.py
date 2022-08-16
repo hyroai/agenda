@@ -19,7 +19,7 @@ setuptools.setup(
         "dateparser",
         "httpx",
         "inflect",
-        "knowledge-graph==0.0.1",
+        "knowledge-graph==0.0.12",
         "phonenumbers",
         "pyap",
         "spacy",
