@@ -12,6 +12,7 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(),
     zip_safe=False,
     install_requires=[
+        "cloud-utils @ https://github.com/hyroai/cloud-utils/tarball/cfc7483faab888ca4fa20ab49eae31854c2e1601",
         "gamla>=121",
         "computation-graph>=38",
         "pytest-asyncio>=0.17",
@@ -19,7 +20,7 @@ setuptools.setup(
         "dateparser",
         "httpx",
         "inflect",
-        "knowledge-graph>=0.0.12",
+        "knowledge-graph>=0.0.14",
         "phonenumbers",
         "pyap",
         "spacy",
