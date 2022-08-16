@@ -172,18 +172,7 @@ def _event_is(event_is: str):
 
 
 def _welcome_message(welcome: str):
-    return agenda.when(
-        agenda.mark_state(
-            agenda.consumes_external_event(
-                None,
-                gamla.alljuxt(
-                    gamla.is_instance(events.ConversationEvent),
-                    gamla.attr_equals("type", "CONVERSATION_START"),
-                ),
-            )
-        ),
-        agenda.say(welcome),
-    )
+    return agenda.when(_event_is("conversation start"), agenda.say(welcome))
 
 
 def _say(say: str):
