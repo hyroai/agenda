@@ -121,7 +121,7 @@ def _add_constituent(sentence, element):
 
 def _add_ack(sentence, element):
     assert element != EMPTY_SENTENCE
-    if _has_ack(sentence):
+    if _has_ack(sentence) and element != sentence.get(_ACK):
         return gamla.freeze_deep(
             gamla.assoc_in(sentence, [_ACK], str_to_ack(GENERIC_ACK))
         )

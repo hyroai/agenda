@@ -163,8 +163,8 @@ def _good_or_bad(text):
 
 @agenda.expect_convos(
     [
-        [["Hi", "how are you?"], ["i am good", "Got it. happy to hear."]],
-        [["Hi", "how are you?"], ["bad", "Got it. sorry to hear."]],
+        [["Hi", "how are you?"], ["i am good", "okay. happy to hear."]],
+        [["Hi", "how are you?"], ["bad", "okay. sorry to hear."]],
         [
             ["Hi", "how are you?"],
             ["Hi", "I'm sorry I couldn't get that. Please rephrase. how are you?"],
@@ -255,16 +255,16 @@ def test_minimal_any_true():
 
 @agenda.expect_convos(
     [
-        [["Hi", "Would you like A?"], ["yes", "Got it. Happy to hear."]],
+        [["Hi", "Would you like A?"], ["yes", "You are all set. Happy to hear."]],
         [
             ["Hi", "Would you like A?"],
             ["no", "I got your answer for A. Would you like B?"],
-            ["yes", "Got it. Happy to hear."],
+            ["yes", "You are all set. Happy to hear."],
         ],
         [
             ["Hi", "Would you like A?"],
             ["no", "I got your answer for A. Would you like B?"],
-            ["no", "Got it. Have a good day."],
+            ["no", "You are all set. Have a good day."],
         ],
     ]
 )
@@ -300,16 +300,16 @@ def test_any_true():
             ["Hi", "Would you like A?"],
             ["yes", "Got it that you want A. Would you like B?"],
         ],
-        [["Hi", "Would you like A?"], ["no", "Got it. Have a good day."]],
+        [["Hi", "Would you like A?"], ["no", "You are all set. Have a good day."]],
         [
             ["Hi", "Would you like A?"],
             ["yes", "Got it that you want A. Would you like B?"],
-            ["no", "Got it. Have a good day."],
+            ["no", "You are all set. Have a good day."],
         ],
         [
             ["Hi", "Would you like A?"],
             ["yes", "Got it that you want A. Would you like B?"],
-            ["yes", "Got it. Happy to hear."],
+            ["yes", "You are all set. Happy to hear."],
         ],
     ]
 )
