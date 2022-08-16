@@ -183,7 +183,10 @@ address: Callable[[str], str] = gamla.compose_left(
 
 def intent(examples: Tuple[str, ...]) -> Callable[[str], bool]:
     def parse_bool(user_utterance: str):
-        return bool(examples) and _sentences_similarity(user_utterance, examples) >= 0.9
+        return bool(examples) and (
+            _sentences_similarity(user_utterance, examples) >= 0.9
+            or gamla.anymap(lambda trigger: trigger in user_utterance)(examples)
+        )
 
     return parse_bool
 

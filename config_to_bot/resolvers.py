@@ -73,6 +73,12 @@ def _any(any: Iterable[base_types.GraphType]) -> base_types.GraphType:
     )
 
 
+def _any_with_ack(any: Iterable[base_types.GraphType], ack) -> base_types.GraphType:
+    return agenda.combine_slots(
+        agenda.any, agenda.ack(ack), agenda.anti_ack(agenda.GENERIC_ANTI_ACK), any
+    )
+
+
 def _kv(
     key: str, value: Union[str, base_types.GraphType]
 ) -> Tuple[str, Union[str, base_types.GraphType]]:
@@ -165,6 +171,10 @@ def _event_is(event_is: str):
     )
 
 
+def _welcome_message(welcome: str):
+    return agenda.when(_event_is("conversation start"), agenda.say(welcome))
+
+
 def _say(say: str):
     return agenda.say(say)
 
@@ -210,8 +220,10 @@ def _render_template(template):
     )
 
 
-def _listen_to_intent(intent: Tuple[str, ...]):
-    return gamla.pipe(extract.intent(intent), agenda.listener_with_memory, agenda.ever)
+def _listen_to_intent(triggers: Tuple[str, ...]):
+    return gamla.pipe(
+        extract.intent(triggers), agenda.listener_with_memory, agenda.ever
+    )
 
 
 def _question_and_answer_dict(question: str, answer: str) -> Tuple[str, str]:
@@ -412,6 +424,17 @@ def _ask_about_identification(
         agenda.ask(ask),
         agenda.ack(agenda.GENERIC_ACK),
         agenda.anti_ack(agenda.GENERIC_ANTI_ACK),
+    )
+
+
+def _ask_about_identification_with_anti_ack(
+    ask: str, identification: Callable[[str], Union[str, agenda.Unknown]], anti_ack: str
+) -> base_types.GraphType:
+    return agenda.slot(
+        gamla.pipe(identification, agenda.if_participated, agenda.listener_with_memory),
+        agenda.ask(ask),
+        agenda.ack(agenda.GENERIC_ACK),
+        agenda.anti_ack(anti_ack),
     )
 
 
@@ -641,6 +664,9 @@ def _composers_for_dag_reducer(
         _concept_and_instances,
         _identification_builder,
         _ask_about_identification,
+        _welcome_message,
+        _any_with_ack,
+        _ask_about_identification_with_anti_ack,
     }
 
 
