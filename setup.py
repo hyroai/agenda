@@ -12,7 +12,7 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(),
     zip_safe=False,
     install_requires=[
-        "cloud-utils @ https://github.com/hyroai/cloud-utils/tarball/96c88c7142de73b46ad8ebc9602cdffa7f509c15",
+        "cloud-utils @ https://github.com/hyroai/cloud-utils/tarball/d777cd4de85ece28ba66e75233395be6c0df7e98",
         "gamla>=121",
         "computation-graph>=38",
         "pytest-asyncio>=0.17",
