@@ -75,7 +75,7 @@ test_skip_toppings_question = _make_test(
             ],
             ["yes I want pizza with olives", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel", "Nice to meet you Daniel! How many pies would you like?"],
             ["4", "Got it. What pizza size would you like?"],
         ]
     ],
@@ -92,7 +92,7 @@ test_happy_flow = _make_test(
             ],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel", "Nice to meet you Daniel! How many pies would you like?"],
             ["4", "Got it. What kind of toppings would you like?"],
             ["mushrooms and olives", "Got it. What pizza size would you like?"],
             ["small", "Got it. What is your address?"],
@@ -100,7 +100,7 @@ test_happy_flow = _make_test(
             ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas with mushrooms, and olives to 881 Mill Street Greenville SC.",
+                "Got it. Thank you Daniel! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas with mushrooms, and olives to 881 Mill Street Greenville SC.",
             ],
         ]
     ],
@@ -117,7 +117,7 @@ test_happy_flow_without_toppings = _make_test(
             ],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel", "Nice to meet you Daniel! How many pies would you like?"],
             ["4", "Got it. What kind of toppings would you like?"],
             ["none", "Got it. What pizza size would you like?"],
             ["small", "Got it. What is your address?"],
@@ -125,7 +125,7 @@ test_happy_flow_without_toppings = _make_test(
             ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas to 881 Mill Street Greenville SC.",
+                "Got it. Thank you Daniel! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 4 small pizzas to 881 Mill Street Greenville SC.",
             ],
         ]
     ],
@@ -143,12 +143,12 @@ test_happy_flow_wihtout_asking_for_amount_and_size = _make_test(
             ],
             ["yes, I want 2 large pizzas with mushrooms", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! What is your address?"],
+            ["Daniel", "Nice to meet you Daniel! What is your address?"],
             ["881 Mill Street Greenville SC", "Got it. What is your phone number?"],
             ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.",
+                "Got it. Thank you Daniel! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms to 881 Mill Street Greenville SC.",
             ],
         ]
     ],
@@ -181,7 +181,7 @@ test_multiple_choice_robustness = _make_test(
             ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel", "Nice to meet you Daniel! How many pies would you like?"],
             ["2", "Got it. What kind of toppings would you like?"],
             [
                 "mushrooms, olives and tomatoes",
@@ -192,7 +192,7 @@ test_multiple_choice_robustness = _make_test(
             ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms, olives, and tomatoes to 881 Mill Street Greenville SC.",
+                "Got it. Thank you Daniel! I got your phone: (999) 888-7777, and your email: abcd1234@gmail.com. We are sending you 2 large pizzas with mushrooms, olives, and tomatoes to 881 Mill Street Greenville SC.",
             ],
         ]
     ],
@@ -228,7 +228,7 @@ test_punctuation_robustness = _make_test(
             ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel", "Nice to meet you Daniel! How many pies would you like?"],
             ["4 pizzas.", "Got it. What kind of toppings would you like?"],
         ],
         [
@@ -238,7 +238,7 @@ test_punctuation_robustness = _make_test(
             ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel", "Nice to meet you Daniel! How many pies would you like?"],
             ["4.", "Got it. What kind of toppings would you like?"],
         ],
         [
@@ -248,7 +248,7 @@ test_punctuation_robustness = _make_test(
             ],
             ["yes", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni.", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel.", "Nice to meet you Daniel! How many pies would you like?"],
         ],
     ],
     _pizza_api_mock,
@@ -397,14 +397,14 @@ test_config_example = _make_test(
             ],
             ["yes, I want pizza", "Got it. Are you vegan?"],
             ["no", "Got it. What is your name?"],
-            ["Yoni", "Nice to meet you Yoni! How many pies would you like?"],
+            ["Daniel", "Nice to meet you Daniel! How many pies would you like?"],
             ["4", "Got it. What kind of toppings would you like?"],
             ["mushrooms and olives", "Got it. What pizza size would you like?"],
             ["small", "Got it. What is your phone number?"],
             ["9998887777", "Got it. What is your email?"],
             [
                 "abcd1234@gmail.com",
-                "Got it. Thank you Yoni! I got your phone (999) 888-7777, and your email abcd1234@gmail.com. You want 4 small pizzas.",
+                "Got it. Thank you Daniel! I got your phone (999) 888-7777, and your email abcd1234@gmail.com. You want 4 small pizzas.",
             ],
         ]
     ],
