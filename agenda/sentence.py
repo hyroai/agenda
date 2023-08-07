@@ -132,7 +132,7 @@ def _add_anti_ack(sentence, element):
     assert element != EMPTY_SENTENCE
     if _has_anti_ack(sentence):
         return gamla.freeze_deep(
-            gamla.assoc_in(sentence, [_ANTI_ACK], str_to_ack(GENERIC_ANTI_ACK))
+            gamla.assoc_in(sentence, [_ANTI_ACK], str_to_anti_ack(GENERIC_ANTI_ACK))
         )
     return gamla.freeze_deep(gamla.assoc_in(sentence, [_ANTI_ACK], element))
 
